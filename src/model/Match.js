@@ -16,8 +16,6 @@ function Match(pep1_protIDs, pep1_positions, pep2_protIDs, pep2_positions,
 	
 	this.id = id.toString().trim();
   	this.residueLinks = new Array();//if the match is ambiguous it will relate to many residueLinks
-    this.controller = xlvController;//reference to controlling xiNET.Controller object 
-    
     //for comparison of different data sets (for mathieu)
   	this.dataSetId = dataSetId;
   	

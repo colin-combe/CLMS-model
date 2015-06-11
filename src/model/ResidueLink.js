@@ -10,26 +10,21 @@
 
 ResidueLink.prototype = new xiNET.Link();
 
-function ResidueLink(id, proteinLink, fromResidue, toResidue, xlvController, flip) {
+function ResidueLink(id, proteinLink, fromResidue, toResidue) {
     this.id = id;
     //    this.matches = new Array(0); //we don't initialise this here 
     // (save some memory in use case where there is no match info, only link info)
-    this.controller = xlvController;
     this.proteinLink = proteinLink;
     this.fromResidue = fromResidue;
     this.toResidue = toResidue;
-    this.intra = false;
+   /* this.intra = false;
     if (typeof this.proteinLink !== 'undefined') {
         if (this.proteinLink.fromProtein === this.proteinLink.toProtein) {
             this.intra = true;
         }
     }
-
+*/
     this.ambig = false;
-    this.tooltip = this.id;
-    if (flip === true) {
-        this.flip = true;
-    }
 }
 
 ResidueLink.prototype.getFromProtein = function() {

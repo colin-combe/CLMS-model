@@ -11,12 +11,11 @@
 //static variable used to calculate width of the background line
 ProteinLink.maxNoResidueLinks = 0;
 
-ProteinLink.prototype = new xiNET.Link();
+//~ ProteinLink.prototype = new xiNET.Link();
 
-function ProteinLink(id, fromP, toP, xlvController) {
+function ProteinLink(id, fromP, toP) {
     this.id = id;
     this.residueLinks = d3.map();
-    this.controller = xlvController;
     this.fromProtein = fromP; //its the object. not the ID number
     this.toProtein = toP; //its the object. not the ID number
     this.ambig = false;
@@ -24,7 +23,7 @@ function ProteinLink(id, fromP, toP, xlvController) {
     this.isSelected = false;
 }
 
-ProteinLink.prototype.selfLink = function() {
+ProteinLink.prototype.isSelfLink = function() {
 	return (this.fromProtein === this.toProtein);
 }
 
@@ -37,7 +36,7 @@ ProteinLink.prototype.getToProtein = function() {
 };
 
 
-
+/*
 ProteinLink.prototype.setSelected = function(select) {
     if (select && this.isSelected === false) {
         this.controller.selected.set(this.id, this);//ok, 
@@ -52,7 +51,7 @@ ProteinLink.prototype.setSelected = function(select) {
         this.highlightLine.setAttribute("stroke", xiNET.highlightColour.toRGB());
  }
 };
-
+*/
 
 
 //its an array of match id's its going to return

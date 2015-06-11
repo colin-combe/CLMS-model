@@ -7,29 +7,16 @@
 
 "use strict";
 
-Protein.STICKHEIGHT = 20; 		// height of stick in pixels
-Protein.MAXSIZE = 100; 			// residue count of longest sequence
-Protein.UNITS_PER_RESIDUE = 1; 	// this value is changed during init (calculated on basis of MAXSIZE)
-Protein.LABELMAXLENGTH = 60; 	// maximal width reserved for protein-labels
-Protein.labelY = -5; 			// label Y offset, better if calc'd half height of label once rendered
-Protein.domainColours = d3.scale.ordinal().range(colorbrewer.Paired[5]);
-Protein.transitionTime = 650;
-
-function Protein(id, xinetController, acc, name) {
+function Protein(id, acc, name) {
     this.id = id; // id may not be accession
-    this.controller = xinetController;
     this.accession = acc;
     this.name = name;
-    this.tooltip = this.name + ' [' + this.id + ']';// + this.accession;
-
     //links
     this.proteinLinks = d3.map();
-    this.selfLink = null;
-    
+    //~ this.selfLink = null;//TODO: maybe dont need this, but xiNET is using it
     //annotation scheme
-    this.customAnnotations = null;//TODO: tidy up, not needed have this.annotations instead
-	//rotators
-	
+    //~ this.customAnnotations = null;//TODO: maybe dont need this, but xiNET is using it
+}	
     
 
 //sequence = amino acids in UPPERCASE, digits or lowercase can be used for modification info
@@ -101,6 +88,9 @@ Protein.prototype.addLink = function(link) {
     }
 };
 */
+
+
+//following stuff is not that important, its used by the layout in xiNET, its probably going to go
 
 
 Protein.prototype.countExternalLinks = function() {
