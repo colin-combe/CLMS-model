@@ -10,10 +10,10 @@
 
 "use strict";
 
-//'superclass' for Protein, ResidueLink, ProteinLink
+//'superclass' for ResidueLink, ProteinLink
 xiNET.Link = function (){};
 // event handler for starting dragging or rotation (or flipping internal links)
-xiNET.Link.prototype.mouseDown = function(evt) {
+/*xiNET.Link.prototype.mouseDown = function(evt) {
 //    //console.log("clickable mouse down");
     this.controller.preventDefaultsAndStopPropagation(evt);//see MouseEvents.js
     //if a force layout exists then stop it
@@ -68,5 +68,5 @@ xiNET.Link.prototype.touchStart = function(evt) {
     this.controller.dragStart = this.controller.mouseToSVG(p.x, p.y);
     return false;
 }
-
+*/
 
