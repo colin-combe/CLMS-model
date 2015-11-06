@@ -9,15 +9,21 @@
 
 // TODO: for historical reasons the order of the parameters 
 // to this function is not that logical - should reorder them.
-function Match(pep1_protIDs, pep1_positions, pep2_protIDs, pep2_positions,
-        id, score, xlvController, linkPos1, linkPos2, 
-        //the following attributes are optional (also pep1_positions, pep2_positions and score in preceeding)
-         pepSeq1, pepSeq2, autovalidated, validated, rejected, dataSetId){
+function Match(controller,id, 
+				pep1_protIDs, pep1_positions, pepSeq1, linkPos1,
+				pep2_protIDs, pep2_positions, pepSeq2, linkPos2,
+				score, dataSetId, autovalidated, validated, run_name, scan_number){
 	
+    this.controller = controller;//reference to controlling xiNET.Controller object 
 	this.id = id.toString().trim();
-  	this.residueLinks = new Array();//if the match is ambiguous it will relate to many residueLinks
-    //for comparison of different data sets (for mathieu)
-  	this.dataSetId = dataSetId;
+
+  	this.residueLinks = [];//if the match is ambiguous it will relate to many residueLinks
+    //for comparison of different data sets
+  	this.group = dataSetId;
+  	this.controller.groups.add(this.group);
+  	
+  	this.runName = run_name;
+  	this.scanNumber = scan_number;
   	
   	//sanitise the inputs  
     //http://stackoverflow.com/questions/5515310/is-there-a-standard-function-to-check-for-null-undefined-or-blank-variables-in
@@ -42,8 +48,7 @@ function Match(pep1_protIDs, pep1_positions, pep2_protIDs, pep2_positions,
 		}
 	}
 	
-	//autovalidated - an attribute used internally by Rappsilber Lab, 
-	// but, hey, its another attribute you can filter on if you want  
+	//autovalidated - another attribute   
 	if (typeof autovalidated != 'undefined' && autovalidated){
 		autovalidated = autovalidated.trim();
 		if (autovalidated !== ''){
@@ -71,9 +76,9 @@ function Match(pep1_protIDs, pep1_positions, pep2_protIDs, pep2_positions,
 	var split = /[;,]/g;
 	var capitalsOnly = /[^A-Z]/g;
 	function sanitiseProteinIDs(protIDs){
-		if (protIDs){
+		//~ if (protIDs){
 			protIDs = protIDs.toString().trim();
-			if (protIDs !== '' && protIDs !== '-' && protIDs !== 'n/a'){
+			if (/*protIDs !== '' &&*/ protIDs !== '-' && protIDs !== 'n/a'){
 				// eliminate all forms of quotation mark
 				// - sooner or later they're going to screw up javascript, prob whilst trying to generate>parse JSON
 				eliminateQuotes.lastIndex = 0;
@@ -88,10 +93,10 @@ function Match(pep1_protIDs, pep1_positions, pep2_protIDs, pep2_positions,
 			else {
 				protIDs = null;
 			}
-		}
-		else {
-			protIDs = null;
-		}		
+		//~ }
+		//~ else {
+			//~ protIDs = null;
+		//~ }		
 		return protIDs;
 	}
 
@@ -99,8 +104,10 @@ function Match(pep1_protIDs, pep1_positions, pep2_protIDs, pep2_positions,
 	pep1_protIDs = sanitiseProteinIDs(pep1_protIDs);
 	pep2_protIDs = sanitiseProteinIDs(pep2_protIDs);
 
-
-	if (typeof pepSeq1 != 'undefined' && pepSeq1 != null){
+	this.pepSeq1raw = pepSeq1;
+	this.pepSeq2raw = pepSeq2;
+	
+	if (pepSeq1){
 		pepSeq1 = pepSeq1.trim();
 		if (pepSeq1){
 			capitalsOnly.lastindex = 0;
@@ -114,7 +121,7 @@ function Match(pep1_protIDs, pep1_positions, pep2_protIDs, pep2_positions,
 		this.pepSeq1 = null;
 	}
 
-	if (typeof pepSeq2 !== 'undefined' && pepSeq2 != null){
+	if (pepSeq2){
 		pepSeq2 = pepSeq2.trim();
 		if (pepSeq2){
 			capitalsOnly.lastindex = 0;
@@ -132,6 +139,10 @@ function Match(pep1_protIDs, pep1_positions, pep2_protIDs, pep2_positions,
 	linkPos1 = sanitisePositions(linkPos1);
 	linkPos2 = sanitisePositions(linkPos2);
 	
+	if (pep1_positions.length == 1 && pep2_positions.length == 1) {
+		this.controller.unambigLinkFound = true; 
+	}
+		
 	// tidy up postions (peptide and link positions), 
 	// leaves positions null if empty, 'n/a' or '-'
 	// forbidden characters are ,;'"
@@ -142,7 +153,7 @@ function Match(pep1_protIDs, pep1_positions, pep2_protIDs, pep2_positions,
 				// eliminate all forms of quotation mark 
 				eliminateQuotes.lastIndex = 0;
 				positions = positions.toString().replace(eliminateQuotes, '');
-				//; or , as seperator
+				//; or , as seperator (need comma incase input field was an array, which has just had toString called on it)
 				split.lastIndex = 0;
 				positions = positions.split(split);	
 				var posCount = positions.length;
@@ -366,8 +377,9 @@ function Match(pep1_protIDs, pep1_positions, pep2_protIDs, pep2_positions,
 			//}
 		}
 		
+		this.controller.matches.push(this);
 		//non of following are strictly necesssary, 
-		//burns some memory for convenience when making table of matches
+		//burns some memory for convenience when making table of matches or outputing CSV
 		this.protein1 = pep1_protIDs;
 		this.pepPos1 = pep1_positions;
 		this.linkPos1 = linkPos1;
@@ -461,14 +473,18 @@ Match.prototype.associateWithLink = function (p1ID, p2ID, res1, res2, //followin
 			resLink = new ResidueLink(residueLinkID, link, res2, res1, this.controller);
 		}
 		link.residueLinks.set(residueLinkID, resLink);
-		if (link.residueLinks.keys().length > ProteinLink.maxNoResidueLinks) {
-			ProteinLink.maxNoResidueLinks = link.residueLinks.keys().length;
+		if (this.controller.proteins.size() > 1) {
+			var linkCount = link.residueLinks.size();
+			if (linkCount > ProteinLink.maxNoResidueLinks) {
+				ProteinLink.maxNoResidueLinks = linkCount;
+			}
 		}
 	}
 	//we have residue link we want - associate this match with it
 	if (typeof resLink.matches === 'undefined' || resLink.matches == null){
-		resLink.matches = new Array(0);
+		resLink.matches = [];
 	}
+	//fix this hack with the array?
 	if (endsReversedInResLinkId === false) {
 		resLink.matches.push([this, pep1_start, pep1_length, pep2_start, pep2_length]);
 	} else {
@@ -500,48 +516,4 @@ Match.prototype.isAmbig = function() {
         return true;
     }
     return false;
-}
-
-Match.prototype.toTableRow = function() {
-   var htmlTableRow = "<tr>";
-	//~ if (loadSpectra){
-		//~ htmlTableRow = "<tr onclick=\"loadSpectra('"+this.id+"','"+this.pepSeq1+"',"
-			//~ +this.linkPos1+",'"+this.pepSeq2+"',"+this.linkPos2+");\">";
-	//~ }
-	
-	htmlTableRow += "<td><p>" + this.id
-		+ "</p></td>";
-	htmlTableRow += "<td><p>" + this.protein1
-		+ "</p></td>";
-	htmlTableRow += "<td><p>" + this.pepPos1
-		+ "</p></td>";
-	htmlTableRow += "<td><p>" + this.pepSeq1
-		+ "</p></td>";
-	htmlTableRow += "<td><p>" + this.linkPos1
-		+ "</p></td>";
-	htmlTableRow += "<td><p>" + this.protein2
-		+ "</p></td>";
-	htmlTableRow += "<td><p>" + this.pepPos2
-		+ "</p></td>";
-	htmlTableRow += "<td><p>" + this.pepSeq2
-		+ "</p></td>";
-	htmlTableRow += "<td><p>" + this.linkPos2
-		+ "</p></td>";			
-		
-	htmlTableRow += "<td><p>" + 
-	((typeof this.score !== 'undefined')? this.score.toFixed(4) : 'undefined')
-	+ "</p></td>";
-	
-	if (this.controller.autoValidatedFound === true){
-		htmlTableRow += "<td><p>" + this.autovalidated
-			+ "</p></td>";
-	}
-	
-	if (this.controller.manualValidatedFound === true){
-		htmlTableRow += "<td><p>" + this.validated
-			+ "</p></td>";
-	}
-	
-	htmlTableRow += "</tr>";
-	return htmlTableRow;
 }

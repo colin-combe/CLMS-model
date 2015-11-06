@@ -11,6 +11,10 @@ function Protein(id, acc, name) {
     this.id = id; // id may not be accession
     this.accession = acc;
     this.name = name;
+    if (!this.name) {
+		this.name = acc;
+	}
+    this.tooltip = this.name + ' [' + this.accession + ']';// + this.accession;
     //links
     this.proteinLinks = d3.map();
     //~ this.selfLink = null;//TODO: maybe dont need this, but xiNET is using it
@@ -18,7 +22,6 @@ function Protein(id, acc, name) {
     //~ this.customAnnotations = null;//TODO: maybe dont need this, but xiNET is using it
 }	
     
-
 //sequence = amino acids in UPPERCASE, digits or lowercase can be used for modification info
 Protein.prototype.setSequence = function(sequence){
     //check for labeling modifications in sequence now, we're about to lose this info
@@ -60,11 +63,12 @@ Protein.prototype.isDecoy = function() {
 	}
 };
 
+
 Protein.prototype.addLink = function(link) {
     if (!this.proteinLinks.has(link.id)) {
         this.proteinLinks.set(link.id, link);
     }
-    if (link.selfLink()) {
+    if (link.selfLink() === true) {
         this.selfLink = link;
         if (this.size) this.selfLink.initSelfLinkSVG();
     }
@@ -73,23 +77,6 @@ Protein.prototype.addLink = function(link) {
     }
 };
 
-/*Protein.prototype.setSelected = function(select) {
-    if (select && this.isSelected === false) {
-        this.controller.selected.set(this.id, this);
-        this.isSelected = true;
-		this.highlight.setAttribute("stroke", xiNET.selectedColour.toRGB());
-		this.highlight.setAttribute("stroke-opacity", "1");
-    }
-    else if (select === false && this.isSelected === true) {
-        this.controller.selected.remove(this.id);
-        this.isSelected = false;
-		this.highlight.setAttribute("stroke-opacity", "0");
-		this.highlight.setAttribute("stroke", xiNET.highlightColour.toRGB());
-    }
-};
-*/
-
-//following stuff is not that important, its used by the layout in xiNET, its probably going to go
 
 Protein.prototype.countExternalLinks = function() {
     //~ if (this.isParked) {
@@ -99,7 +86,7 @@ Protein.prototype.countExternalLinks = function() {
     var c = this.proteinLinks.keys().length;
     for (var l = 0; l < c; l++) {
         var link = this.proteinLinks.values()[l];
-        if (!link.intra)
+        if (!link.selfLink())
         {
             if (link.check() === true) {
                 countExternal++;
@@ -152,4 +139,3 @@ Protein.prototype.addConnectedNodes = function(subgraph) {
     }
     return subgraph;
 };
-

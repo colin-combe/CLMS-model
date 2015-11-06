@@ -17,14 +17,12 @@ function ResidueLink(id, proteinLink, fromResidue, toResidue) {
     this.proteinLink = proteinLink;
     this.fromResidue = fromResidue;
     this.toResidue = toResidue;
-   /* this.intra = false;
-    if (typeof this.proteinLink !== 'undefined') {
-        if (this.proteinLink.fromProtein === this.proteinLink.toProtein) {
-            this.intra = true;
-        }
-    }
-*/
+
     this.ambig = false;
+}
+
+ResidueLink.prototype.selfLink = function() {
+	return (this.proteinLink.fromProtein === this.proteinLink.toProtein);
 }
 
 ResidueLink.prototype.getFromProtein = function() {
@@ -35,29 +33,11 @@ ResidueLink.prototype.getToProtein = function() {
     return this.proteinLink.toProtein;
 };
 
-/*
-ResidueLink.prototype.setSelected = function(select) {
-    if (select && this.isSelected === false) {
-        this.controller.selected.set(this.id, this);//ok, 
-        this.isSelected = true;
-        this.highlightLine.setAttribute("stroke", xiNET.selectedColour.toRGB());
-		this.highlightLine.setAttribute("stroke-opacity", "0.7");
-    }
-    else if (select === false && this.isSelected === true) {
-        this.controller.selected.remove(this.id);
-        this.isSelected = false;
-        this.highlightLine.setAttribute("stroke-opacity", "0");
-        this.highlightLine.setAttribute("stroke", xiNET.highlightColour.toRGB());
- }
-};
-
-*/
-
 ResidueLink.prototype.getFilteredMatches = function() {
     this.ambig = true;
     this.hd = false;
     this.intraMolecular = false; //i.e. type 1, loop link, intra peptide, internally linked peptide, etc 
-    var filteredMatches = new Array();
+    var filteredMatches = [];
     var count = this.matches? this.matches.length : 0;
     for (var i = 0; i < count; i++) {
         var match = this.matches[i][0];
@@ -79,7 +59,7 @@ ResidueLink.prototype.getFilteredMatches = function() {
 
 //used when filter changed
 ResidueLink.prototype.check = function(filter) {
-    if (this.controller.intraHidden && this.intra) {
+    if (this.controller.selfLinkShown === false && this.selfLink()) {
         this.hide();
         return false;
     }
@@ -88,20 +68,11 @@ ResidueLink.prototype.check = function(filter) {
         return false;
     }
     if (typeof this.matches === 'undefined' || this.matches == null) {
-        //~ if (this.proteinLink.sc >= this.controller.cutOff) {
-            this.ambig = false;
-			this.show();
-            return true;
-        //~ } else {
-            //~ this.hide();
-            //~ return false;
-        //~ }
+		this.ambig = false;
+		this.show();
+		return true;
     }
     var filteredMatches = this.getFilteredMatches();
-    
-    //mathieu - filteredMatches is an array of Match objects, 
-    // you can check aMatch.dataSetId to find out which data set each match belongs to
-    
     var countFilteredMatches = filteredMatches.length;
     if (countFilteredMatches > 0) {
         /*this.tooltip = this.proteinLink.fromProtein.labelText + '_' + this.fromResidue
@@ -111,10 +82,31 @@ ResidueLink.prototype.check = function(filter) {
             this.tooltip += ' match)';
         } else {
             this.tooltip += ' matches)';
-        }
+
         this.show();
-        this.dashedLine(this.ambig);
-        if (this.intra === true){
+        this.dashedLine(this.ambig);		
+        if (this.controller.groups.values().length > 1 && this.controller.groups.values().length < 5) {
+			var groupCheck = d3.set();
+            for (var i=0; i < countFilteredMatches; i++) {
+                var match = filteredMatches[i][0];//fix this weirdness with array?
+				groupCheck.add(match.group);
+			}
+			if (groupCheck.values().length == 1){
+				var c = this.controller.linkColours(groupCheck.values()[0]);
+				this.line.setAttribute("stroke", c);				
+          		this.line.setAttribute("transform", "scale (1 1)");
+				this.highlightLine.setAttribute("transform", "scale (1 1)");
+			}
+			else  {
+				this.line.setAttribute("stroke", "#000000");
+				if (this.selfLink()){
+					this.line.setAttribute("transform", "scale (1 -1)");
+					this.highlightLine.setAttribute("transform", "scale (1 -1)");
+				}
+            }
+            //else this.line.setAttribute("stroke", "purple");//shouldn't happen				
+		}
+        else if (this.selfLink() === true && this.colour == null){
 			if (this.hd === true) {
 				this.line.setAttribute("stroke", xiNET.homodimerLinkColour.toRGB());			
 				this.line.setAttribute("transform", "scale(1, -1)");			
@@ -127,7 +119,10 @@ ResidueLink.prototype.check = function(filter) {
 				this.line.setAttribute("stroke-width", xiNET.linkWidth);			
 				this.highlightLine.setAttribute("transform", "scale(1, 1)");			
 			}
+
 		}*/
+
+
         return true;
     }
     else {
@@ -135,3 +130,4 @@ ResidueLink.prototype.check = function(filter) {
         return false;
     }
 };
+

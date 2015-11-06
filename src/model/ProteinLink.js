@@ -38,18 +38,20 @@ ProteinLink.prototype.getToProtein = function() {
 
 /*
 ProteinLink.prototype.setSelected = function(select) {
-    if (select && this.isSelected === false) {
-        this.controller.selected.set(this.id, this);//ok, 
+    if (select === true && this.isSelected === false) {
+        this.controller.selectedLinks.set(this.id, this);//ok, 
         this.isSelected = true;
         this.highlightLine.setAttribute("stroke", xiNET.selectedColour.toRGB());
 		this.highlightLine.setAttribute("stroke-opacity", "1");
+		this.controller.linkSelectionChanged();
     }
     else if (select === false && this.isSelected === true) {
-        this.controller.selected.remove(this.id);
+        this.controller.selectedLinks.remove(this.id);
         this.isSelected = false;
         this.highlightLine.setAttribute("stroke-opacity", "0");
         this.highlightLine.setAttribute("stroke", xiNET.highlightColour.toRGB());
- }
+		this.controller.linkSelectionChanged();
+	}
 };
 */
 
@@ -108,7 +110,7 @@ ProteinLink.prototype.check = function() {
 	if (this.fromProtein.form === 0 && (this.toProtein !== null && this.toProtein.form === 0)) {
 
 		this.ambig = true;
-		var filteredResLinks = new Array();
+		var filteredResLinks = [];
 		var filteredMatches = d3.map();
 		var altProteinLinks = d3.map();
 		for (var i = 0; i < resLinkCount; i++) {
@@ -126,7 +128,7 @@ ProteinLink.prototype.check = function() {
 							resLinkMeetsCriteria = true;
 							filteredResLinks.push(resLink);
 						}
-						filteredMatches.set(match.id);
+						filteredMatches.set(match.id, match);
 						if (match.isAmbig()) {
 							for (var mrl = 0; mrl < match.residueLinks.length; mrl++) {
 								altProteinLinks.set(match.residueLinks[mrl].proteinLink.id);
@@ -158,6 +160,7 @@ ProteinLink.prototype.check = function() {
 			this.ambig = (this.ambig && (altProteinLinks.keys().length > 1));
 			this.dashedLine(this.ambig);
 			/*if (this.selfLink()) {
+
 				if (this.hd) {
 					this.line.setAttribute("stroke", xiNET.homodimerLinkColour.toRGB());			
 					this.line.setAttribute("stroke-width", xiNET.homodimerLinkWidth);			

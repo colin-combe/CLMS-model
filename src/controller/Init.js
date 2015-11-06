@@ -28,33 +28,32 @@ xiNET.Controller = function(targetDiv) {
 	if (typeof targetDiv === "string"){
 		targetDiv = document.getElementById(targetDiv);
 	}
-	this.emptyElement(targetDiv); //avoids prob with 'save - web page complete'
+	d3.select(targetDiv).selectAll("*").remove();//avoids prob with 'save - web page complete'
+    
+    //this is neded to allow the SVG export
+    var containingDiv = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+    containingDiv.setAttribute("style", "width:100%;height:100%;display:block;");
+    targetDiv.appendChild(containingDiv);
+    
     //create SVG elemnent
     this.svgElement = document.createElementNS(xiNET.svgns, "svg");
     this.svgElement.setAttribute('id', 'networkSVG');
     this.svgElement.setAttribute("width", "100%");
     this.svgElement.setAttribute("height", "100%");
-    this.svgElement.setAttribute("style", "display:block;");
+    //~ this.svgElement.setAttribute("preserveAspectRatio", "xMinYMin meet");
+    //~ this.svgElement.setAttribute("viewBox", "0 0 " + targetDiv.clientWidth + " " + targetDiv.clientHeight); 
+    //~ this.svgElement.setAttribute("style", "display:block;");
     // disable right click context menu (we wish to put right click to our own purposes)
     this.svgElement.oncontextmenu = function() {
         return false;
     };
+    
     //add listeners
     var self = this;
-    this.svgElement.onmousedown = function(evt) {
-        self.mouseDown(evt);
-    };
-    this.svgElement.onmousemove = function(evt) {
-        self.mouseMove(evt);
-    };
-    this.svgElement.onmouseup = function(evt) {
-        self.mouseUp(evt);
-    };
-    // even though we don't use jquery, see:
-    // http://stackoverflow.com/questions/4258615/what-is-the-difference-between-jquerys-mouseout-and-mouseleave
-    this.svgElement.onmouseout = function(evt) {
-        self.hideTooltip(evt);
-    };    
+    this.svgElement.onmousedown = function(evt) { self.mouseDown(evt); };
+    this.svgElement.onmousemove = function(evt) { self.mouseMove(evt); };
+    this.svgElement.onmouseup = function(evt) { self.mouseUp(evt); };
+    this.svgElement.onmouseout = function(evt) { self.hideTooltip(evt); };    
     var mousewheelevt= (/Firefox/i.test(navigator.userAgent))? "DOMMouseScroll" : "mousewheel" //FF doesn't recognize mousewheel as of FF3.x
     if (document.attachEvent){ //if IE (and Opera depending on user setting) 
         this.svgElement.attachEvent("on"+mousewheelevt, function(evt) {self.mouseWheel(evt);});
@@ -63,24 +62,19 @@ xiNET.Controller = function(targetDiv) {
         this.svgElement.addEventListener(mousewheelevt, function(evt) {self.mouseWheel(evt);}, false);
     }  
     this.lastMouseUp = new Date().getTime();   
-     //touchstart
-    this.svgElement.ontouchstart = function(evt) {
-        self.touchStart(evt);
-    };
-    //touchmove
-    this.svgElement.ontouchmove = function(evt) {
-        self.touchMove(evt);
-    };
-    //touchend
-    this.svgElement.ontouchend = function(evt) {
-        self.message("touch end");
-        self.touchEnd(evt);
-    };
-    
-    targetDiv.appendChild(this.svgElement);
+    this.svgElement.ontouchstart = function(evt) { self.touchStart(evt); };
+    this.svgElement.ontouchmove = function(evt) { self.touchMove(evt); };
+    this.svgElement.ontouchend = function(evt) { self.touchEnd(evt); };
+    //selection and highlight callbacks
+    this.linkSelectionCallbacks = [];
+    this.linkHighlightsCallbacks = [];
+    //legend changed callbacks
+    this.legendCallbacks = new Array();
+
+    containingDiv.appendChild(this.svgElement);
     
 	//these attributes are used by checkboxes to hide self links or ambiguous links
-	this.selfLinksShown = true;//TODO - fix confusing double negative
+	this.selfLinksShown = true;
 	this.ambigShown = true;	
        
     // filled background needed, else cannot click/drag background
@@ -125,7 +119,7 @@ xiNET.Controller = function(targetDiv) {
 
     this.svgElement.appendChild(this.container);
     //showing title as tooltips is NOT part of svg spec (even though browsers do this)
-    //also more repsonsive / more control if we do out own
+    //also more repsonsive / more control if we do our own
     this.tooltip = document.createElementNS(xiNET.svgns, "text");
 	this.tooltip.setAttribute('x', 0);
     this.tooltip.setAttribute('y', 0);
@@ -150,15 +144,8 @@ xiNET.Controller = function(targetDiv) {
     this.svgElement.appendChild(this.tooltip_bg);
     this.svgElement.appendChild(this.tooltip);
 
+	this.xiNET_storage = new xiNET_Storage(this);
     this.clear();
-};
-
-/**
- * Sets the current transform matrix of an element.
- */
-xiNET.setCTM = function(element, matrix) {
-    var s = "matrix(" + matrix.a + "," + matrix.b + "," + matrix.c + "," + matrix.d + "," + matrix.e + "," + matrix.f + ")";
-    element.setAttribute("transform", s);
 };
 
 xiNET.Controller.prototype.clear = function() {
@@ -167,14 +154,14 @@ xiNET.Controller.prototype.clear = function() {
 		this.force.stop();
 	}
  	this.force = null;
-    this.emptyElement(this.p_pLinksWide);
-    this.emptyElement(this.highlights);
-    this.emptyElement(this.p_pLinks);
-    this.emptyElement(this.res_resLinks);
-    this.emptyElement(this.proteinLower);
-    this.emptyElement(this.proteinUpper);
- 
-     //are we panning?
+ 	d3.select(this.p_pLinksWide).selectAll("*").remove();
+    d3.select(this.highlights).selectAll("*").remove();
+    d3.select(this.p_pLinks).selectAll("*").remove();
+    d3.select(this.res_resLinks).selectAll("*").remove();
+    d3.select(this.proteinLower).selectAll("*").remove();
+    d3.select(this.proteinUpper).selectAll("*").remove();
+    
+    //are we panning?
     this.panning = false;
     // if we are dragging something at the moment - this will be the element that is draged
     this.dragElement = null;
@@ -187,18 +174,19 @@ xiNET.Controller.prototype.clear = function() {
     
     this.proteins = d3.map();
     this.proteinLinks = d3.map();
-    this.matches = d3.map();
-    this.subgraphs = new Array();
+    this.matches = [];
+    this.groups = d3.set();
+    this.subgraphs = [];
     this.layoutXOffset = 0;
 
     this.proteinCount = 0;
+    this.unambigLinkFound = false;
     this.maxBlobRadius = 30;
     Protein.MAXSIZE = 100;
 
     this.layout = null;
     this.z = 1;
     this.scores = null;
-    this.selected = d3.map();
     this.selectedLinks = d3.map();
 
     this.hideTooltip();
@@ -206,39 +194,71 @@ xiNET.Controller.prototype.clear = function() {
     this.resetZoom();
     this.state = xiNET.Controller.MOUSE_UP;
 };
+/**
+ * Sets the current transform matrix of an element.
+ */
+xiNET.setCTM = function(element, matrix) {
+    var s = "matrix(" + matrix.a + "," + matrix.b + "," + matrix.c + "," + matrix.d + "," + matrix.e + "," + matrix.f + ")";
+    element.setAttribute("transform", s);
+};
 
-xiNET.Controller.prototype.emptyElement = function(element) {
-    while (element.lastChild) {
-        element.removeChild(element.lastChild);
+xiNET.Controller.prototype.linkSelectionChanged = function() {
+	var callbacks = this.linkSelectionCallbacks;
+	var count = callbacks.length;
+	for (var i = 0; i < count; i++) {
+		callbacks[i](this.selectedLinks);
+	}
+}
+
+xiNET.Controller.prototype.linkHighlightsChanged = function(highlighted) {
+	var callbacks = this.linkHighlightsCallbacks;
+	var count = callbacks.length;
+	for (var i = 0; i < count; i++) {
+		callbacks[i](highlighted);
+	}
+}
+
+xiNET.Controller.prototype.legendChanged = function() {
+	var callbacks = this.legendCallbacks;
+	var count = callbacks.length;
+	for (var i = 0; i < count; i++) {
+		callbacks[i](this.linkColours, this.domainColours);
+	}
+}
+
+xiNET.Controller.prototype.clearSelection = function() {
+	var things = this.selectedLinks.values();
+    var count = things.length;
+    for (var t = 0; t < count; t++) {
+        var thing = things[t];
+        thing.setSelected(false);
     }
 };
 
-xiNET.Controller.prototype.setAnnotations = function(annotationType) {
-	this.annotationSet = annotationType;
+xiNET.Controller.prototype.setAnnotations = function(annotationChoice) {
+	this.annotationChoice = annotationChoice;
+	//clear all annot's
+	var mols = this.proteins.values();
+	var molCount = mols.length;
+	for (var m = 0; m < molCount; m++) {
+		mols[m].clearPositionalFeatures();
+	}
+	this.domainColours = null;
+    this.legendChanged();
 	if (this.sequenceInitComplete) { //dont want to be changing annotations while still waiting on sequence
-		var mols = this.proteins.values(); 
-		var molCount = mols.length;
 		var self = this;
-		for (var m = 0; m < molCount; m++) {
-			var mol = mols[m];
-			if (annotationType.toUpperCase() === "CUSTOM") {
+		if (annotationChoice.toUpperCase() === "CUSTOM"){
+			for (m = 0; m < molCount; m++) {
+				var mol = mols[m];
 				mol.setPositionalFeatures(mol.customAnnotations);
 			}
-			else if (annotationType.toUpperCase() === "SUPERFAM" || annotationType.toUpperCase() === "SUPERFAMILY"){
-				xiNET_Storage.getSuperFamFeatures(mol.id, function (id, fts){
-					var m = self.proteins.get(id);
-					m.setPositionalFeatures(fts);
-				});
-			}  
-			else if (annotationType.toUpperCase() === "UNIPROT" || annotationType.toUpperCase() === "UNIPROTKB") {
-				xiNET_Storage.getUniProtFeatures(mol.id, function (id, fts){
-					var m = self.proteins.get(id);
-					m.setPositionalFeatures(fts);
-				});	
-			}
-			else if (annotationType.toUpperCase() === "LYSINES") {
+			chooseColours();
+		}
+		else if (annotationChoice.toUpperCase() === "LYSINES") {
+			for (m = 0; m < molCount; m++) {
+				var mol = mols[m];
 				var seq = mol.sequence;
-				var annots = new Array();
+				var annots = [];
 				for (var i =0; i < mol.size; i++){
 					var aa = seq[i];
 					if (aa === 'K'){
@@ -248,18 +268,126 @@ xiNET.Controller.prototype.setAnnotations = function(annotationType) {
 				}
 				mol.setPositionalFeatures(annots);
 			}
-			else {
-				mol.setPositionalFeatures([])
+			chooseColours();
+		}
+		else if (annotationChoice.toUpperCase() === "SUPERFAM" || annotationChoice.toUpperCase() === "SUPERFAMILY"){
+			var molsAnnotated = 0;
+			for (m = 0; m < molCount; m++) {
+				var mol = mols[m];
+				this.xiNET_storage.getSuperFamFeatures(mol.id, function (id, fts){
+					var m = self.proteins.get(id);
+					m.setPositionalFeatures(fts);
+					molsAnnotated++;
+					if (molsAnnotated === molCount) {
+						chooseColours();
+					}
+				});
 			}
 		}
-		return true;
+		else if (annotationChoice.toUpperCase() === "UNIPROT" || annotationChoice.toUpperCase() === "UNIPROTKB") {
+			var molsAnnotated = 0;
+			for (m = 0; m < molCount; m++) {
+				var mol = mols[m];
+				this.xiNET_storage.getUniProtFeatures(mol.id, function (id, fts){
+					var m = self.proteins.get(id);
+					if (m.accession.indexOf("-") === -1 || m.accession === "P02768-A") {
+						if (m.accession === "P02768-A") {
+							var offset = -24;
+							for (var f = 0; f < fts.length; f++) {
+								var feature = fts[f];
+								feature.start = feature.start + offset;
+								feature.end = feature.end + offset;
+							}
+						}
+						m.setPositionalFeatures(fts);
+					}
+					molsAnnotated++;
+					if (molsAnnotated === molCount) {
+						chooseColours();
+					}
+				});
+			}
+		}
 	}
-	else return false;
+
+	function chooseColours(){
+		var categories = d3.set();
+		for (m = 0; m < molCount; m++) {
+			var mol = mols[m];
+			for (var a = 0; a < mol.annotations.length; a++){
+				categories.add(mol.annotations[a].name);
+			}
+		}
+		var catCount = categories.values().length;
+		if (catCount < 3){catCount = 3;}
+        //~ if (catCount < 21) {
+			if (catCount < 9) {
+				var reversed = colorbrewer.Accent[catCount].slice().reverse();
+				self.domainColours = d3.scale.ordinal().range(reversed);
+			}
+			else if (catCount < 13) {
+				var reversed = colorbrewer.Set3[catCount].slice().reverse();
+				self.domainColours = d3.scale.ordinal().range(reversed);
+			}
+			else {
+				self.domainColours = d3.scale.category20();
+			}
+			for (m = 0; m < molCount; m++) {
+				var mol = mols[m];
+				for (a = 0; a < mol.annotations.length; a++) {
+					var anno = mol.annotations[a];
+					var c = self.domainColours(anno.name);
+					anno.pieSlice.setAttribute("fill", c);
+					anno.pieSlice.setAttribute("stroke", c);
+					anno.colouredRect.setAttribute("fill", c);
+					anno.colouredRect.setAttribute("stroke", c);
+				}
+			}
+		//~ }
+		self.legendChanged();
+	}
 };
 
-//this can be done before all proteins have their sequences
+//if no saved layout this can be done before all proteins have their sequences
 xiNET.Controller.prototype.initLayout = function() {
-    if (typeof this.layout !== 'undefined' && this.layout != null) {
+  	var prots = this.proteins.values();
+	var protCount = prots.length;
+	Protein.MAXSIZE = 0;
+	for (var i = 0; i < protCount; i++){
+		var protSize = prots[i].size;
+		if (protSize > Protein.MAXSIZE){
+			Protein.MAXSIZE = protSize;
+		}
+	}
+	//this.maxBlobRadius = Math.sqrt(Protein.MAXSIZE / Math.PI);
+	var width = this.svgElement.parentNode.clientWidth;
+	Protein.UNITS_PER_RESIDUE = (((width / 2)) - Protein.LABELMAXLENGTH) / Protein.MAXSIZE;  var groupCount = this.groups.values().length;
+    if (groupCount > 1 && groupCount < 5) {
+		//can now choose link colours for comparing sets
+		var catCount = this.groups.values().length;
+		//~ if (catCount > 1 && catCount < 6) {
+		//~ if (catCount < 3){catCount = 3;}
+        // if (catCount < 21) {
+			//~ if (catCount < 9) {
+				//~ var reversed = colorbrewer.Accent[3];
+				this.linkColours = d3.scale.ordinal().range(colorbrewer.Dark2[5]);
+			//~ }
+			//~ else if (catCount < 13) {
+				//~ var reversed = colorbrewer.Set3[catCount];
+				//~ this.linkColours = d3.scale.ordinal().range(reversed);
+			//~ }
+			//~ else {
+				//~ this.linkColours = d3.scale.category20();
+			//~ }	
+		//}	
+			var groups = this.groups.values();
+			for (var g = 0; g < groupCount; g++) {
+				this.linkColours(groups[g]);
+			}
+			this.legendChanged();
+		//~ }
+	}    
+	if (typeof this.layout !== 'undefined' && this.layout != null) {
         this.loadLayout();
     } else {
         var proteins = this.proteins.values();
@@ -271,6 +399,7 @@ xiNET.Controller.prototype.initLayout = function() {
         }
         this.autoLayout();
     }
+
 };
 
 //requires all proteins have had sequence set
@@ -330,51 +459,86 @@ xiNET.Controller.prototype.resetZoom = function() {
     //~ }
 };
 
-xiNET.Controller.prototype.exportSVG = function() {
-	var svgXml = this.svgElement.parentNode.innerHTML.replace(/<rect .*?\/rect>/i, "");//take out white background fill
-    svgXml = svgXml.replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events" ')
-    if (Blob) {
-		var blob = new Blob([svgXml], {type: "data:image/svg;charset=utf-8"});
-		saveAs(blob, "xiNET_output.svg");
-	} else {	
-		var xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
+xiNET.Controller.prototype.getSVG = function() {
+	var svgXml = this.svgElement.parentNode.innerHTML.replace(/<rect .*?\/rect>/i, "");//take out white background fill   
+    var viewBox = 'viewBox="0 0 ' + this.svgElement.parentNode.clientWidth + " " + this.svgElement.parentNode.clientHeight + '" '; 
+    svgXml = svgXml.replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events" ' + viewBox);
+	
+	return '<?xml version="1.0" encoding="UTF-8" standalone=\"no\"?>' 
 		+ "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">"
 		+ svgXml;
-		var xmlAsUrl;
-		//xmlAsUrl = 'data:xml;filename=xiNET_output.xml,'
-		xmlAsUrl = 'data:image/svg;filename=xiNET-output.svg,';
-		xmlAsUrl += encodeURIComponent(xml);
-		var win = window.open(xmlAsUrl, 'xiNET-output.svg');
+}
+
+/*
+xiNET.Controller.prototype.getMatchesCSV = function() {
+	var csv = '"Id","Protein1","PepPos1","PepSeq1","LinkPos1","Protein2","PepPos2","PepSeq2","LinkPos2","Score","Group"\r\n';
+	var matches = this.matches;
+	var matchCount = matches.length;
+	for (var i = 0; i < matchCount; i++){
+		var match = matches[i];
+		if (match.meetsFilterCriteria()){
+			csv += '"' + match.id + '","' + match.protein1 + '","' +match.pepPos1 + '","' 
+				+ match.pepSeq1 + '","' + match.linkPos1 + '","' 
+				+ match.protein2 + '","' + match.pepPos2 + '","'
+				+ match.pepSeq2 + '","' + match.linkPos2 + '","'
+				+ match.score + '","' + match.group + '"\r\n';
+		}
 	}
-};
+	return csv;
+}
 
-xiNET.Controller.prototype.message = function(text, preformatted) {
-    if (typeof this.messageElement !== 'undefined') {
-        if (typeof text === "object") {
-            text = JSON.stringify(text, null, ' ');
-            text = text.replace(/\\u0000/gi, '');
-            preformatted = true;
-        }
-        if (preformatted)
-            text = "<pre>" + text + "</pre>";
-        this.messageElement.innerHTML = text;
-    }
-};
+xiNET.Controller.prototype.getLinksCSV = function() {
+	var csv = '"Protein1","LinkPos1","LinkedRes1","Protein2","LinkPos2","LinkedRes2"\r\n';
+	
+	var pLinks = this.proteinLinks.values();
+	var pLinkCount = pLinks.length;
+	for (var pl = 0; pl < pLinkCount; pl++){
+		var resLinks = pLinks[pl].residueLinks.values();
+		var resLinkCount = resLinks.length;
+		for (var rl =0; rl < resLinkCount; rl ++) {
+			var residueLink = resLinks[rl];
+			var filteredMatches = residueLink.getFilteredMatches();
+			if (filteredMatches.length > 0){
+				csv += '"' + xiNET.Controller.bestId(residueLink.proteinLink.fromProtein) + '","' 
+					+ residueLink.fromResidue + '","' + residueLink.proteinLink.fromProtein.sequence[residueLink.fromResidue - 1] + '","'
+					+ xiNET.Controller.bestId(residueLink.proteinLink.toProtein) + '","'
+					+ residueLink.toResidue + '","';
+				if (residueLink.proteinLink.toProtein && residueLink.toResidue) {
+					csv += residueLink.proteinLink.toProtein.sequence[residueLink.toResidue - 1];
+				}
+				csv += '"\r\n';				
+			}
+		}		  		
+	}
+	return csv;
+}*/
 
-xiNET.Controller.prototype.addProtein = function(id, label, sequence, description, accession, size) {
+xiNET.Controller.bestId = function(protein){
+	if (protein.accession) {
+		return protein.accession;
+	}
+	if (protein.name) {
+		return protein.name;
+	}
+	return protein.id;
+}
+
+xiNET.Controller.prototype.addProtein = function(id, label, sequence, accession) {
     var newProt = new Protein(id, this, accession, label);
     newProt.setSequence(sequence);
-    newProt.init();
+    //~ newProt.init();
     this.proteins.set(id, newProt);
 };
 
 //Positions are one based
-xiNET.Controller.prototype.addMatch = function(pep1_protIDs, pep1_positions,
-        pep2_protIDs, pep2_positions,
-        id, score, linkPos1, linkPos2, pep1_seq, pep2_seq, autovalidated, validated, rejected, dataSetId) { //dataSetId param added for mathieu
-    var match = new Match(pep1_protIDs, pep1_positions, pep2_protIDs, pep2_positions,
-            id, score, this, linkPos1, linkPos2, pep1_seq, pep2_seq, autovalidated, validated, rejected, dataSetId);
-    this.matches.set(id, match);
+xiNET.Controller.prototype.addMatch = function(id, 
+				pep1_protIDs, pep1_positions, pep1_seq, linkPos1, 
+				pep2_protIDs, pep2_positions, pep2_seq, linkPos2,
+				score, dataSetId, autovalidated, validated, run_name, scan_number) { 
+    var match = new Match(this, id,
+				pep1_protIDs, pep1_positions, pep1_seq, linkPos1,
+				pep2_protIDs, pep2_positions, pep2_seq, linkPos2,
+				score, dataSetId, autovalidated, validated, run_name, scan_number);
     return match;
 };
 
@@ -385,7 +549,8 @@ xiNET.Controller.prototype.addMatches = function(matches) {
         //        alert(matches[i]);
         this.addMatch(matches[i][0], matches[i][1], matches[i][2], matches[i][3],
                 matches[i][4], matches[i][5], matches[i][6], matches[i][7],
-                matches[i][8], matches[i][9]);
+                matches[i][8], matches[i][9], matches[i][10], matches[i][11],
+                matches[i][12], matches[i][13], matches[i][14], matches[i][15]);
     }
 }
 
@@ -415,7 +580,7 @@ xiNET.Controller.prototype.addAnnotation = function(protId, annotName, startRes,
 
 		var annotation = new Annotation(annotName, startRes, endRes, colour);
 		if (protein.customAnnotations == null) {
-			protein.customAnnotations = new Array();
+			protein.customAnnotations = [];
 		}
 		protein.customAnnotations.push(annotation);
 	}
@@ -465,7 +630,7 @@ xiNET.Controller.prototype.addAnnotations = function(annotations) {
 }
 
 xiNET.Controller.prototype.getLayout = function() {
-    var myJSONText = JSON.stringify(this.proteins, null, '\t');
+    var myJSONText = JSON.stringify(this.proteins.values(), null, '\t');
     var viewportJSON = "";//ProtNet.svgElement.getAttribute("viewBox");
     var layout = myJSONText.replace(/\\u0000/gi, '');
     //+ "\n{co:" + this.cutOff +"}";
@@ -477,49 +642,44 @@ xiNET.Controller.prototype.setLayout = function(layoutJSON) {
 };
 
 xiNET.Controller.prototype.loadLayout = function() {
-    for (var prot in this.layout/*.proteins*/) {
-        var protState = this.layout[prot];
-        var protein = this.proteins.get(prot);
+    for (var prot in this.layout) {
+        var protLayout = this.layout[prot];
+        var protein = this.proteins.get(protLayout.id);
         if (protein !== undefined) {
-            protein.setPosition(protState["x"], protState["y"]);
-            // protein.toStick();
-            //~ if (typeof protState.annot !== 'undefined' && protState.annot != null) {
-                //~ if (protState.annot.length > 0) {
-                    //~ protein.customAnnotations = protState.annot;
-                    //~ protein.setPositionalFeatures(protein.customAnnotations);
-                //~ }
-            //~ }
-            
-            //~ if (protState["form"] === 1) {
-                if (typeof protState["stickZoom"] !== 'undefined') {
-                    protein.stickZoom = protState["stickZoom"];
-                    //~ protein.scale();
-                }
-                //~ protein.setRotation(protein.rotation);
-            //~ }
-            
-            if (typeof protState['rot'] !== 'undefined') {
-                protein.rotation = protState["rot"];
-            }
-
-            if (typeof protState["form"]) {
-                protein.setForm(protState["form"]);
-            }
-            
-			protein.setAllLineCoordinates();// watch out for this
-
-            if (typeof protState["parked"] !== 'undefined') {
-                protein.setParked(protState["parked"]);
-            }
-            if (protState["flipped"]) { //TODO: fix this
-                protein.toggleFlipped(); // change to setFlipped(protState["flipped"])
-            }
-            //~ if (protState["processedDAS"]) {
-                //~ protein.processedDAS = d3.map(protState["processedDAS"]);
-            //~ }
-            this.proteinLower.appendChild(protein.lowerGroup);
+              this.proteinLower.appendChild(protein.lowerGroup);
             this.proteinUpper.appendChild(protein.upperGroup);
+          protein.setPosition(protLayout["x"], protLayout["y"]);
+            if (typeof protLayout['rot'] !== 'undefined') {
+                protein.rotation = protLayout["rot"] - 0;
+            }
+  
+            if (protLayout["form"]) {
+				//~ if (protLayout["stickZoom"]) {
+                    protein.stickZoom = 1;//protLayout["stickZoom"];
+                //~ }  
+                protein.form = protLayout["form"] - 0;
+                // protein.form =1;
+                // protein.scale();
+                // protein.toStick();
+                //~ //protein.setRotation(protein.rotation);
+            }
+             //~ protein.form = 1;
+            //~ protein.init();
+            
+            //~ if (typeof protLayout["form"]) {
+              //~ 
+            //~ }
+            
+			//~ protein.setAllLineCoordinates();// watch out for this
+
+            if (typeof protLayout["parked"] !== 'undefined') {
+                protein.setParked(protLayout["parked"]);
+            }
+            if (protLayout["flipped"]) { //TODO: fix this
+                protein.toggleFlipped(); // change to setFlipped(protLayout["flipped"])
+            }
         }
+        else {console.log("!");}
     }
 
     // incase proteins have been added which are not included in layout -
@@ -596,7 +756,3 @@ xiNET.Controller.prototype.showAmbig = function(bool) {
     this.checkLinks();
 };
 
-//set the message element to use (optional - mainly for debugging)
-xiNET.Controller.prototype.setMessageElement = function(e) {
-    this.messageElement = e;
-};
