@@ -89,9 +89,7 @@ Protein.prototype.addLink = function(link) {
 };
 */
 
-
 //following stuff is not that important, its used by the layout in xiNET, its probably going to go
-
 
 Protein.prototype.countExternalLinks = function() {
     //~ if (this.isParked) {
@@ -154,3 +152,4 @@ Protein.prototype.addConnectedNodes = function(subgraph) {
     }
     return subgraph;
 };
+

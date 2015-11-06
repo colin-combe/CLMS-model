@@ -201,8 +201,7 @@ xiNET.Controller.prototype.clear = function() {
     this.selected = d3.map();
     this.selectedLinks = d3.map();
 
-    this.tooltip.setAttribute('visibility', 'hidden');
-    this.tooltip_bg.setAttribute('visibility', 'hidden');
+    this.hideTooltip();
 
     this.resetZoom();
     this.state = xiNET.Controller.MOUSE_UP;
@@ -292,7 +291,12 @@ xiNET.Controller.prototype.initProteins = function() {
 		prots[i].init();
 	}
 	this.sequenceInitComplete = true;
-	
+	//~ if (protCount < 3) {
+		//~ for (var j =0; j < protCount; j++){
+			//~ prots[j].busy = false;
+			//~ prots[j].setForm(1);
+		//~ }
+	//~ }
 	if (this.annotationSet){
 		xlv.setAnnotations(this.annotationSet);
 	}
@@ -327,9 +331,8 @@ xiNET.Controller.prototype.resetZoom = function() {
 };
 
 xiNET.Controller.prototype.exportSVG = function() {
-	var svgXml = this.svgElement.parentNode.innerHTML.replace(/<g class="PV_rotator".*?<\/g><\/g>/gi, "")
-    .replace(/<rect .*?\/rect>/i, "");//takes out large white background fill
-    
+	var svgXml = this.svgElement.parentNode.innerHTML.replace(/<rect .*?\/rect>/i, "");//take out white background fill
+    svgXml = svgXml.replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events" ')
     if (Blob) {
 		var blob = new Blob([svgXml], {type: "data:image/svg;charset=utf-8"});
 		saveAs(blob, "xiNET_output.svg");
