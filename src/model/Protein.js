@@ -11,22 +11,23 @@ function Protein(id, acc, name) {
     this.id = id; // id may not be accession
     this.accession = acc;
     this.name = name;
-    if (!this.name) {
+    if (!this.name && acc) {
 		this.name = acc;
+	} else {
+		this.name = id;
 	}
-    this.tooltip = this.name + ' [' + this.accession + ']';// + this.accession;
     //links
-    this.proteinLinks = d3.map();
-    //~ this.selfLink = null;//TODO: maybe dont need this, but xiNET is using it
+    this.proteinLinks = new Map();
+    this.selfLink = null;//TODO: maybe dont need this, but xiNET is using it
     //annotation scheme
-    //~ this.customAnnotations = null;//TODO: maybe dont need this, but xiNET is using it
+    this.annotatedRegions = null;//TODO: maybe dont need this, but xiNET is using it
 }	
     
 //sequence = amino acids in UPPERCASE, digits or lowercase can be used for modification info
 Protein.prototype.setSequence = function(sequence){
     //check for labeling modifications in sequence now, we're about to lose this info
     if (/\d/.test(sequence)) {//is there a digit in the sequence?
-        this.labeling = '';// as in silac labelling
+        this.isotopicLabeling = '';// as in silac labelling
         if (sequence.indexOf('K4') !== -1)
             this.labeling += 'K4';
         if (sequence.indexOf('K6') !== -1)
@@ -42,15 +43,9 @@ Protein.prototype.setSequence = function(sequence){
         if (sequence.indexOf('R10') !== -1)
             this.labeling += 'R10';
     }
-    if (typeof this.labeling !== 'undefined') {
-        this.labelSVG.innerHTML = '[' + this.labeling + '] ' + this.labelSVG.innerHTML;
-    }
     //remove modification site info from sequence
     this.sequence = sequence.replace(/[^A-Z]/g, '');
-    this.size = this.sequence.length;
 }
-
-
 
 Protein.prototype.isDecoy = function() {
 	if (!this.name){
@@ -77,6 +72,9 @@ Protein.prototype.addLink = function(link) {
     }
 };
 
+/*
+ * following aren't in uml diagram but leave in for now -  
+ */
 
 Protein.prototype.countExternalLinks = function() {
     //~ if (this.isParked) {
