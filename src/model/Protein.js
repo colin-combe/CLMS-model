@@ -97,8 +97,8 @@ Protein.prototype.countExternalLinks = function() {
 Protein.prototype.getSubgraph = function(subgraphs) {
    if (this.subgraph == null) { // don't check for undefined here
 		var subgraph = {
-			nodes: d3.map(),
-			links: d3.map()
+			nodes: new Map(),
+			links: new Map()
 		};
 		subgraph.nodes.set(this.id, this);
 		if (this.isParked === false) {

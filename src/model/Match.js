@@ -21,9 +21,12 @@ function Match(id,
   	this.group = dataSetId.toString().trim();
   	Match.groups.add(this.group);
 
-  	this.runName = run_name.toString().trim();
-  	this.scanNumber = scan_number.toString().trim();
-
+	if (run_name) {
+		this.runName = run_name.toString().trim();
+	}
+  	if (scan_number) {
+		this.scanNumber = scan_number.toString().trim();
+	}
   	//sanitise the inputs
 	//http://stackoverflow.com/questions/5515310/is-there-a-standard-function-to-check-for-null-undefined-or-blank-variables-in
 
@@ -34,10 +37,10 @@ function Match(id,
 			this.score = score;
 
 			if (!Match.maxScore || this.score > Match.maxScore) {
-				this.controller.scores.max = this.score;
+				Match.maxScore = this.score;
 			}
-			else if (this.score < this.controller.scores.min) {
-				this.controller.scores.min = this.score;
+			else if (!Match.minScore || this.score < Match.minScore) {
+				Match.minScore = this.score;
 			}
 		}
 	}
@@ -104,6 +107,7 @@ function Match(id,
 		this.pepSeq2 = pepSeq2.replace(Match.capitalsOnly, '');
 	}
 
+	var self = this;
 	pep1_positions = sanitisePositions(pep1_positions);
 	pep2_positions = sanitisePositions(pep2_positions);
 	linkPos1 = sanitisePositions(linkPos1);
@@ -124,14 +128,14 @@ function Match(id,
 				Match.eliminateQuotes.lastIndex = 0;
 				positions = positions.toString().replace(Match.eliminateQuotes, '');
 				//; or , as seperator (need comma incase input field was an array, which has just had toString called on it)
-				split.lastIndex = 0;
-				positions = positions.split(split);
+				Match.split.lastIndex = 0;
+				positions = positions.split(Match.split);
 				var posCount = positions.length;
 				for (var i2 = 0; i2 < posCount; i2++ ){
 					var pos = parseInt(positions[i2]);
 					if (isNaN(pos)) {
 						console.debug('Absurd non-numerical position. Match id:'
-							 + this.id + ". So-called 'position':" + positions[i2]);
+							 + self.id + ". So-called 'position':" + positions[i2]);
 					}
 					else {
 						positions[i2] = pos;

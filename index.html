@@ -11,14 +11,14 @@
 		<!--libraries-->
 		<script type="text/javascript" src="./vendor/backbone.js"></script>
 		<script type="text/javascript" src="./vendor/underscore.js"></script>
+		<script type="text/javascript" src="./demo/d3.js"></script> <!-- its just to read the text file, bit ugly -->
 		<!--xiNET-->
 		<script type="text/javascript" src="./src/controller/Init.js"></script>
 		<script type="text/javascript" src="./src/model/Match.js"></script>
-		<script type="text/javascript" src="./src/model/Link.js"></script>
 		<script type="text/javascript" src="./src/model/Protein.js"></script>
 		<script type="text/javascript" src="./src/model/Annotation.js"></script>
 		<script type="text/javascript" src="./src/model/ProteinLink.js"></script>
-		<script type="text/javascript" src="./src/model/ResidueLink.js"></script>
+		<script type="text/javascript" src="./src/model/CrossLink.js"></script>
 		<script type="text/javascript" src="./src/controller/xiNET_Storage.js"></script>
 		<script type="text/javascript" src="./src/controller/ReadCSV.js"></script>
 		<script type="text/javascript" src="./src/controller/Fasta.js"></script>
@@ -59,6 +59,8 @@
 			d3.text(path, "text/csv", function(text) {
 				xlv.clear();
 				xlv.readCSV(text);
+				
+				//~ d3.select(".main").text(xlv.crosslinks.values().length);
 			});
 			//~ }
 

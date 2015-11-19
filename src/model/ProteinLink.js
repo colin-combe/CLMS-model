@@ -15,7 +15,7 @@ ProteinLink.maxNoCrossLinks = 0;
 
 function ProteinLink(id, fromP, toP) {
 	this.id = id;
-	this.crossLinks = d3.map();
+	this.crossLinks = new Map();
 	this.fromProtein = fromP; //its the object. not the ID number
 	this.toProtein = toP; //its the object. not the ID number
 	this.ambig = false;
@@ -67,7 +67,7 @@ ProteinLink.prototype.setSelected = function(select) {
 ProteinLink.prototype.getFilteredMatches = function() {
 	var resLinks = this.crossLinks.values();
 	var resLinkCount = resLinks.length;
-	var filteredMatches = d3.map();
+	var filteredMatches = new Map();
 	for (var i = 0; i < resLinkCount; i++) {
 		var resLink = resLinks[i];
 		var mCount = resLink.matches.length;
@@ -118,8 +118,8 @@ ProteinLink.prototype.check = function() {
 
 		this.ambig = true;
 		var filteredResLinks = [];
-		var filteredMatches = d3.map();
-		var altProteinLinks = d3.map();
+		var filteredMatches = new Map();
+		var altProteinLinks = new Map();
 		for (var i = 0; i < resLinkCount; i++) {
 			var resLink = resLinks[i];
 			var resLinkMeetsCriteria = false;
