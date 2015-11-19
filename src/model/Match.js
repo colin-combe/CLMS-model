@@ -14,30 +14,26 @@ function Match(id,
 	
     this.id = id.toString().trim();
 
-  	this.residueLinks = [];//if the match is ambiguous it will relate to many residueLinks
+  	//if the match is ambiguous it will relate to many residueLinks
+  	this.residueLinks = [];
+    
     //for comparison of different data sets
-  	this.group = dataSetId;
-  	Match.groups = Match.groups || new Set();
+  	this.group = dataSetId.toString().trim();
   	Match.groups.add(this.group);
   	
-  	this.runName = run_name;
-  	this.scanNumber = scan_number;
+  	this.runName = run_name.toString().trim();
+  	this.scanNumber = scan_number.toString().trim();
   	
   	//sanitise the inputs  
     //http://stackoverflow.com/questions/5515310/is-there-a-standard-function-to-check-for-null-undefined-or-blank-variables-in
 
     //score - leaves this.score null if !isNaN(parseFloat(score)) 
-    if (typeof score != 'undefined' && score){
+    if (score){
 		score = parseFloat(score);
 		if (!isNaN(score)){
 			this.score = score;
-			if (this.controller.scores == null){
-					this.controller.scores = {
-						'min':this.score,
-						'max':this.score
-					};
-			}
-			if (this.score > this.controller.scores.max) {
+			
+			if (!Match.maxScore || this.score > Match.maxScore) {
 				this.controller.scores.max = this.score;
 			}
 			else if (this.score < this.controller.scores.min) {
@@ -47,54 +43,44 @@ function Match(id,
 	}
 	
 	//autovalidated - another attribute   
-	if (typeof autovalidated != 'undefined' && autovalidated){
-		autovalidated = autovalidated.trim();
+	if (autovalidated){
+		autovalidated = autovalidated.toString().trim();
 		if (autovalidated !== ''){
 			if (autovalidated == "t" || autovalidated == "true" || autovalidated === true){
 				this.autovalidated = true;
 			} else {
 				this.autovalidated = false;
 			}		
-			this.controller.autoValidatedFound = true;
+			Match.autoValidatedFound = true;
 		}
     }
     
     // used in Rappsilber Lab to record manual validation status
-    if (typeof validated != 'undefined' && validated){
-		validated = validated.trim();
-		if (validated !== ''){
-			this.validated = validated;	
-			this.controller.manualValidatedFound = true;
-		}
+    if (validated){
+		validated = validated.toString().trim();
+		this.validated = validated;	
+		Match.manualValidatedFound = true;
 	}
 		
 	//tidy up IDs, leaves protIDs null if empty, 'n/a' or '-'
 	// forbidden characters are ,;'"
-	var eliminateQuotes = /(['"])/g;
-	var split = /[;,]/g;
-	var capitalsOnly = /[^A-Z]/g;
 	function sanitiseProteinIDs(protIDs){
-		//~ if (protIDs){
-			protIDs = protIDs.toString().trim();
-			if (/*protIDs !== '' &&*/ protIDs !== '-' && protIDs !== 'n/a'){
-				// eliminate all forms of quotation mark
-				// - sooner or later they're going to screw up javascript, prob whilst trying to generate>parse JSON
-				eliminateQuotes.lastIndex = 0;
-				protIDs = protIDs.replace(eliminateQuotes, '');
-				split.lastIndex = 0;
-				protIDs = protIDs.split(split);			
-				var protIDCount = protIDs.length
-				for (var p2 = 0; p2 < protIDCount; p2++ ){
-					protIDs[p2] = protIDs[p2].trim();
-				}		
-			}
-			else {
-				protIDs = null;
-			}
-		//~ }
-		//~ else {
-			//~ protIDs = null;
-		//~ }		
+		protIDs = protIDs.toString().trim();
+		if (/*protIDs !== '' &&*/ protIDs !== '-' && protIDs !== 'n/a'){
+			// eliminate all forms of quotation mark
+			// - sooner or later they're going to screw up javascript, prob whilst trying to generate>parse JSON
+			Match.eliminateQuotes.lastIndex = 0;
+			protIDs = protIDs.replace(Match.eliminateQuotes, '');
+			Match.split.lastIndex = 0;
+			protIDs = protIDs.split(Match.split);			
+			var protIDCount = protIDs.length
+			for (var p = 0; p < protIDCount; p++ ){
+				protIDs[p] = protIDs[p].trim();
+			}		
+		}
+		else {
+			protIDs = null;
+		}
 		return protIDs;
 	}
 
@@ -102,34 +88,20 @@ function Match(id,
 	pep1_protIDs = sanitiseProteinIDs(pep1_protIDs);
 	pep2_protIDs = sanitiseProteinIDs(pep2_protIDs);
 
+	//these are the peptide sequences before the modification info is removed
+	//(these att's not shown in uml diagram...)
 	this.pepSeq1raw = pepSeq1;
 	this.pepSeq2raw = pepSeq2;
 	
+	this.pepSeq1 = null;
 	if (pepSeq1){
-		pepSeq1 = pepSeq1.trim();
-		if (pepSeq1){
-			capitalsOnly.lastindex = 0;
-			this.pepSeq1 = pepSeq1.replace(capitalsOnly, '');	
-		}
-		else{
-			this.pepSeq1 = null;
-		}	
+		Match.capitalsOnly.lastindex = 0;
+		this.pepSeq1 = pepSeq1.replace(Match.capitalsOnly, '');
 	}
-	else {
-		this.pepSeq1 = null;
-	}
-
+	this.pepSeq2 = null;
 	if (pepSeq2){
-		pepSeq2 = pepSeq2.trim();
-		if (pepSeq2){
-			capitalsOnly.lastindex = 0;
-			this.pepSeq2 = pepSeq2.replace(capitalsOnly, '');
-		} else {
-			this.pepSeq2 = null;
-		}
-	}
-	else {
-		this.pepSeq2 = null;
+		Match.capitalsOnly.lastindex = 0;
+		this.pepSeq2 = pepSeq2.replace(Match.capitalsOnly, '');
 	}
 	
 	pep1_positions = sanitisePositions(pep1_positions);
@@ -138,7 +110,7 @@ function Match(id,
 	linkPos2 = sanitisePositions(linkPos2);
 	
 	if (pep1_positions.length == 1 && pep2_positions.length == 1) {
-		this.controller.unambigLinkFound = true; 
+		Match.unambigLinkFound = true; 
 	}
 		
 	// tidy up postions (peptide and link positions), 
@@ -149,8 +121,8 @@ function Match(id,
 			positions = positions.toString().trim();
 			if (positions !== '' && positions !== '-' && positions !== 'n/a'){
 				// eliminate all forms of quotation mark 
-				eliminateQuotes.lastIndex = 0;
-				positions = positions.toString().replace(eliminateQuotes, '');
+				Match.eliminateQuotes.lastIndex = 0;
+				positions = positions.toString().replace(Match.eliminateQuotes, '');
 				//; or , as seperator (need comma incase input field was an array, which has just had toString called on it)
 				split.lastIndex = 0;
 				positions = positions.split(split);	
@@ -158,7 +130,7 @@ function Match(id,
 				for (var i2 = 0; i2 < posCount; i2++ ){
 					var pos = parseInt(positions[i2]);
 					if (isNaN(pos)) {
-						console.debug('Absurd non-numerical position. Match id:' 
+						console.debug('Absurd non-numerical position. Match id:'
 							 + this.id + ". So-called 'position':" + positions[i2]);
 					}
 					else {
@@ -180,13 +152,13 @@ function Match(id,
   	//0 = linker modified peptide (mono-link), 
   	// 1 = internally linked peptide (loop-link), 2 = cross-link 			
 	if (pep2_protIDs === null && (pep2_positions === null && linkPos2 === null)){
-		this.type = 0;
+		this.productType = 0;
 	}
 	else if (pep2_protIDs === null){
-		this.type = 1;
+		this.productType = 1;
 	}
 	else {
-		this.type = 2;
+		this.productType = 2;
 	}
 
 	// the protein IDs and residue numers we eventually want to get:-
@@ -195,7 +167,7 @@ function Match(id,
 	var iProt, jProt;
 	
 	if (pep1_protIDs) {
-		if (this.type === 0) { //its a linker modified peptide (mono-link) 
+		if (this.productType === 0) { //its a linker modified peptide (mono-link) 
 			if (pep1_positions !== null) { 
 				for (var i = 0; i < pep1_positions.length; i++) {
 					iProt = i;
@@ -220,7 +192,7 @@ function Match(id,
 				}		
 			}
 		} 
-		else if (this.type === 1){// its an internally linked peptide (loop-link)
+		else if (this.productType === 1){// its an internally linked peptide (loop-link)
 			if (pep1_positions !== null) { 
 				//loop to produce all alternative linkage site combinations for loop links
 				for (var i = 0; i < pep1_positions.length; i++) {
@@ -330,7 +302,7 @@ function Match(id,
 		}
 		
 		//identify homodimers: if peptides overlap its a homodimer, this bit of code is not quite finished
-		this.hd = false;//not that simple - single match may possibly be both homodimer link and inter protein link (if ambiguous)
+		this.confirmedInterSelflink = false;//not that simple - single match may possibly be both homodimer link and inter protein link (if ambiguous)
 		this.overlap = [];//again, not that simple - see note below
 		//if self link
 		if (p1ID === p2ID) {
@@ -349,7 +321,7 @@ function Match(id,
 					var pep2_end = pep2_start + (pep2length - 1);
 					if (pep1_start >= pep2_start && pep1_start <= pep2_end){
 					   //console.log("here");
-						this.hd = true;
+						this.confirmedInterSelflink = true;
 						this.overlap[0] = pep1_start - 1;
 						if (pep1_end < pep2_end) {
 							this.overlap[1] = pep1_end;											
@@ -358,7 +330,7 @@ function Match(id,
 						}
 					}
 					else if (pep2_start >= pep1_start && pep2_start <= pep1_end){
-						this.hd = true;
+						this.confirmedInterSelflink = true;
 						this.overlap[0] = pep2_start - 1;
 						if (pep2_end < pep1_end) {
 							this.overlap[1] = pep2_end;											
@@ -368,7 +340,7 @@ function Match(id,
 					}
 				}
 				else if (res1 === res2) {
-					this.hd = true;
+					this.confirmedInterSelflink = true;
 					this.overlap[0] = res1 -1;
 					this.overlap[1] = res2;
 				}
@@ -376,8 +348,8 @@ function Match(id,
 		}
 		
 		this.controller.matches.push(this);
-		//non of following are strictly necesssary, 
-		//burns some memory for convenience when making table of matches or outputing CSV
+		//non of following are strictly necesssary, because info is stored in assicated CrossLinks
+		//burns some memory for convenience when making table of matches or outputing CSV, etc
 		this.protein1 = pep1_protIDs;
 		this.pepPos1 = pep1_positions;
 		this.linkPos1 = linkPos1;
@@ -386,6 +358,15 @@ function Match(id,
 		this.linkPos2  = linkPos2; 
 	}
 }
+
+//static variables
+Match.groups = new Set();
+Match.autoValidatedFound = false;
+Match.manualValidatedFound = false;
+Match.unambigLinkFound = false; 
+Match.eliminateQuotes = /(['"])/g;
+Match.split = /[;,]/g;
+Match.capitalsOnly = /[^A-Z]/g;	
 	
 Match.prototype.associateWithLink = function (p1ID, p2ID, res1, res2, //following params may be null :-
 			pep1_start, pep1_length, pep2_start, pep2_length){	
