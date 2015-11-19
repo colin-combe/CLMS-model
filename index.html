@@ -4,33 +4,33 @@
 			<title>CLMS model</title>
 			<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 			<meta name="description" content="xiNET is a visualisation tool for cross-linking and mass spectrometry data." />
-			<meta name="keywords" content="xiNET, biologists, mass-spectrometrists, cross-linking, protein, complexes, 3d, models, rappsilber, software" />	
+			<meta name="keywords" content="xiNET, biologists, mass-spectrometrists, cross-linking, protein, complexes, 3d, models, rappsilber, software" />
 		<!--
 		<script type="text/javascript" src="./xiNET_2.0.0.js"></script>
 		-->
-        <!--libraries-->
-        <script type="text/javascript" src="./vendor/backbone.js"></script>
-        <script type="text/javascript" src="./vendor/underscore.js"></script>
-        <!--xiNET-->
-        <script type="text/javascript" src="./src/controller/Init.js"></script>
-        <script type="text/javascript" src="./src/model/Match.js"></script>
-        <script type="text/javascript" src="./src/model/Link.js"></script>
-        <script type="text/javascript" src="./src/model/Protein.js"></script>
-        <script type="text/javascript" src="./src/model/Annotation.js"></script>
-        <script type="text/javascript" src="./src/model/ProteinLink.js"></script>
-        <script type="text/javascript" src="./src/model/ResidueLink.js"></script>
-        <script type="text/javascript" src="./src/controller/xiNET_Storage.js"></script>
-        <script type="text/javascript" src="./src/controller/ReadCSV.js"></script>
-        <script type="text/javascript" src="./src/controller/Fasta.js"></script>
-	</head>	
+		<!--libraries-->
+		<script type="text/javascript" src="./vendor/backbone.js"></script>
+		<script type="text/javascript" src="./vendor/underscore.js"></script>
+		<!--xiNET-->
+		<script type="text/javascript" src="./src/controller/Init.js"></script>
+		<script type="text/javascript" src="./src/model/Match.js"></script>
+		<script type="text/javascript" src="./src/model/Link.js"></script>
+		<script type="text/javascript" src="./src/model/Protein.js"></script>
+		<script type="text/javascript" src="./src/model/Annotation.js"></script>
+		<script type="text/javascript" src="./src/model/ProteinLink.js"></script>
+		<script type="text/javascript" src="./src/model/ResidueLink.js"></script>
+		<script type="text/javascript" src="./src/controller/xiNET_Storage.js"></script>
+		<script type="text/javascript" src="./src/controller/ReadCSV.js"></script>
+		<script type="text/javascript" src="./src/controller/Fasta.js"></script>
+	</head>
 	<body>
 
-		<div id="main">			
+		<div id="main">
 		</div> <!-- MAIN -->
-	  	
+
 	  	<script type="text/javascript">
-	  	//<![CDATA[	  	
-			var config = [				
+	  	//<![CDATA[
+			var config = [
 				//~ {//TFIIF
 					//~ file:"./data/TFIIF.csv",
 					//~ cite:"<p>Data from <a href='http://www.nature.com/emboj/journal/v29/n4/full/emboj2009401a.html' target='_blank'>Chen ZA, Jawhari A, Fischer L, Buchen C, Tahir S, Kamenski T, Rasmussen M, Lariviere L, Bukowski-Wills J-C, Nilges M, Cramer P &amp; Rappsilber J (2010) Architecture of the RNA polymerase II–TFIIF complex revealed by cross-linking and mass spectrometry. The EMBO Journal 29: 717–726</a>.</p>"
@@ -47,22 +47,22 @@
 				{//NPC
 					file:"./demo/data/NPC.csv",
 					cite:"<p>Data from <a href='http://www.sciencedirect.com/science/article/pii/S0092867413014165' target='_blank'>Bui, K. H., von Appen, A., DiGuilio, A. L., Ori, A., Sparks, L., Mackmull, M.-T., Bock, T., Hagen, W., Andrés-Pons, A., Glavy, J. S., and Beck, M. (2013) Integrated Structural Analysis of the Human Nuclear Pore Complex Scaffold. Cell 155, 1233–1243</a>.</p>"
-				}				
+				}
 			];
-		
+
 			//~ window.addEventListener('load', function() {
 			var targetDiv = document.getElementById('networkContainer');
 			xlv = new xiNET.Controller(targetDiv);
-			
+
 			var path = config[0].file;
-							
+
 			d3.text(path, "text/csv", function(text) {
 				xlv.clear();
 				xlv.readCSV(text);
 			});
-			//~ }   
-			     
-            //]]>
+			//~ }
+
+			//]]>
 	  	</script>
 	</body>
 </html>

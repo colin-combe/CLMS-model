@@ -14,13 +14,13 @@ ProteinLink.maxNoCrossLinks = 0;
 //~ ProteinLink.prototype = new xiNET.Link();
 
 function ProteinLink(id, fromP, toP) {
-    this.id = id;
-    this.crossLinks = d3.map();
-    this.fromProtein = fromP; //its the object. not the ID number
-    this.toProtein = toP; //its the object. not the ID number
-    this.ambig = false;
-    
-    this.isSelected = false;
+	this.id = id;
+	this.crossLinks = d3.map();
+	this.fromProtein = fromP; //its the object. not the ID number
+	this.toProtein = toP; //its the object. not the ID number
+	this.ambig = false;
+
+	this.isSelected = false;
 }
 
 ProteinLink.prototype.isSelfLink = function() {
@@ -35,28 +35,28 @@ ProteinLink.prototype.hasConfirmedHomomultimer = function() {
 	return this.confirmedHomomultimer;
 }
 ProteinLink.prototype.getFromProtein = function() {
-    return this.fromProtein;
+	return this.fromProtein;
 };
 
 ProteinLink.prototype.getToProtein = function() {
-    return this.toProtein;
+	return this.toProtein;
 };
 
 
 /*
 ProteinLink.prototype.setSelected = function(select) {
-    if (select === true && this.isSelected === false) {
-        this.controller.selectedLinks.set(this.id, this);//ok, 
-        this.isSelected = true;
-        this.highlightLine.setAttribute("stroke", xiNET.selectedColour.toRGB());
+	if (select === true && this.isSelected === false) {
+		this.controller.selectedLinks.set(this.id, this);//ok,
+		this.isSelected = true;
+		this.highlightLine.setAttribute("stroke", xiNET.selectedColour.toRGB());
 		this.highlightLine.setAttribute("stroke-opacity", "1");
 		this.controller.linkSelectionChanged();
-    }
-    else if (select === false && this.isSelected === true) {
-        this.controller.selectedLinks.remove(this.id);
-        this.isSelected = false;
-        this.highlightLine.setAttribute("stroke-opacity", "0");
-        this.highlightLine.setAttribute("stroke", xiNET.highlightColour.toRGB());
+	}
+	else if (select === false && this.isSelected === true) {
+		this.controller.selectedLinks.remove(this.id);
+		this.isSelected = false;
+		this.highlightLine.setAttribute("stroke-opacity", "0");
+		this.highlightLine.setAttribute("stroke", xiNET.highlightColour.toRGB());
 		this.controller.linkSelectionChanged();
 	}
 };
@@ -65,52 +65,52 @@ ProteinLink.prototype.setSelected = function(select) {
 
 //its an array of match id's its going to return
 ProteinLink.prototype.getFilteredMatches = function() {
-    var resLinks = this.crossLinks.values();
-    var resLinkCount = resLinks.length;
-    var filteredMatches = d3.map();
-    for (var i = 0; i < resLinkCount; i++) {
-        var resLink = resLinks[i];
-        var mCount = resLink.matches.length;
-        for (var m = 0; m < mCount; m++) {
-            var match = resLink.matches[m];
-            if (match.meetsFilterCriteria()) {
-                filteredMatches.set(match.id);
-            }
-        }
-    }
-    return filteredMatches.keys();
+	var resLinks = this.crossLinks.values();
+	var resLinkCount = resLinks.length;
+	var filteredMatches = d3.map();
+	for (var i = 0; i < resLinkCount; i++) {
+		var resLink = resLinks[i];
+		var mCount = resLink.matches.length;
+		for (var m = 0; m < mCount; m++) {
+			var match = resLink.matches[m];
+			if (match.meetsFilterCriteria()) {
+				filteredMatches.set(match.id);
+			}
+		}
+	}
+	return filteredMatches.keys();
 };
 
 ProteinLink.prototype.check = function() {
 	//currently no representation of monolinks at proteinLink level (hence checks for this.toProtein !== null)
 	if (this.fromProtein.isParked || (this.toProtein !== null && this.toProtein.isParked)) {
-        this.hide();
-        return false;
-    }
-    if (this.selfLink() && this.controller.selfLinksShown === false) {
-        if (this.fromProtein.form === 0) {
-            this.hide();
-        } else {
-            var resLinks = this.crossLinks.values();
-            var resLinkCount = resLinks.length;
-            for (var i = 0; i < resLinkCount; i++) {
-                resLinks[i].hide();
-            }
-        }
-        return false;
-    }
-    if (this.hidden) {
-        if (this.fromProtein.form === 0 && (this.toProtein !== null && this.toProtein.form === 0)) {
-            this.hide();
-        } else {
-            var resLinks = this.crossLinks.values();
-            var resLinkCount = resLinks.length;
-            for (var i = 0; i < resLinkCount; i++) {
-                resLinks[i].hide();
-            }
-        }
-        return false;
-    }
+		this.hide();
+		return false;
+	}
+	if (this.selfLink() && this.controller.selfLinksShown === false) {
+		if (this.fromProtein.form === 0) {
+			this.hide();
+		} else {
+			var resLinks = this.crossLinks.values();
+			var resLinkCount = resLinks.length;
+			for (var i = 0; i < resLinkCount; i++) {
+				resLinks[i].hide();
+			}
+		}
+		return false;
+	}
+	if (this.hidden) {
+		if (this.fromProtein.form === 0 && (this.toProtein !== null && this.toProtein.form === 0)) {
+			this.hide();
+		} else {
+			var resLinks = this.crossLinks.values();
+			var resLinkCount = resLinks.length;
+			for (var i = 0; i < resLinkCount; i++) {
+				resLinks[i].hide();
+			}
+		}
+		return false;
+	}
 	var resLinks = this.crossLinks.values();
 	var resLinkCount = resLinks.length;
 	this.confirmedHomomultimer = false;
@@ -169,12 +169,12 @@ ProteinLink.prototype.check = function() {
 			/*if (this.selfLink()) {
 
 				if (this.confirmedHomomultimer) {
-					this.line.setAttribute("stroke", xiNET.homodimerLinkColour.toRGB());			
-					this.line.setAttribute("stroke-width", xiNET.homodimerLinkWidth);			
+					this.line.setAttribute("stroke", xiNET.homodimerLinkColour.toRGB());
+					this.line.setAttribute("stroke-width", xiNET.homodimerLinkWidth);
 				}
 				else {
-					this.line.setAttribute("stroke", "black");	
-					this.line.setAttribute("stroke-width", 1);			
+					this.line.setAttribute("stroke", "black");
+					this.line.setAttribute("stroke-width", 1);
 				}
 			}
 			this.show();*/
@@ -194,16 +194,16 @@ ProteinLink.prototype.check = function() {
 					showedResResLink = true;
 				}
 			}
-			return showedResResLink; //is this most sensible thing to return? Or false becuase ProteinLink was not shown? 
+			return showedResResLink; //is this most sensible thing to return? Or false becuase ProteinLink was not shown?
 		}
 	}
 };
 
 ProteinLink.prototype.getOtherEnd = function(protein) {
-    if (this.fromProtein === protein) {
-        return this.toProtein;
-    }
-    else {
-        return this.fromProtein;
-    }
+	if (this.fromProtein === protein) {
+		return this.toProtein;
+	}
+	else {
+		return this.fromProtein;
+	}
 };
