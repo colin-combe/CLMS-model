@@ -8,7 +8,7 @@
 
 "use strict";
 
-CrossLink.prototype = new xiNET.Link();
+//CrossLink.prototype = new xiNET.Link();
 
 function CrossLink(id, proteinLink, fromResidue, toResidue) {
     this.id = id;
@@ -21,8 +21,16 @@ function CrossLink(id, proteinLink, fromResidue, toResidue) {
     this.ambig = false;
 }
 
-CrossLink.prototype.selfLink = function() {// u r here
+CrossLink.prototype.isSelfLink = function() {
 	return (this.proteinLink.fromProtein === this.proteinLink.toProtein);
+}
+
+CrossLink.prototype.isAmbiguous = function() {
+	return this.ambig;
+}
+
+CrossLink.prototype.hasConfirmedHomomultimer = function() {
+	return this.confirmedHomomultimer;
 }
 
 CrossLink.prototype.getFromProtein = function() {
@@ -35,7 +43,7 @@ CrossLink.prototype.getToProtein = function() {
 
 CrossLink.prototype.getFilteredMatches = function() {
     this.ambig = true;
-    this.confirmedInterSelflink = false;
+    this.confirmedHomomultimer = false;
     this.intraMolecular = false; //i.e. type 1, loop link, intra peptide, internally linked peptide, etc 
     var filteredMatches = [];
     var count = this.matches? this.matches.length : 0;
@@ -47,7 +55,7 @@ CrossLink.prototype.getFilteredMatches = function() {
                 this.ambig = false;
             }
             if (match.hd === true) {
-                this.confirmedInterSelflink = true;
+                this.confirmedHomomultimer = true;
             }            
             if (match.type === 1){
 				this.intraMolecular = true;
@@ -107,7 +115,7 @@ CrossLink.prototype.check = function(filter) {
             //else this.line.setAttribute("stroke", "purple");//shouldn't happen				
 		}
         else if (this.selfLink() === true && this.colour == null){
-			if (this.confirmedInterSelflink === true) {
+			if (this.confirmedHomomultimer === true) {
 				this.line.setAttribute("stroke", xiNET.homodimerLinkColour.toRGB());			
 				this.line.setAttribute("transform", "scale(1, -1)");			
 				this.line.setAttribute("stroke-width", xiNET.homodimerLinkWidth);			

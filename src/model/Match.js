@@ -302,7 +302,7 @@ function Match(id,
 		}
 		
 		//identify homodimers: if peptides overlap its a homodimer, this bit of code is not quite finished
-		this.confirmedInterSelflink = false;//not that simple - single match may possibly be both homodimer link and inter protein link (if ambiguous)
+		this.confirmedHomomultimer = false;//not that simple - single match may possibly be both homodimer link and inter protein link (if ambiguous)
 		this.overlap = [];//again, not that simple - see note below
 		//if self link
 		if (p1ID === p2ID) {
@@ -321,7 +321,7 @@ function Match(id,
 					var pep2_end = pep2_start + (pep2length - 1);
 					if (pep1_start >= pep2_start && pep1_start <= pep2_end){
 					   //console.log("here");
-						this.confirmedInterSelflink = true;
+						this.confirmedHomomultimer = true;
 						this.overlap[0] = pep1_start - 1;
 						if (pep1_end < pep2_end) {
 							this.overlap[1] = pep1_end;											
@@ -330,7 +330,7 @@ function Match(id,
 						}
 					}
 					else if (pep2_start >= pep1_start && pep2_start <= pep1_end){
-						this.confirmedInterSelflink = true;
+						this.confirmedHomomultimer = true;
 						this.overlap[0] = pep2_start - 1;
 						if (pep2_end < pep1_end) {
 							this.overlap[1] = pep2_end;											
@@ -340,7 +340,7 @@ function Match(id,
 					}
 				}
 				else if (res1 === res2) {
-					this.confirmedInterSelflink = true;
+					this.confirmedHomomultimer = true;
 					this.overlap[0] = res1 -1;
 					this.overlap[1] = res2;
 				}

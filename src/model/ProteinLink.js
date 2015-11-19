@@ -27,6 +27,13 @@ ProteinLink.prototype.isSelfLink = function() {
 	return (this.fromProtein === this.toProtein);
 }
 
+ProteinLink.prototype.isAmbiguous = function() {
+	return this.ambig;
+}
+
+ProteinLink.prototype.hasConfirmedHomomultimer = function() {
+	return this.confirmedHomomultimer;
+}
 ProteinLink.prototype.getFromProtein = function() {
     return this.fromProtein;
 };
@@ -106,7 +113,7 @@ ProteinLink.prototype.check = function() {
     }
 	var resLinks = this.crossLinks.values();
 	var resLinkCount = resLinks.length;
-	this.confirmedInterSelflink = false;
+	this.confirmedHomomultimer = false;
 	if (this.fromProtein.form === 0 && (this.toProtein !== null && this.toProtein.form === 0)) {
 
 		this.ambig = true;
@@ -122,7 +129,7 @@ ProteinLink.prototype.check = function() {
 					var match = resLink.matches[m][0];
 					if (match.meetsFilterCriteria()) {
 						if (match.hd === true) {
-							this.confirmedInterSelflink = true;
+							this.confirmedHomomultimer = true;
 						}
 						if (resLinkMeetsCriteria === false) {
 							resLinkMeetsCriteria = true;
@@ -161,7 +168,7 @@ ProteinLink.prototype.check = function() {
 			this.dashedLine(this.ambig);
 			/*if (this.selfLink()) {
 
-				if (this.confirmedInterSelflink) {
+				if (this.confirmedHomomultimer) {
 					this.line.setAttribute("stroke", xiNET.homodimerLinkColour.toRGB());			
 					this.line.setAttribute("stroke-width", xiNET.homodimerLinkWidth);			
 				}
