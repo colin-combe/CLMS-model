@@ -14,8 +14,8 @@ function Match(id,
 	
     this.id = id.toString().trim();
 
-  	//if the match is ambiguous it will relate to many residueLinks
-  	this.residueLinks = [];
+  	//if the match is ambiguous it will relate to many crossLinks
+  	this.crossLinks = [];
     
     //for comparison of different data sets
   	this.group = dataSetId.toString().trim();
@@ -347,7 +347,6 @@ function Match(id,
 			//}
 		}
 		
-		this.controller.matches.push(this);
 		//non of following are strictly necesssary, because info is stored in assicated CrossLinks
 		//burns some memory for convenience when making table of matches or outputing CSV, etc
 		this.protein1 = pep1_protIDs;
@@ -414,48 +413,48 @@ Match.prototype.associateWithLink = function (p1ID, p2ID, res1, res2, //followin
 	}
 	// again, order id string by prot id or by residue if self-link
 	var endsReversedInResLinkId = false;
-	var residueLinkID;
+	var crossLinkID;
 	if (p1ID === p2ID || p2ID === null) {
 		if ((res1 - 0) < (res2 - 0) || res2 === null) {
-			residueLinkID = res1 + "-" + res2;
+			crossLinkID = res1 + "-" + res2;
 		}
 		else {
-			residueLinkID = res2 + "-" + res1;
+			crossLinkID = res2 + "-" + res1;
 			endsReversedInResLinkId = true;
 		}
 	}
 	else if (p1ID < p2ID) {
-		residueLinkID = res1 + "-" +  res2;
+		crossLinkID = res1 + "-" +  res2;
 	}
 	else {
-		residueLinkID =  res2 + "-" + res1;
+		crossLinkID =  res2 + "-" + res1;
 		endsReversedInResLinkId = true;
 	}
 
 	//get or create residue link
-	var resLink = link.residueLinks.get(residueLinkID);
+	var resLink = link.crossLinks.get(crossLinkID);
 	if (resLink === undefined) {
 		//WATCH OUT - residues need to be in correct order
 		if (p1ID === p2ID) {
 			if ((res1 - 0) < (res2 - 0) || res2 === 'n/a') {//TODO: the 'n/a' is a mistake? Already dealt with?
-				resLink = new ResidueLink(residueLinkID, link, res1, res2, this.controller);
+				resLink = new CrossLink(crossLinkID, link, res1, res2, this.controller);
 			} else {
-				resLink = new ResidueLink(residueLinkID, link, res2, res1, this.controller);
+				resLink = new CrossLink(crossLinkID, link, res2, res1, this.controller);
 			}
 		}
 		//
 		else if (p1ID == link.fromProtein.id) {
-			resLink = new ResidueLink(residueLinkID, link, res1, res2, this.controller);
+			resLink = new CrossLink(crossLinkID, link, res1, res2, this.controller);
 		}
 		else {
 			//WATCH OUT - residues need to be in correct oprder
-			resLink = new ResidueLink(residueLinkID, link, res2, res1, this.controller);
+			resLink = new CrossLink(crossLinkID, link, res2, res1, this.controller);
 		}
-		link.residueLinks.set(residueLinkID, resLink);
+		link.crossLinks.set(crossLinkID, resLink);
 		if (this.controller.proteins.size() > 1) {
-			var linkCount = link.residueLinks.size();
-			if (linkCount > ProteinLink.maxNoResidueLinks) {
-				ProteinLink.maxNoResidueLinks = linkCount;
+			var linkCount = link.crossLinks.size();
+			if (linkCount > ProteinLink.maxNoCrossLinks) {
+				ProteinLink.maxNoCrossLinks = linkCount;
 			}
 		}
 	}
@@ -469,7 +468,7 @@ Match.prototype.associateWithLink = function (p1ID, p2ID, res1, res2, //followin
 	} else {
 		resLink.matches.push([this, pep2_start, pep2_length, pep1_start, pep1_length]);
 	}	
-	this.residueLinks.push(resLink);	
+	this.crossLinks.push(resLink);	
 }
 
 Match.prototype.meetsFilterCriteria = function() {
@@ -491,7 +490,7 @@ Match.prototype.meetsFilterCriteria = function() {
 }
 
 Match.prototype.isAmbig = function() {
-    if (this.residueLinks.length > 1) {
+    if (this.crossLinks.length > 1) {
         return true;
     }
     return false;

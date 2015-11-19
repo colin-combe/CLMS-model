@@ -9,13 +9,13 @@
 "use strict";
 
 //static variable used to calculate width of the background line
-ProteinLink.maxNoResidueLinks = 0;
+ProteinLink.maxNoCrossLinks = 0;
 
 //~ ProteinLink.prototype = new xiNET.Link();
 
 function ProteinLink(id, fromP, toP) {
     this.id = id;
-    this.residueLinks = d3.map();
+    this.crossLinks = d3.map();
     this.fromProtein = fromP; //its the object. not the ID number
     this.toProtein = toP; //its the object. not the ID number
     this.ambig = false;
@@ -58,7 +58,7 @@ ProteinLink.prototype.setSelected = function(select) {
 
 //its an array of match id's its going to return
 ProteinLink.prototype.getFilteredMatches = function() {
-    var resLinks = this.residueLinks.values();
+    var resLinks = this.crossLinks.values();
     var resLinkCount = resLinks.length;
     var filteredMatches = d3.map();
     for (var i = 0; i < resLinkCount; i++) {
@@ -84,7 +84,7 @@ ProteinLink.prototype.check = function() {
         if (this.fromProtein.form === 0) {
             this.hide();
         } else {
-            var resLinks = this.residueLinks.values();
+            var resLinks = this.crossLinks.values();
             var resLinkCount = resLinks.length;
             for (var i = 0; i < resLinkCount; i++) {
                 resLinks[i].hide();
@@ -96,7 +96,7 @@ ProteinLink.prototype.check = function() {
         if (this.fromProtein.form === 0 && (this.toProtein !== null && this.toProtein.form === 0)) {
             this.hide();
         } else {
-            var resLinks = this.residueLinks.values();
+            var resLinks = this.crossLinks.values();
             var resLinkCount = resLinks.length;
             for (var i = 0; i < resLinkCount; i++) {
                 resLinks[i].hide();
@@ -104,9 +104,9 @@ ProteinLink.prototype.check = function() {
         }
         return false;
     }
-	var resLinks = this.residueLinks.values();
+	var resLinks = this.crossLinks.values();
 	var resLinkCount = resLinks.length;
-	this.hd = false;
+	this.confirmedInterSelflink = false;
 	if (this.fromProtein.form === 0 && (this.toProtein !== null && this.toProtein.form === 0)) {
 
 		this.ambig = true;
@@ -122,7 +122,7 @@ ProteinLink.prototype.check = function() {
 					var match = resLink.matches[m][0];
 					if (match.meetsFilterCriteria()) {
 						if (match.hd === true) {
-							this.hd = true;
+							this.confirmedInterSelflink = true;
 						}
 						if (resLinkMeetsCriteria === false) {
 							resLinkMeetsCriteria = true;
@@ -130,8 +130,8 @@ ProteinLink.prototype.check = function() {
 						}
 						filteredMatches.set(match.id, match);
 						if (match.isAmbig()) {
-							for (var mrl = 0; mrl < match.residueLinks.length; mrl++) {
-								altProteinLinks.set(match.residueLinks[mrl].proteinLink.id);
+							for (var mrl = 0; mrl < match.crossLinks.length; mrl++) {
+								altProteinLinks.set(match.crossLinks[mrl].proteinLink.id);
 							}
 						}
 						else {
@@ -155,13 +155,13 @@ ProteinLink.prototype.check = function() {
 			} else {
 				this.tooltip += ' matches)';
 			}
-			this.w = filteredResLinkCount * (45 / ProteinLink.maxNoResidueLinks);
+			this.w = filteredResLinkCount * (45 / ProteinLink.maxNoCrossLinks);
 			//acknowledge following line is a bit strange
 			this.ambig = (this.ambig && (altProteinLinks.keys().length > 1));
 			this.dashedLine(this.ambig);
 			/*if (this.selfLink()) {
 
-				if (this.hd) {
+				if (this.confirmedInterSelflink) {
 					this.line.setAttribute("stroke", xiNET.homodimerLinkColour.toRGB());			
 					this.line.setAttribute("stroke-width", xiNET.homodimerLinkWidth);			
 				}

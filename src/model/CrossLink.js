@@ -3,14 +3,14 @@
 //
 //		author: Colin Combe
 //		
-//		ResidueLink.js
+//		CrossLink.js
 // 		the class representing a residue-residue link
 
 "use strict";
 
-ResidueLink.prototype = new xiNET.Link();
+CrossLink.prototype = new xiNET.Link();
 
-function ResidueLink(id, proteinLink, fromResidue, toResidue) {
+function CrossLink(id, proteinLink, fromResidue, toResidue) {
     this.id = id;
     //    this.matches = new Array(0); //we don't initialise this here 
     // (save some memory in use case where there is no match info, only link info)
@@ -21,21 +21,21 @@ function ResidueLink(id, proteinLink, fromResidue, toResidue) {
     this.ambig = false;
 }
 
-ResidueLink.prototype.selfLink = function() {
+CrossLink.prototype.selfLink = function() {// u r here
 	return (this.proteinLink.fromProtein === this.proteinLink.toProtein);
 }
 
-ResidueLink.prototype.getFromProtein = function() {
+CrossLink.prototype.getFromProtein = function() {
     return this.proteinLink.fromProtein;
 };
 
-ResidueLink.prototype.getToProtein = function() {
+CrossLink.prototype.getToProtein = function() {
     return this.proteinLink.toProtein;
 };
 
-ResidueLink.prototype.getFilteredMatches = function() {
+CrossLink.prototype.getFilteredMatches = function() {
     this.ambig = true;
-    this.hd = false;
+    this.confirmedInterSelflink = false;
     this.intraMolecular = false; //i.e. type 1, loop link, intra peptide, internally linked peptide, etc 
     var filteredMatches = [];
     var count = this.matches? this.matches.length : 0;
@@ -47,7 +47,7 @@ ResidueLink.prototype.getFilteredMatches = function() {
                 this.ambig = false;
             }
             if (match.hd === true) {
-                this.hd = true;
+                this.confirmedInterSelflink = true;
             }            
             if (match.type === 1){
 				this.intraMolecular = true;
@@ -58,7 +58,7 @@ ResidueLink.prototype.getFilteredMatches = function() {
 };
 
 //used when filter changed
-ResidueLink.prototype.check = function(filter) {
+CrossLink.prototype.check = function(filter) {
     if (this.controller.selfLinkShown === false && this.selfLink()) {
         this.hide();
         return false;
@@ -107,7 +107,7 @@ ResidueLink.prototype.check = function(filter) {
             //else this.line.setAttribute("stroke", "purple");//shouldn't happen				
 		}
         else if (this.selfLink() === true && this.colour == null){
-			if (this.hd === true) {
+			if (this.confirmedInterSelflink === true) {
 				this.line.setAttribute("stroke", xiNET.homodimerLinkColour.toRGB());			
 				this.line.setAttribute("transform", "scale(1, -1)");			
 				this.line.setAttribute("stroke-width", xiNET.homodimerLinkWidth);			
