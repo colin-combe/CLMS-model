@@ -63,7 +63,7 @@ Protein.prototype.addLink = function(link) {
 	if (!this.proteinLinks.has(link.id)) {
 		this.proteinLinks.set(link.id, link);
 	}
-	if (link.selfLink() === true) {
+	if (link.isSelfLink() === true) {
 		this.selfLink = link;
 		if (this.size) this.selfLink.initSelfLinkSVG();
 	}

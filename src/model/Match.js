@@ -7,13 +7,16 @@
 
 "use strict";
 
-function Match(id,
+function Match(controller, id,
 				pep1_protIDs, pep1_positions, pepSeq1, linkPos1,
 				pep2_protIDs, pep2_positions, pepSeq2, linkPos2,
 				score, dataSetId, autovalidated, validated, run_name, scan_number){
 
 	this.id = id.toString().trim();
 
+	//temp?
+	this.controller = controller;//reference to controlling xiNET.Controller object 
+	
   	//if the match is ambiguous it will relate to many crossLinks
   	this.crossLinks = [];
 
@@ -351,6 +354,7 @@ function Match(id,
 			//}
 		}
 
+		this.controller.matches.push(this);
 		//non of following are strictly necesssary, because info is stored in assicated CrossLinks
 		//burns some memory for convenience when making table of matches or outputing CSV, etc
 		this.protein1 = pep1_protIDs;
@@ -455,8 +459,8 @@ Match.prototype.associateWithLink = function (p1ID, p2ID, res1, res2, //followin
 			resLink = new CrossLink(crossLinkID, link, res2, res1, this.controller);
 		}
 		link.crossLinks.set(crossLinkID, resLink);
-		if (this.controller.proteins.size() > 1) {
-			var linkCount = link.crossLinks.size();
+		if (this.controller.proteins.keys().length > 1) {
+			var linkCount = link.crossLinks.keys().length;
 			if (linkCount > ProteinLink.maxNoCrossLinks) {
 				ProteinLink.maxNoCrossLinks = linkCount;
 			}
