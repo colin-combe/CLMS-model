@@ -459,6 +459,7 @@ Match.prototype.associateWithLink = function (p1ID, p2ID, res1, res2, //followin
 			resLink = new CrossLink(crossLinkID, link, res2, res1, this.controller);
 		}
 		link.crossLinks.set(crossLinkID, resLink);
+		this.controller.crossLinks.set(crossLinkID, resLink);
 		if (this.controller.proteins.keys().length > 1) {
 			var linkCount = link.crossLinks.keys().length;
 			if (linkCount > ProteinLink.maxNoCrossLinks) {

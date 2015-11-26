@@ -28,6 +28,7 @@ xiNET.Controller.prototype.clear = function() {
 
 	this.proteins = new Map();
 	this.proteinLinks = new Map();
+	this.crossLinks = new Map();
 	this.matches = [];
 	//~ this.groups = new Set();
 	this.subgraphs = [];
