@@ -157,8 +157,8 @@ CLMS.model.ProteinLink.prototype.check = function() {
 			this.tooltip = this.id + ', ' + filteredResLinkCount + ' unique cross-link';
 			if (filteredResLinkCount > 1)
 				this.tooltip += 's';
-			this.tooltip += ' (' + filteredCLMS.model.Matches.keys().length;
-			if (filteredCLMS.model.Matches.keys().length === 1) {
+			this.tooltip += ' (' + filteredCLMS.model.SpectrumMatches.keys().length;
+			if (filteredCLMS.model.SpectrumMatches.keys().length === 1) {
 				this.tooltip += ' match)';
 			} else {
 				this.tooltip += ' matches)';

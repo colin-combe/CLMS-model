@@ -3,11 +3,11 @@
 //
 //		author: Colin Combe
 //
-//		CLMS.model.Match.js
+//		CLMS.model.SpectrumMatch.js
 
 "use strict";
 
-CLMS.model.Match = function (containingModel, id,
+CLMS.model.SpectrumMatch = function (containingModel, id,
 				pep1_protIDs, pep1_positions, pepSeq1, linkPos1,
 				pep2_protIDs, pep2_positions, pepSeq2, linkPos2,
 				score, dataSetId, autovalidated, validated, run_name, scan_number){
@@ -22,7 +22,7 @@ CLMS.model.Match = function (containingModel, id,
 
 	//for comparison of different data sets
   	this.group = dataSetId.toString().trim();
-  	//~ CLMS.model.Match.groups.add(this.group);
+  	//~ CLMS.model.SpectrumMatch.groups.add(this.group);
 
 	if (run_name) {
 		this.runName = run_name.toString().trim();
@@ -50,7 +50,7 @@ CLMS.model.Match = function (containingModel, id,
 			} else {
 				this.autovalidated = false;
 			}
-			CLMS.model.Match.autoValidatedFound = true;
+			CLMS.model.SpectrumMatch.autoValidatedFound = true;
 		}
 	}
 
@@ -58,7 +58,7 @@ CLMS.model.Match = function (containingModel, id,
 	if (validated){
 		validated = validated.toString().trim();
 		this.validated = validated;
-		CLMS.model.Match.manualValidatedFound = true;
+		CLMS.model.SpectrumMatch.manualValidatedFound = true;
 	}
 
 	//tidy up IDs, leaves protIDs null if empty, 'n/a' or '-'
@@ -68,10 +68,10 @@ CLMS.model.Match = function (containingModel, id,
 		if (/*protIDs !== '' &&*/ protIDs !== '-' && protIDs !== 'n/a'){
 			// eliminate all forms of quotation mark
 			// - sooner or later they're going to screw up javascript, prob whilst trying to generate>parse JSON
-			CLMS.model.Match.eliminateQuotes.lastIndex = 0;
-			protIDs = protIDs.replace(CLMS.model.Match.eliminateQuotes, '');
-			CLMS.model.Match.split.lastIndex = 0;
-			protIDs = protIDs.split(CLMS.model.Match.split);
+			CLMS.model.SpectrumMatch.eliminateQuotes.lastIndex = 0;
+			protIDs = protIDs.replace(CLMS.model.SpectrumMatch.eliminateQuotes, '');
+			CLMS.model.SpectrumMatch.split.lastIndex = 0;
+			protIDs = protIDs.split(CLMS.model.SpectrumMatch.split);
 			var protIDCount = protIDs.length
 			for (var p = 0; p < protIDCount; p++ ){
 				protIDs[p] = protIDs[p].trim();
@@ -94,13 +94,13 @@ CLMS.model.Match = function (containingModel, id,
 
 	this.pepSeq1 = null;
 	if (pepSeq1){
-		CLMS.model.Match.capitalsOnly.lastindex = 0;
-		this.pepSeq1 = pepSeq1.replace(CLMS.model.Match.capitalsOnly, '');
+		CLMS.model.SpectrumMatch.capitalsOnly.lastindex = 0;
+		this.pepSeq1 = pepSeq1.replace(CLMS.model.SpectrumMatch.capitalsOnly, '');
 	}
 	this.pepSeq2 = null;
 	if (pepSeq2){
-		CLMS.model.Match.capitalsOnly.lastindex = 0;
-		this.pepSeq2 = pepSeq2.replace(CLMS.model.Match.capitalsOnly, '');
+		CLMS.model.SpectrumMatch.capitalsOnly.lastindex = 0;
+		this.pepSeq2 = pepSeq2.replace(CLMS.model.SpectrumMatch.capitalsOnly, '');
 	}
 
 	var self = this;
@@ -110,7 +110,7 @@ CLMS.model.Match = function (containingModel, id,
 	linkPos2 = sanitisePositions(linkPos2);
 
 	if (pep1_positions.length == 1 && pep2_positions.length == 1) {
-		CLMS.model.Match.unambigLinkFound = true;
+		CLMS.model.SpectrumMatch.unambigLinkFound = true;
 	}
 
 	// tidy up postions (peptide and link positions),
@@ -121,16 +121,16 @@ CLMS.model.Match = function (containingModel, id,
 			positions = positions.toString().trim();
 			if (positions !== '' && positions !== '-' && positions !== 'n/a'){
 				// eliminate all forms of quotation mark
-				CLMS.model.Match.eliminateQuotes.lastIndex = 0;
-				positions = positions.toString().replace(CLMS.model.Match.eliminateQuotes, '');
+				CLMS.model.SpectrumMatch.eliminateQuotes.lastIndex = 0;
+				positions = positions.toString().replace(CLMS.model.SpectrumMatch.eliminateQuotes, '');
 				//; or , as seperator (need comma incase input field was an array, which has just had toString called on it)
-				CLMS.model.Match.split.lastIndex = 0;
-				positions = positions.split(CLMS.model.Match.split);
+				CLMS.model.SpectrumMatch.split.lastIndex = 0;
+				positions = positions.split(CLMS.model.SpectrumMatch.split);
 				var posCount = positions.length;
 				for (var i2 = 0; i2 < posCount; i2++ ){
 					var pos = parseInt(positions[i2]);
 					if (isNaN(pos)) {
-						console.debug('Absurd non-numerical position. CLMS.model.Match id:'
+						console.debug('Absurd non-numerical position. CLMS.model.SpectrumMatch id:'
 							 + self.id + ". So-called 'position':" + positions[i2]);
 					}
 					else {
@@ -360,14 +360,14 @@ CLMS.model.Match = function (containingModel, id,
 }
 
 //static variables
-CLMS.model.Match.autoValidatedFound = false;
-CLMS.model.Match.manualValidatedFound = false;
-CLMS.model.Match.unambigLinkFound = false;
-CLMS.model.Match.eliminateQuotes = /(['"])/g;
-CLMS.model.Match.split = /[;,]/g;
-CLMS.model.Match.capitalsOnly = /[^A-Z]/g;
+CLMS.model.SpectrumMatch.autoValidatedFound = false;
+CLMS.model.SpectrumMatch.manualValidatedFound = false;
+CLMS.model.SpectrumMatch.unambigLinkFound = false;
+CLMS.model.SpectrumMatch.eliminateQuotes = /(['"])/g;
+CLMS.model.SpectrumMatch.split = /[;,]/g;
+CLMS.model.SpectrumMatch.capitalsOnly = /[^A-Z]/g;
 
-CLMS.model.Match.prototype.associateWithLink = function (p1ID, p2ID, res1, res2, //following params may be null :-
+CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res1, res2, //following params may be null :-
 			pep1_start, pep1_length, pep2_start, pep2_length){
 	// we don't want two different ID's, e.g. one thats "33-66" and one thats "66-33"
 	//following puts lower protein_ID first in link_ID
@@ -476,7 +476,7 @@ CLMS.model.Match.prototype.associateWithLink = function (p1ID, p2ID, res1, res2,
 	this.crossLinks.push(resLink);
 }
 
-CLMS.model.Match.prototype.meetsFilterCriteria = function() {
+CLMS.model.SpectrumMatch.prototype.meetsFilterCriteria = function() {
 	if (this.isAmbig() && this.containingModel.ambigShown === false) {
 		return false;
 	}
@@ -494,7 +494,7 @@ CLMS.model.Match.prototype.meetsFilterCriteria = function() {
 	}
 }
 
-CLMS.model.Match.prototype.isAmbig = function() {
+CLMS.model.SpectrumMatch.prototype.isAmbig = function() {
 	if (this.crossLinks.length > 1) {
 		return true;
 	}

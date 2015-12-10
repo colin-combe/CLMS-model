@@ -44,7 +44,7 @@
 				var l = rawMatches.length;
 				console.log("l " + l);
 				for (var i = 0; i < l; i++) {
-					var match = new CLMS.model.Match (this, tempMatches[i][0], tempMatches[i][1], tempMatches[i][2], tempMatches[i][3],
+					var match = new CLMS.model.SpectrumMatch (this, tempMatches[i][0], tempMatches[i][1], tempMatches[i][2], tempMatches[i][3],
 					tempMatches[i][4], tempMatches[i][5], tempMatches[i][6], tempMatches[i][7],
 					tempMatches[i][8], tempMatches[i][9], tempMatches[i][10], tempMatches[i][11],
 					tempMatches[i][12], tempMatches[i][13], tempMatches[i][14], tempMatches[i][15]);

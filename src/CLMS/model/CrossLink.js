@@ -80,13 +80,13 @@ CLMS.model.CrossLink.prototype.check = function(filter) {
 		this.show();
 		return true;
 	}
-	var filteredMatches = this.getFilteredCLMS.model.Matches();
-	var countFilteredMatches = filteredCLMS.model.Matches.length;
+	var filteredMatches = this.getFilteredCLMS.model.SpectrumMatches();
+	var countFilteredMatches = filteredCLMS.model.SpectrumMatches.length;
 	if (countFilteredMatches > 0) {
 		/*this.tooltip = this.proteinLink.fromProtein.labelText + '_' + this.fromResidue
 					+ "-"  + ((this.proteinLink.toProtein != null)? this.proteinLink.toProtein.labelText:'null')
-					+ '_' + this.toResidue + ' (' + countFilteredCLMS.model.Matches;
-		if (countFilteredCLMS.model.Matches == 1) {
+					+ '_' + this.toResidue + ' (' + countFilteredCLMS.model.SpectrumMatches;
+		if (countFilteredCLMS.model.SpectrumMatches == 1) {
 			this.tooltip += ' match)';
 		} else {
 			this.tooltip += ' matches)';
@@ -95,8 +95,8 @@ CLMS.model.CrossLink.prototype.check = function(filter) {
 		this.dashedLine(this.ambig);
 		if (this.controller.groups.values().length > 1 && this.controller.groups.values().length < 5) {
 			var groupCheck = new Set();
-			for (var i=0; i < countFilteredCLMS.model.Matches; i++) {
-				var match = filteredCLMS.model.Matches[i][0];//fix this weirdness with array?
+			for (var i=0; i < countFilteredCLMS.model.SpectrumMatches; i++) {
+				var match = filteredCLMS.model.SpectrumMatches[i][0];//fix this weirdness with array?
 				groupCheck.add(match.group);
 			}
 			if (groupCheck.values().length == 1){
