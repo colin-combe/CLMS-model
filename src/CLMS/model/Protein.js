@@ -3,11 +3,11 @@
 //
 //		authors: Lutz Fischer, Colin Combe
 //
-//		Protein.js
+//		CLMS.model.Protein.js
 
 "use strict";
 
-function Protein(id, acc, name) {
+CLMS.model.Protein = function (id, acc, name) {
 	this.id = id; // id may not be accession
 	this.accession = acc;
 	this.name = name;
@@ -24,7 +24,7 @@ function Protein(id, acc, name) {
 }
 
 //sequence = amino acids in UPPERCASE, digits or lowercase can be used for modification info
-Protein.prototype.setSequence = function(sequence){
+CLMS.model.Protein.prototype.setSequence = function(sequence){
 	//check for labeling modifications in sequence now, we're about to lose this info
 	if (/\d/.test(sequence)) {//is there a digit in the sequence?
 		this.isotopicLabeling = '';// as in silac labelling
@@ -47,7 +47,7 @@ Protein.prototype.setSequence = function(sequence){
 	this.sequence = sequence.replace(/[^A-Z]/g, '');
 }
 
-Protein.prototype.isDecoy = function() {
+CLMS.model.Protein.prototype.isDecoy = function() {
 	if (!this.name){
 		return false;
 	}
@@ -59,7 +59,7 @@ Protein.prototype.isDecoy = function() {
 };
 
 
-Protein.prototype.addLink = function(link) {
+CLMS.model.Protein.prototype.addLink = function(link) {
 	if (!this.proteinLinks.has(link.id)) {
 		this.proteinLinks.set(link.id, link);
 	}
@@ -76,7 +76,7 @@ Protein.prototype.addLink = function(link) {
  * following aren't in uml diagram but leave in for now -
  */
 
-Protein.prototype.countExternalLinks = function() {
+CLMS.model.Protein.prototype.countExternalLinks = function() {
 	//~ if (this.isParked) {
 		//~ return 0;
 	//~ }
@@ -94,7 +94,7 @@ Protein.prototype.countExternalLinks = function() {
 	return countExternal;
 };
 
-Protein.prototype.getSubgraph = function(subgraphs) {
+CLMS.model.Protein.prototype.getSubgraph = function(subgraphs) {
    if (this.subgraph == null) { // don't check for undefined here
 		var subgraph = {
 			nodes: new Map(),
@@ -109,21 +109,21 @@ Protein.prototype.getSubgraph = function(subgraphs) {
 	return this.subgraph;
 };
 
-Protein.prototype.addConnectedNodes = function(subgraph) {
+CLMS.model.Protein.prototype.addConnectedNodes = function(subgraph) {
 	var links = this.proteinLinks.values();
 	var c = links.length;
 	for (var l = 0; l < c; l++) {
 		var link = links[l];
 		//visible, non-self links only
-		if (link.fromProtein !== link.toProtein && link.check() === true) {
+		if (link.fromCLMS.model.Protein !== link.toCLMS.model.Protein && link.check() === true) {
 			if (!subgraph.links.has(link.id)) {
 				subgraph.links.set(link.id, link);
 				var otherEnd;
-				if (link.getFromProtein() === this) {
-					otherEnd = link.getToProtein();
+				if (link.getFromCLMS.model.Protein() === this) {
+					otherEnd = link.getToCLMS.model.Protein();
 				}
 				else {
-					otherEnd = link.getFromProtein();
+					otherEnd = link.getFromCLMS.model.Protein();
 				}
 				if (otherEnd !== null) {
 					if (!subgraph.nodes.has(otherEnd.id)) {

@@ -9,8 +9,9 @@
 	"use strict"; // todo: we got some issues with 'use strict' and how we access the global namespace
 
 	win.CLMS = win.CLMS || {};
+	win.CLMS.model = win.CLMS.model || {};
 
-	win.CLMS.DataModelBB = Backbone.Model.extend ({
+	win.CLMS.model.SearchResultsModel = Backbone.Model.extend ({
 		defaults : {
 			interactors: new Map (), //map
 			matches: [], //array
@@ -28,7 +29,7 @@
 			if (rawInteractors) {
 				var interactorMap = this.get("interactors");
 				for (var i of rawInteractors){
-					var protein = new Protein (i[0], i[1], i[3]);
+					var protein = new CLMS.model.Protein (i[0], i[1], i[3]);
 					protein.setSequence(i[2]);
 					interactorMap.set(protein.id, protein);
 				}
@@ -43,7 +44,7 @@
 				var l = rawMatches.length;
 				console.log("l " + l);
 				for (var i = 0; i < l; i++) {
-					var match = new Match (this, tempMatches[i][0], tempMatches[i][1], tempMatches[i][2], tempMatches[i][3],
+					var match = new CLMS.model.Match (this, tempMatches[i][0], tempMatches[i][1], tempMatches[i][2], tempMatches[i][3],
 					tempMatches[i][4], tempMatches[i][5], tempMatches[i][6], tempMatches[i][7],
 					tempMatches[i][8], tempMatches[i][9], tempMatches[i][10], tempMatches[i][11],
 					tempMatches[i][12], tempMatches[i][13], tempMatches[i][14], tempMatches[i][15]);

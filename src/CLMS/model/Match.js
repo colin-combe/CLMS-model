@@ -3,11 +3,11 @@
 //
 //		author: Colin Combe
 //
-//		Match.js
+//		CLMS.model.Match.js
 
 "use strict";
 
-function Match(containingModel, id,
+CLMS.model.Match = function (containingModel, id,
 				pep1_protIDs, pep1_positions, pepSeq1, linkPos1,
 				pep2_protIDs, pep2_positions, pepSeq2, linkPos2,
 				score, dataSetId, autovalidated, validated, run_name, scan_number){
@@ -22,7 +22,7 @@ function Match(containingModel, id,
 
 	//for comparison of different data sets
   	this.group = dataSetId.toString().trim();
-  	//~ Match.groups.add(this.group);
+  	//~ CLMS.model.Match.groups.add(this.group);
 
 	if (run_name) {
 		this.runName = run_name.toString().trim();
@@ -50,7 +50,7 @@ function Match(containingModel, id,
 			} else {
 				this.autovalidated = false;
 			}
-			Match.autoValidatedFound = true;
+			CLMS.model.Match.autoValidatedFound = true;
 		}
 	}
 
@@ -58,7 +58,7 @@ function Match(containingModel, id,
 	if (validated){
 		validated = validated.toString().trim();
 		this.validated = validated;
-		Match.manualValidatedFound = true;
+		CLMS.model.Match.manualValidatedFound = true;
 	}
 
 	//tidy up IDs, leaves protIDs null if empty, 'n/a' or '-'
@@ -68,10 +68,10 @@ function Match(containingModel, id,
 		if (/*protIDs !== '' &&*/ protIDs !== '-' && protIDs !== 'n/a'){
 			// eliminate all forms of quotation mark
 			// - sooner or later they're going to screw up javascript, prob whilst trying to generate>parse JSON
-			Match.eliminateQuotes.lastIndex = 0;
-			protIDs = protIDs.replace(Match.eliminateQuotes, '');
-			Match.split.lastIndex = 0;
-			protIDs = protIDs.split(Match.split);
+			CLMS.model.Match.eliminateQuotes.lastIndex = 0;
+			protIDs = protIDs.replace(CLMS.model.Match.eliminateQuotes, '');
+			CLMS.model.Match.split.lastIndex = 0;
+			protIDs = protIDs.split(CLMS.model.Match.split);
 			var protIDCount = protIDs.length
 			for (var p = 0; p < protIDCount; p++ ){
 				protIDs[p] = protIDs[p].trim();
@@ -94,13 +94,13 @@ function Match(containingModel, id,
 
 	this.pepSeq1 = null;
 	if (pepSeq1){
-		Match.capitalsOnly.lastindex = 0;
-		this.pepSeq1 = pepSeq1.replace(Match.capitalsOnly, '');
+		CLMS.model.Match.capitalsOnly.lastindex = 0;
+		this.pepSeq1 = pepSeq1.replace(CLMS.model.Match.capitalsOnly, '');
 	}
 	this.pepSeq2 = null;
 	if (pepSeq2){
-		Match.capitalsOnly.lastindex = 0;
-		this.pepSeq2 = pepSeq2.replace(Match.capitalsOnly, '');
+		CLMS.model.Match.capitalsOnly.lastindex = 0;
+		this.pepSeq2 = pepSeq2.replace(CLMS.model.Match.capitalsOnly, '');
 	}
 
 	var self = this;
@@ -110,7 +110,7 @@ function Match(containingModel, id,
 	linkPos2 = sanitisePositions(linkPos2);
 
 	if (pep1_positions.length == 1 && pep2_positions.length == 1) {
-		Match.unambigLinkFound = true;
+		CLMS.model.Match.unambigLinkFound = true;
 	}
 
 	// tidy up postions (peptide and link positions),
@@ -121,16 +121,16 @@ function Match(containingModel, id,
 			positions = positions.toString().trim();
 			if (positions !== '' && positions !== '-' && positions !== 'n/a'){
 				// eliminate all forms of quotation mark
-				Match.eliminateQuotes.lastIndex = 0;
-				positions = positions.toString().replace(Match.eliminateQuotes, '');
+				CLMS.model.Match.eliminateQuotes.lastIndex = 0;
+				positions = positions.toString().replace(CLMS.model.Match.eliminateQuotes, '');
 				//; or , as seperator (need comma incase input field was an array, which has just had toString called on it)
-				Match.split.lastIndex = 0;
-				positions = positions.split(Match.split);
+				CLMS.model.Match.split.lastIndex = 0;
+				positions = positions.split(CLMS.model.Match.split);
 				var posCount = positions.length;
 				for (var i2 = 0; i2 < posCount; i2++ ){
 					var pos = parseInt(positions[i2]);
 					if (isNaN(pos)) {
-						console.debug('Absurd non-numerical position. Match id:'
+						console.debug('Absurd non-numerical position. CLMS.model.Match id:'
 							 + self.id + ". So-called 'position':" + positions[i2]);
 					}
 					else {
@@ -360,14 +360,14 @@ function Match(containingModel, id,
 }
 
 //static variables
-Match.autoValidatedFound = false;
-Match.manualValidatedFound = false;
-Match.unambigLinkFound = false;
-Match.eliminateQuotes = /(['"])/g;
-Match.split = /[;,]/g;
-Match.capitalsOnly = /[^A-Z]/g;
+CLMS.model.Match.autoValidatedFound = false;
+CLMS.model.Match.manualValidatedFound = false;
+CLMS.model.Match.unambigLinkFound = false;
+CLMS.model.Match.eliminateQuotes = /(['"])/g;
+CLMS.model.Match.split = /[;,]/g;
+CLMS.model.Match.capitalsOnly = /[^A-Z]/g;
 
-Match.prototype.associateWithLink = function (p1ID, p2ID, res1, res2, //following params may be null :-
+CLMS.model.Match.prototype.associateWithLink = function (p1ID, p2ID, res1, res2, //following params may be null :-
 			pep1_start, pep1_length, pep2_start, pep2_length){
 	// we don't want two different ID's, e.g. one thats "33-66" and one thats "66-33"
 	//following puts lower protein_ID first in link_ID
@@ -408,7 +408,7 @@ Match.prototype.associateWithLink = function (p1ID, p2ID, res1, res2, //followin
 			alert("Something has gone wrong; a link has been added before a protein it links to. " +
 					p1ID + "-" + p2ID);
 		}
-		link = new ProteinLink(proteinLinkID, fromProt, toProt, this.containingModel);
+		link = new CLMS.model.ProteinLink(proteinLinkID, fromProt, toProt, this.containingModel);
 		proteinLinks.set(proteinLinkID, link);
 		fromProt.addLink(link);
 		if (toProt !== null){
@@ -441,18 +441,18 @@ Match.prototype.associateWithLink = function (p1ID, p2ID, res1, res2, //followin
 		//WATCH OUT - residues need to be in correct order
 		if (p1ID === p2ID) {
 			if ((res1 - 0) < (res2 - 0) || res2 === 'n/a') {//TODO: the 'n/a' is a mistake? Already dealt with?
-				resLink = new CrossLink(crossLinkID, link, res1, res2, this.containingModel);
+				resLink = new CLMS.model.CrossLink(crossLinkID, link, res1, res2, this.containingModel);
 			} else {
-				resLink = new CrossLink(crossLinkID, link, res2, res1, this.containingModel);
+				resLink = new CLMS.model.CrossLink(crossLinkID, link, res2, res1, this.containingModel);
 			}
 		}
 		//
 		else if (p1ID == link.fromProtein.id) {
-			resLink = new CrossLink(crossLinkID, link, res1, res2, this.containingModel);
+			resLink = new CLMS.model.CrossLink(crossLinkID, link, res1, res2, this.containingModel);
 		}
 		else {
 			//WATCH OUT - residues need to be in correct oprder
-			resLink = new CrossLink(crossLinkID, link, res2, res1, this.containingModel);
+			resLink = new CLMS.model.CrossLink(crossLinkID, link, res2, res1, this.containingModel);
 		}
 		link.crossLinks.set(crossLinkID, resLink);
 		crossLinks.set(crossLinkID, resLink);
@@ -476,7 +476,7 @@ Match.prototype.associateWithLink = function (p1ID, p2ID, res1, res2, //followin
 	this.crossLinks.push(resLink);
 }
 
-Match.prototype.meetsFilterCriteria = function() {
+CLMS.model.Match.prototype.meetsFilterCriteria = function() {
 	if (this.isAmbig() && this.containingModel.ambigShown === false) {
 		return false;
 	}
@@ -494,7 +494,7 @@ Match.prototype.meetsFilterCriteria = function() {
 	}
 }
 
-Match.prototype.isAmbig = function() {
+CLMS.model.Match.prototype.isAmbig = function() {
 	if (this.crossLinks.length > 1) {
 		return true;
 	}

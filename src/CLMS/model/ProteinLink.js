@@ -3,17 +3,15 @@
 //
 //		author: Colin Combe
 //
-//		ProteinLink.js
+//		CLMS.model.ProteinLink.js
 // 		the class representing a protein-protein link
 
 "use strict";
 
-//static variable used to calculate width of the background line
-ProteinLink.maxNoCrossLinks = 0;
 
-//~ ProteinLink.prototype = new xiNET.Link();
+//~ CLMS.model.ProteinLink.prototype = new xiNET.Link();
 
-function ProteinLink(id, fromP, toP) {
+CLMS.model.ProteinLink = function (id, fromP, toP) {
 	this.id = id;
 	this.crossLinks = new Map();
 	this.fromProtein = fromP; //its the object. not the ID number
@@ -23,28 +21,31 @@ function ProteinLink(id, fromP, toP) {
 	this.isSelected = false;
 }
 
-ProteinLink.prototype.isSelfLink = function() {
+//static variable used to calculate width of the background line
+CLMS.model.ProteinLink.maxNoCrossLinks = 0;
+
+CLMS.model.ProteinLink.prototype.isSelfLink = function() {
 	return (this.fromProtein === this.toProtein);
 }
 
-ProteinLink.prototype.isAmbiguous = function() {
+CLMS.model.ProteinLink.prototype.isAmbiguous = function() {
 	return this.ambig;
 }
 
-ProteinLink.prototype.hasConfirmedHomomultimer = function() {
+CLMS.model.ProteinLink.prototype.hasConfirmedHomomultimer = function() {
 	return this.confirmedHomomultimer;
 }
-ProteinLink.prototype.getFromProtein = function() {
+CLMS.model.ProteinLink.prototype.getFromProtein = function() {
 	return this.fromProtein;
 };
 
-ProteinLink.prototype.getToProtein = function() {
+CLMS.model.ProteinLink.prototype.getToProtein = function() {
 	return this.toProtein;
 };
 
 
 /*
-ProteinLink.prototype.setSelected = function(select) {
+CLMS.model.ProteinLink.prototype.setSelected = function(select) {
 	if (select === true && this.isSelected === false) {
 		this.controller.selectedLinks.set(this.id, this);//ok,
 		this.isSelected = true;
@@ -64,7 +65,7 @@ ProteinLink.prototype.setSelected = function(select) {
 
 
 //its an array of match id's its going to return
-ProteinLink.prototype.getFilteredMatches = function() {
+CLMS.model.ProteinLink.prototype.getFilteredMatches = function() {
 	var resLinks = this.crossLinks.values();
 	var resLinkCount = resLinks.length;
 	var filteredMatches = new Map();
@@ -81,7 +82,7 @@ ProteinLink.prototype.getFilteredMatches = function() {
 	return filteredMatches.keys();
 };
 
-ProteinLink.prototype.check = function() {
+CLMS.model.ProteinLink.prototype.check = function() {
 	//currently no representation of monolinks at proteinLink level (hence checks for this.toProtein !== null)
 	if (this.fromProtein.isParked || (this.toProtein !== null && this.toProtein.isParked)) {
 		this.hide();
@@ -156,15 +157,15 @@ ProteinLink.prototype.check = function() {
 			this.tooltip = this.id + ', ' + filteredResLinkCount + ' unique cross-link';
 			if (filteredResLinkCount > 1)
 				this.tooltip += 's';
-			this.tooltip += ' (' + filteredMatches.keys().length;
-			if (filteredMatches.keys().length === 1) {
+			this.tooltip += ' (' + filteredCLMS.model.Matches.keys().length;
+			if (filteredCLMS.model.Matches.keys().length === 1) {
 				this.tooltip += ' match)';
 			} else {
 				this.tooltip += ' matches)';
 			}
-			this.w = filteredResLinkCount * (45 / ProteinLink.maxNoCrossLinks);
+			this.w = filteredResLinkCount * (45 / CLMS.model.ProteinLink.maxNoCrossLinks);
 			//acknowledge following line is a bit strange
-			this.ambig = (this.ambig && (altProteinLinks.keys().length > 1));
+			this.ambig = (this.ambig && (altCLMS.model.ProteinLinks.keys().length > 1));
 			this.dashedLine(this.ambig);
 			/*if (this.selfLink()) {
 
@@ -194,12 +195,12 @@ ProteinLink.prototype.check = function() {
 					showedResResLink = true;
 				}
 			}
-			return showedResResLink; //is this most sensible thing to return? Or false becuase ProteinLink was not shown?
+			return showedResResLink; //is this most sensible thing to return? Or false becuase CLMS.model.ProteinLink was not shown?
 		}
 	}
 };
 
-ProteinLink.prototype.getOtherEnd = function(protein) {
+CLMS.model.ProteinLink.prototype.getOtherEnd = function(protein) {
 	if (this.fromProtein === protein) {
 		return this.toProtein;
 	}

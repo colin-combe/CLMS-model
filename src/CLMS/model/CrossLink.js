@@ -3,14 +3,14 @@
 //
 //		author: Colin Combe
 //
-//		CrossLink.js
+//		CLMS.model.CrossLink.js
 // 		the class representing a residue-residue link
 
 "use strict";
 
-//CrossLink.prototype = new xiNET.Link();
+//CLMS.model.CrossLink.prototype = new xiNET.Link();
 
-function CrossLink(id, proteinLink, fromResidue, toResidue) {
+CLMS.model.CrossLink = function (id, proteinLink, fromResidue, toResidue) {
 	this.id = id;
 	//    this.matches = new Array(0); //we don't initialise this here
 	// (save some memory in use case where there is no match info, only link info)
@@ -21,27 +21,27 @@ function CrossLink(id, proteinLink, fromResidue, toResidue) {
 	this.ambig = false;
 }
 
-CrossLink.prototype.isSelfLink = function() {
+CLMS.model.CrossLink.prototype.isSelfLink = function() {
 	return (this.proteinLink.fromProtein === this.proteinLink.toProtein);
 }
 
-CrossLink.prototype.isAmbiguous = function() {
+CLMS.model.CrossLink.prototype.isAmbiguous = function() {
 	return this.ambig;
 }
 
-CrossLink.prototype.hasConfirmedHomomultimer = function() {
+CLMS.model.CrossLink.prototype.hasConfirmedHomomultimer = function() {
 	return this.confirmedHomomultimer;
 }
 
-CrossLink.prototype.getFromProtein = function() {
+CLMS.model.CrossLink.prototype.getFromProtein = function() {
 	return this.proteinLink.fromProtein;
 };
 
-CrossLink.prototype.getToProtein = function() {
+CLMS.model.CrossLink.prototype.getToProtein = function() {
 	return this.proteinLink.toProtein;
 };
 
-CrossLink.prototype.getFilteredMatches = function() {
+CLMS.model.CrossLink.prototype.getFilteredMatches = function() {
 	this.ambig = true;
 	this.confirmedHomomultimer = false;
 	this.intraMolecular = false; //i.e. type 1, loop link, intra peptide, internally linked peptide, etc
@@ -66,7 +66,7 @@ CrossLink.prototype.getFilteredMatches = function() {
 };
 
 //used when filter changed
-CrossLink.prototype.check = function(filter) {
+CLMS.model.CrossLink.prototype.check = function(filter) {
 	if (this.controller.selfLinkShown === false && this.selfLink()) {
 		this.hide();
 		return false;
@@ -80,13 +80,13 @@ CrossLink.prototype.check = function(filter) {
 		this.show();
 		return true;
 	}
-	var filteredMatches = this.getFilteredMatches();
-	var countFilteredMatches = filteredMatches.length;
+	var filteredMatches = this.getFilteredCLMS.model.Matches();
+	var countFilteredMatches = filteredCLMS.model.Matches.length;
 	if (countFilteredMatches > 0) {
 		/*this.tooltip = this.proteinLink.fromProtein.labelText + '_' + this.fromResidue
 					+ "-"  + ((this.proteinLink.toProtein != null)? this.proteinLink.toProtein.labelText:'null')
-					+ '_' + this.toResidue + ' (' + countFilteredMatches;
-		if (countFilteredMatches == 1) {
+					+ '_' + this.toResidue + ' (' + countFilteredCLMS.model.Matches;
+		if (countFilteredCLMS.model.Matches == 1) {
 			this.tooltip += ' match)';
 		} else {
 			this.tooltip += ' matches)';
@@ -95,8 +95,8 @@ CrossLink.prototype.check = function(filter) {
 		this.dashedLine(this.ambig);
 		if (this.controller.groups.values().length > 1 && this.controller.groups.values().length < 5) {
 			var groupCheck = new Set();
-			for (var i=0; i < countFilteredMatches; i++) {
-				var match = filteredMatches[i][0];//fix this weirdness with array?
+			for (var i=0; i < countFilteredCLMS.model.Matches; i++) {
+				var match = filteredCLMS.model.Matches[i][0];//fix this weirdness with array?
 				groupCheck.add(match.group);
 			}
 			if (groupCheck.values().length == 1){

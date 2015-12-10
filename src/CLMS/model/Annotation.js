@@ -9,7 +9,7 @@
 "use strict";
 
 //constructor for annotations
-function Annotation(annotName, startRes, endRes, colour, notes) {
+CLMS.model.AnnotatedRegion = function (annotName, startRes, endRes, colour, notes) {
     this.name = annotName;
     this.start = startRes - 0;
     this.end = endRes - 0;
