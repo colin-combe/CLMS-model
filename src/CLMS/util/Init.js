@@ -288,7 +288,7 @@ xiNET.Controller.bestId = function(protein){
 }
 
 xiNET.Controller.prototype.addProtein = function(id, label, sequence, accession) {
-	var newProt = new Protein(id, this, accession, label);
+	var newProt = new Protein(id, /*this,?*/ accession, label);
 	newProt.setSequence(sequence);
 	//~ newProt.init();
 	this.proteins.set(id, newProt);
@@ -310,7 +310,6 @@ xiNET.Controller.prototype.addMatch = function(id,
 xiNET.Controller.prototype.addMatches = function(matches) {
 	var l = matches.length;
 	for (var i = 0; i < l; i++) {
-		//        alert(matches[i]);
 		this.addMatch(matches[i][0], matches[i][1], matches[i][2], matches[i][3],
 				matches[i][4], matches[i][5], matches[i][6], matches[i][7],
 				matches[i][8], matches[i][9], matches[i][10], matches[i][11],

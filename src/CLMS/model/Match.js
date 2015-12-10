@@ -7,22 +7,22 @@
 
 "use strict";
 
-function Match(controller, id,
+function Match(containingModel, id,
 				pep1_protIDs, pep1_positions, pepSeq1, linkPos1,
 				pep2_protIDs, pep2_positions, pepSeq2, linkPos2,
 				score, dataSetId, autovalidated, validated, run_name, scan_number){
 
 	this.id = id.toString().trim();
 
-	//temp?
-	this.controller = controller;//reference to controlling xiNET.Controller object 
+
+	this.containingModel = containingModel;//reference to controlling xiNET.Controller object 
 	
   	//if the match is ambiguous it will relate to many crossLinks
   	this.crossLinks = [];
 
 	//for comparison of different data sets
   	this.group = dataSetId.toString().trim();
-  	Match.groups.add(this.group);
+  	//~ Match.groups.add(this.group);
 
 	if (run_name) {
 		this.runName = run_name.toString().trim();
@@ -38,13 +38,6 @@ function Match(controller, id,
 		score = parseFloat(score);
 		if (!isNaN(score)){
 			this.score = score;
-
-			if (!Match.maxScore || this.score > Match.maxScore) {
-				Match.maxScore = this.score;
-			}
-			else if (!Match.minScore || this.score < Match.minScore) {
-				Match.minScore = this.score;
-			}
 		}
 	}
 
@@ -354,7 +347,7 @@ function Match(controller, id,
 			//}
 		}
 
-		this.controller.matches.push(this);
+		/*this.containingModel.matches.push(this);*/
 		//non of following are strictly necesssary, because info is stored in assicated CrossLinks
 		//burns some memory for convenience when making table of matches or outputing CSV, etc
 		this.protein1 = pep1_protIDs;
@@ -367,7 +360,6 @@ function Match(controller, id,
 }
 
 //static variables
-Match.groups = new Set();
 Match.autoValidatedFound = false;
 Match.manualValidatedFound = false;
 Match.unambigLinkFound = false;
@@ -381,9 +373,13 @@ Match.prototype.associateWithLink = function (p1ID, p2ID, res1, res2, //followin
 	//following puts lower protein_ID first in link_ID
 	var proteinLinkID, fromProt, toProt;
 
+	var proteins = this.containingModel.get("interactors");
+	var crossLinks = this.containingModel.get("crossLinks");
+	var proteinLinks = this.containingModel.get("proteinLinks");
+
 	//TODO: tidy up following
 	if (p2ID === null) { //its  a loop link or mono link
-		fromProt = this.controller.proteins.get(p1ID);
+		fromProt = this.containingModel.proteins.get(p1ID);
 		if (res2 === null){// its a monolink
 			proteinLinkID = "" + p1ID + "-null";
 			toProt = null;
@@ -395,25 +391,25 @@ Match.prototype.associateWithLink = function (p1ID, p2ID, res1, res2, //followin
 	}
 	else if (p1ID <= p2ID) {
 		proteinLinkID = "" + p1ID + "-" + p2ID;
-		fromProt = this.controller.proteins.get(p1ID);
-		toProt = (p2ID !== null)? this.controller.proteins.get(p2ID) : null;
+		fromProt = proteins.get(p1ID);
+		toProt = (p2ID !== null)? proteins.get(p2ID) : null;
 	}
 	else {
 		proteinLinkID = "" + p2ID + "-" + p1ID;
-		fromProt = this.controller.proteins.get(p2ID);
-		toProt = this.controller.proteins.get(p1ID);
+		fromProt = proteins.get(p2ID);
+		toProt = proteins.get(p1ID);
 
 	}
 
 	//get or create protein-protein link
-	var link = this.controller.proteinLinks.get(proteinLinkID);
+	var link = proteinLinks.get(proteinLinkID);
 	if (link === undefined) {
 		if (fromProt === undefined || toProt === undefined) {
 			alert("Something has gone wrong; a link has been added before a protein it links to. " +
 					p1ID + "-" + p2ID);
 		}
-		link = new ProteinLink(proteinLinkID, fromProt, toProt, this.controller);
-		this.controller.proteinLinks.set(proteinLinkID, link);
+		link = new ProteinLink(proteinLinkID, fromProt, toProt, this.containingModel);
+		proteinLinks.set(proteinLinkID, link);
 		fromProt.addLink(link);
 		if (toProt !== null){
 			toProt.addLink(link);
@@ -445,22 +441,22 @@ Match.prototype.associateWithLink = function (p1ID, p2ID, res1, res2, //followin
 		//WATCH OUT - residues need to be in correct order
 		if (p1ID === p2ID) {
 			if ((res1 - 0) < (res2 - 0) || res2 === 'n/a') {//TODO: the 'n/a' is a mistake? Already dealt with?
-				resLink = new CrossLink(crossLinkID, link, res1, res2, this.controller);
+				resLink = new CrossLink(crossLinkID, link, res1, res2, this.containingModel);
 			} else {
-				resLink = new CrossLink(crossLinkID, link, res2, res1, this.controller);
+				resLink = new CrossLink(crossLinkID, link, res2, res1, this.containingModel);
 			}
 		}
 		//
 		else if (p1ID == link.fromProtein.id) {
-			resLink = new CrossLink(crossLinkID, link, res1, res2, this.controller);
+			resLink = new CrossLink(crossLinkID, link, res1, res2, this.containingModel);
 		}
 		else {
 			//WATCH OUT - residues need to be in correct oprder
-			resLink = new CrossLink(crossLinkID, link, res2, res1, this.controller);
+			resLink = new CrossLink(crossLinkID, link, res2, res1, this.containingModel);
 		}
 		link.crossLinks.set(crossLinkID, resLink);
-		this.controller.crossLinks.set(crossLinkID, resLink);
-		if (this.controller.proteins.keys().length > 1) {
+		crossLinks.set(crossLinkID, resLink);
+		if (proteins.keys().length > 1) {
 			var linkCount = link.crossLinks.keys().length;
 			if (linkCount > ProteinLink.maxNoCrossLinks) {
 				ProteinLink.maxNoCrossLinks = linkCount;
@@ -481,14 +477,14 @@ Match.prototype.associateWithLink = function (p1ID, p2ID, res1, res2, //followin
 }
 
 Match.prototype.meetsFilterCriteria = function() {
-	if (this.isAmbig() && this.controller.ambigShown === false) {
+	if (this.isAmbig() && this.containingModel.ambigShown === false) {
 		return false;
 	}
-	if (typeof this.controller.filter == 'function') {
-		return this.controller.filter(this);
+	if (typeof this.containingModel.filter == 'function') {
+		return this.containingModel.filter(this);
 	}
-	else if (typeof this.controller.cutOff !== 'undefined' && typeof this.score !== 'undefined') {
-		if (this.score >= this.controller.cutOff)
+	else if (typeof this.containingModel.cutOff !== 'undefined' && typeof this.score !== 'undefined') {
+		if (this.score >= this.containingModel.cutOff)
 			return true;
 		else
 			return false;
