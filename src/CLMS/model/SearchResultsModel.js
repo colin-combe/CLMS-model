@@ -19,7 +19,7 @@
 			proteinLinks: new Map(), //map
 			minScore: NaN,
 			maxScore: NaN,
-			groups: new Set(),
+			groups: new Set()
 		},
 
 		constructor: function (rawInteractors, rawMatches) {
