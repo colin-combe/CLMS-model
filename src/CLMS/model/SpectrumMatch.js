@@ -464,9 +464,9 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
 		}
 	}
 	//we have residue link we want - associate this match with it
-	if (typeof resLink.matches === 'undefined' || resLink.matches == null){
-		resLink.matches = [];
-	}
+	//~ if (typeof resLink.matches === 'undefined' || resLink.matches == null){
+		//~ resLink.matches = [];
+	//~ }
 	//fix this hack with the array?
 	if (endsReversedInResLinkId === false) {
 		resLink.matches.push([this, pep1_start, pep1_length, pep2_start, pep2_length]);
@@ -475,7 +475,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
 	}
 	this.crossLinks.push(resLink);
 }
-
+/*
 CLMS.model.SpectrumMatch.prototype.meetsFilterCriteria = function() {
 	if (this.isAmbig() && this.containingModel.ambigShown === false) {
 		return false;
@@ -492,7 +492,7 @@ CLMS.model.SpectrumMatch.prototype.meetsFilterCriteria = function() {
 	else {
 		return true;
 	}
-}
+}*/
 
 CLMS.model.SpectrumMatch.prototype.isAmbig = function() {
 	if (this.crossLinks.length > 1) {

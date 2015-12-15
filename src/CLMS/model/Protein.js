@@ -13,7 +13,7 @@ CLMS.model.Protein = function (id, acc, name) {
 	this.name = name;
 	if (!this.name && acc) {
 		this.name = acc;
-	} else {
+	} else if (!this.name) {
 		this.name = id;
 	}
 	//links
@@ -45,6 +45,7 @@ CLMS.model.Protein.prototype.setSequence = function(sequence){
 	}
 	//remove modification site info from sequence
 	this.sequence = sequence.replace(/[^A-Z]/g, '');
+	this.size = this.sequence.length;
 }
 
 CLMS.model.Protein.prototype.isDecoy = function() {
@@ -65,7 +66,7 @@ CLMS.model.Protein.prototype.addLink = function(link) {
 	}
 	if (link.isSelfLink() === true) {
 		this.selfLink = link;
-		if (this.size) this.selfLink.initSelfLinkSVG();
+		//~ if (this.size) this.selfLink.initSelfLinkSVG();
 	}
 	if (link.toProtein === null) {
 		this.linkerModifications = link;
@@ -104,7 +105,7 @@ CLMS.model.Protein.prototype.getSubgraph = function(subgraphs) {
 		if (this.isParked === false) {
 			this.subgraph = this.addConnectedNodes(subgraph);
 		}
-		this.controller.subgraphs.push(subgraph);
+		//~ this.controller.subgraphs.push(subgraph); **
 	}
 	return this.subgraph;
 };

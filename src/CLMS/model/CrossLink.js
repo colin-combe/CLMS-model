@@ -12,8 +12,8 @@
 
 CLMS.model.CrossLink = function (id, proteinLink, fromResidue, toResidue) {
 	this.id = id;
-	//    this.matches = new Array(0); //we don't initialise this here
-	// (save some memory in use case where there is no match info, only link info)
+	this.matches = new Array(0);
+	this.filteredMatches = new Array(0);
 	this.proteinLink = proteinLink;
 	this.fromResidue = fromResidue;
 	this.toResidue = toResidue;
@@ -42,7 +42,8 @@ CLMS.model.CrossLink.prototype.getToProtein = function() {
 };
 
 CLMS.model.CrossLink.prototype.getFilteredMatches = function() {
-	this.ambig = true;
+	
+	/*this.ambig = true;
 	this.confirmedHomomultimer = false;
 	this.intraMolecular = false; //i.e. type 1, loop link, intra peptide, internally linked peptide, etc
 	var filteredMatches = [];
@@ -61,8 +62,8 @@ CLMS.model.CrossLink.prototype.getFilteredMatches = function() {
 				this.intraMolecular = true;
 			}
 		}
-	}
-	return filteredMatches;
+	}*/
+	return this.filteredMatches;
 };
 
 //used when filter changed
