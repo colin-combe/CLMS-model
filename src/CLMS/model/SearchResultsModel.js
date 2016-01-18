@@ -36,7 +36,8 @@
 			}
 
 			var interactorCount = interactorMap.size;
-			
+			var xiNET_StorageNS = "xiNET.";
+
 			for (protein of interactorMap.values()){
 				uniProtTxt(protein);	
 			}
@@ -69,8 +70,6 @@
 				}
 			}
 			
-			var xiNET_StorageNS = "xiNET.";
-
 			function uniProtTxt (p){
 				if (p.accession) {
 					var accession = p.accession;
@@ -79,18 +78,18 @@
 						d3.text(url, function (txt){
 							//~ console.log(accession + " retrieved from UniProt.");
 							if(typeof(Storage) !== "undefined") {
-								localStorage.setItem(xiNET_Storage.ns  + "UniProtKB."+ accession, txt);
+								win.localStorage.setItem(xiNET_StorageNS  + "UniProtKB."+ accession, txt);
 								//~ console.log(accession + " UniProt added to local storage.");
 							}
 							processUniProtTxt(p, txt);
 						});
 					}
 
-					if(typeof(Storage) !== "undefined") {
+					if(Storage){
 						// Code for localStorage/sessionStorage.
 						//~ console.log("Local storage found.");
 						// Retrieve
-						var stored = localStorage.getItem(xiNET_StorageNS + "UniProtKB." + accession);
+						var stored = win.localStorage.getItem(xiNET_StorageNS + "UniProtKB." + accession);
 						if (stored){
 							console.log(accession + " UniProt from local storage.");
 							processUniProtTxt(p, stored);
