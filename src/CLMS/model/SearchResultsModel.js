@@ -26,15 +26,21 @@
 		
 			Backbone.Model.apply( this ); // calls overridden constructor
 
+			var interactorMap = this.get("interactors");
 			if (rawInteractors) {
-				var interactorMap = this.get("interactors");
 				for (var i of rawInteractors){
-					var protein = new CLMS.model.Protein (i[0], i[1], i[3]);
-					protein.setSequence(i[2]);
+					var protein = new CLMS.model.Protein (i[0], i[1], i[2]);
+					protein.setSequence(i[3]);
 					interactorMap.set(protein.id, protein);
 				}
 			}
 
+			var interactorCount = interactorMap.size;
+			
+			for (protein of interactorMap.values()){
+				uniProtTxt(protein);	
+			}
+			
 			if (rawMatches) {
 				var matches = this.get("matches");
 				var minScore = this.get("minScore");
@@ -63,6 +69,82 @@
 				}
 			}
 			
+			var xiNET_StorageNS = "xiNET.";
+
+			function uniProtTxt (p){
+				if (p.accession) {
+					var accession = p.accession;
+					function uniprotWebService(){
+						var url = "http://www.uniprot.org/uniprot/" + accession + ".txt";
+						d3.text(url, function (txt){
+							//~ console.log(accession + " retrieved from UniProt.");
+							if(typeof(Storage) !== "undefined") {
+								localStorage.setItem(xiNET_Storage.ns  + "UniProtKB."+ accession, txt);
+								//~ console.log(accession + " UniProt added to local storage.");
+							}
+							processUniProtTxt(p, txt);
+						});
+					}
+
+					if(typeof(Storage) !== "undefined") {
+						// Code for localStorage/sessionStorage.
+						//~ console.log("Local storage found.");
+						// Retrieve
+						var stored = localStorage.getItem(xiNET_StorageNS + "UniProtKB." + accession);
+						if (stored){
+							console.log(accession + " UniProt from local storage.");
+							processUniProtTxt(p, stored);
+						}
+						else {
+							console.log(accession + " UniProt not in local storage.");
+							uniprotWebService();
+						}
+					}
+					else {
+						//~ console.log("No local storage found.");
+						uniprotWebService();
+					}
+					
+				} else {
+					interactorCount--; //no accession
+					if (interactorCount === 0) doneProcessingUniProtText();
+				}
+			}
+			
+			function processUniProtTxt(p, txt){
+				
+				var sequence = "";
+				var lines = txt.split('\n');
+				var lineCount = lines.length;
+				for (var l = 1; l < lineCount; l++){
+					var line = lines[l];
+					if (line.indexOf("SQ") === 0){
+						//sequence = line;
+						l++;
+						for (l; l < lineCount; l++){
+							line = lines[l];
+							sequence += line;
+						}
+					}
+				}
+				
+				sequence = sequence.replace(/[^A-Z]/g, '');
+							
+				p.canonicalSeq = sequence;
+				
+				interactorCount--;
+				if (interactorCount === 0) doneProcessingUniProtText();
+			}
+			
+			function doneProcessingUniProtText(){
+				//~ console.log("YO!");
+				for (var protein of interactorMap.values()) {
+					console.log(protein.id + "\t" + protein.accession + "\t" + protein.sequence)
+					console.log(protein.id + "\t" + protein.accession + "\t" + protein.canonicalSeq)
+				}	
+				CLMSUI.vent.trigger("uniprotDataParsed");
+			}
+							
 		}
 
 	});

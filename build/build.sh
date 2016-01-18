@@ -11,7 +11,6 @@ java -jar compiler.jar \
 --js=../src/CLMS/model/AnnotatedRegion.js \
 --js=../src/CLMS/model/ProteinLink.js \
 --js=../src/CLMS/model/CrossLink.js \
---js=../src/CLMS/util/xiNET_Storage.js \
 --js_output_file=./CLMS_model.js;
 
 
