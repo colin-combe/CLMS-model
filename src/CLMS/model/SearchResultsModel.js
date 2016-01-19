@@ -22,32 +22,32 @@
 			groups: new Set()
 		},
 
-		constructor: function (rawInteractors, rawMatches) {
+		initialize: function (options) {
 		
-			Backbone.Model.apply( this ); // calls overridden constructor
-
 			var interactorMap = this.get("interactors");
-			if (rawInteractors) {
-				for (var i of rawInteractors){
+			if (options.rawInteractors) {
+				for (var i of options.rawInteractors){
 					var protein = new CLMS.model.Protein (i[0], i[1], i[2]);
 					protein.setSequence(i[3]);
 					interactorMap.set(protein.id, protein);
 				}
 			}
 	
+			var rawMatches = tempMatches;
 			if (rawMatches) {
 				var matches = this.get("matches");
 				var minScore = this.get("minScore");
 				var maxScore = this.get("maxScore");
 				var groups = this.get("groups");
 
+				
 				var l = rawMatches.length;
 				console.log("l " + l);
 				for (var i = 0; i < l; i++) {
-					var match = new CLMS.model.SpectrumMatch (this, tempMatches[i][0], tempMatches[i][1], tempMatches[i][2], tempMatches[i][3],
-					tempMatches[i][4], tempMatches[i][5], tempMatches[i][6], tempMatches[i][7],
-					tempMatches[i][8], tempMatches[i][9], tempMatches[i][10], tempMatches[i][11],
-					tempMatches[i][12], tempMatches[i][13], tempMatches[i][14], tempMatches[i][15]);
+					var match = new CLMS.model.SpectrumMatch (this, rawMatches[i][0], rawMatches[i][1], rawMatches[i][2], rawMatches[i][3],
+					rawMatches[i][4], rawMatches[i][5], rawMatches[i][6], rawMatches[i][7],
+					rawMatches[i][8], rawMatches[i][9], rawMatches[i][10], rawMatches[i][11],
+					rawMatches[i][12], rawMatches[i][13], rawMatches[i][14], rawMatches[i][15]);
 
 					matches.push(match);
 
@@ -62,11 +62,6 @@
 
 				}
 			}
-
-			this.initialize();				
-		},
-		
-		initialize: function (options){
 			
 			var interactorMap = this.get("interactors");
 			var interactorCount = interactorMap.size;
@@ -77,7 +72,7 @@
 			}
 			
 			function uniProtTxt (p){
-				if (p.accession) {
+				if (/*interactor is protein AND*/ p.accession) {
 					var accession = p.accession;
 					function uniprotWebService(){
 						var url = "http://www.uniprot.org/uniprot/" + accession + ".txt";
@@ -118,11 +113,22 @@
 			
 			function processUniProtTxt(p, txt){
 				
+				var features = [];	
 				var sequence = "";
 				var lines = txt.split('\n');
 				var lineCount = lines.length;
 				for (var l = 1; l < lineCount; l++){
 					var line = lines[l];
+				
+					if (line.indexOf("FT") === 0){
+						var fields = line.split(/\s{2,}/g);
+						if (fields.length > 4 && fields[1] === 'DOMAIN') {
+							//console.log(fields[1]);fields[4].substring(0, fields[4].indexOf("."))
+							var name = fields[4].substring(0, fields[4].indexOf("."));
+							features.push(new CLMS.model.AnnotatedRegion (name, fields[2], fields[3], null, fields[4]));
+						}
+					}
+				
 					if (line.indexOf("SQ") === 0){
 						//sequence = line;
 						l++;
@@ -133,14 +139,16 @@
 					}
 				}
 				
-				sequence = sequence.replace(/[^A-Z]/g, '');
-							
+				p.uniprotFeatures = features;
+
+				sequence = sequence.replace(/[^A-Z]/g, '');							
 				p.canonicalSeq = sequence;
 				
 				interactorCount--;
 				if (interactorCount === 0) doneProcessingUniProtText();
 			}
-			
+			console.log("***:" + this);
+				
 			function doneProcessingUniProtText(){
 				//~ console.log("YO!");
 				for (var protein of interactorMap.values()) {
