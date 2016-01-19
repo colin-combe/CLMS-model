@@ -34,14 +34,7 @@
 					interactorMap.set(protein.id, protein);
 				}
 			}
-
-			var interactorCount = interactorMap.size;
-			var xiNET_StorageNS = "xiNET.";
-
-			for (protein of interactorMap.values()){
-				uniProtTxt(protein);	
-			}
-			
+	
 			if (rawMatches) {
 				var matches = this.get("matches");
 				var minScore = this.get("minScore");
@@ -68,6 +61,19 @@
 					groups.add(match.group);
 
 				}
+			}
+
+			this.initialize();				
+		},
+		
+		initialize: function (options){
+			
+			var interactorMap = this.get("interactors");
+			var interactorCount = interactorMap.size;
+			var xiNET_StorageNS = "xiNET.";
+
+			for (var protein of interactorMap.values()){
+				uniProtTxt(protein);	
 			}
 			
 			function uniProtTxt (p){
@@ -143,7 +149,7 @@
 				}	
 				CLMSUI.vent.trigger("uniprotDataParsed");
 			}
-							
+					
 		}
 
 	});
