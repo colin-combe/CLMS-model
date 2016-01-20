@@ -23,7 +23,8 @@
 		},
 
 		initialize: function (options) {
-		
+			
+			var self = this;
 			var interactorMap = this.get("interactors");
 			if (options.rawInteractors) {
 				for (var i of options.rawInteractors){
@@ -155,7 +156,7 @@
 					console.log(protein.id + "\t" + protein.accession + "\t" + protein.sequence)
 					console.log(protein.id + "\t" + protein.accession + "\t" + protein.canonicalSeq)
 				}	
-				CLMSUI.vent.trigger("uniprotDataParsed");
+				CLMSUI.vent.trigger("uniprotDataParsed", self);
 			}
 					
 		}
