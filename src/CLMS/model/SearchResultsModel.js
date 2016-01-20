@@ -23,7 +23,7 @@
 		},
 
 		initialize: function (options) {
-			
+
 			var self = this;
 			var interactorMap = this.get("interactors");
 			if (options.rawInteractors) {
@@ -33,7 +33,7 @@
 					interactorMap.set(protein.id, protein);
 				}
 			}
-	
+
 			var rawMatches = tempMatches;
 			if (rawMatches) {
 				var matches = this.get("matches");
@@ -41,7 +41,7 @@
 				var maxScore = this.get("maxScore");
 				var groups = this.get("groups");
 
-				
+
 				var l = rawMatches.length;
 				console.log("l " + l);
 				for (var i = 0; i < l; i++) {
@@ -63,15 +63,18 @@
 
 				}
 			}
-			
+
 			var interactorMap = this.get("interactors");
 			var interactorCount = interactorMap.size;
 			var xiNET_StorageNS = "xiNET.";
+			var pdbRegex = /DR...PDB;.(....);/g
+			var candidatePDBs = new Set();
+			var uniprotFeatureTypes = new Set();
 
 			for (var protein of interactorMap.values()){
-				uniProtTxt(protein);	
+				uniProtTxt(protein);
 			}
-			
+
 			function uniProtTxt (p){
 				if (/*interactor is protein AND*/ p.accession) {
 					var accession = p.accession;
@@ -105,31 +108,40 @@
 						//~ console.log("No local storage found.");
 						uniprotWebService();
 					}
-					
+
 				} else {
 					interactorCount--; //no accession
 					if (interactorCount === 0) doneProcessingUniProtText();
 				}
 			}
-			
+
 			function processUniProtTxt(p, txt){
-				
-				var features = [];	
+
+				var features = [];
 				var sequence = "";
 				var lines = txt.split('\n');
 				var lineCount = lines.length;
 				for (var l = 1; l < lineCount; l++){
 					var line = lines[l];
-				
+
+					if (line.indexOf("DR") === 0){
+						pdbRegex.lastIndex = 0;
+						var match = pdbRegex.exec(line);
+						if (match) {
+							candidatePDBs.add(match[1].toString().trim());
+						}
+					}
+
 					if (line.indexOf("FT") === 0){
 						var fields = line.split(/\s{2,}/g);
-						if (fields.length > 4 && fields[1] === 'DOMAIN') {
-							//console.log(fields[1]);fields[4].substring(0, fields[4].indexOf("."))
+						if (fields.length > 4 ) {// && fields[1] === 'DOMAIN') {
+							uniprotFeatureTypes.add(fields[1]);
+						//console.log(fields[1]);fields[4].substring(0, fields[4].indexOf("."))
 							var name = fields[4].substring(0, fields[4].indexOf("."));
 							features.push(new CLMS.model.AnnotatedRegion (name, fields[2], fields[3], null, fields[4]));
 						}
 					}
-				
+
 					if (line.indexOf("SQ") === 0){
 						//sequence = line;
 						l++;
@@ -139,26 +151,28 @@
 						}
 					}
 				}
-				
+
 				p.uniprotFeatures = features;
 
-				sequence = sequence.replace(/[^A-Z]/g, '');							
+				sequence = sequence.replace(/[^A-Z]/g, '');
 				p.canonicalSeq = sequence;
-				
+
 				interactorCount--;
 				if (interactorCount === 0) doneProcessingUniProtText();
 			}
-			console.log("***:" + this);
-				
+
 			function doneProcessingUniProtText(){
-				//~ console.log("YO!");
-				for (var protein of interactorMap.values()) {
-					console.log(protein.id + "\t" + protein.accession + "\t" + protein.sequence)
-					console.log(protein.id + "\t" + protein.accession + "\t" + protein.canonicalSeq)
-				}	
+				//~ for (var protein of interactorMap.values()) {
+					//~ console.log(protein.id + "\t" + protein.accession + "\t" + protein.sequence)
+					//~ console.log(protein.id + "\t" + protein.accession + "\t" + protein.canonicalSeq)
+				//~ }			
+				//~ console.log("candidatePDBs:" + Array.from(candidatePDBs.values()).toString());
+				//~ console.log("uniprotFeatureTypes:" + Array.from(uniprotFeatureTypes.values()).toString());
+				self.set("candidatePDBs", candidatePDBs);				
+				self.set("uniprotFeatureTypes", uniprotFeatureTypes);				
 				CLMSUI.vent.trigger("uniprotDataParsed", self);
 			}
-					
+
 		}
 
 	});

@@ -52,10 +52,10 @@ CLMS.model.Protein.prototype.isDecoy = function() {
 	if (!this.name){
 		return false;
 	}
-	else if (this.name.indexOf("DECOY_") === -1 && this.name !== "REV") {
-		return false;
-	} else {
+	else if (this.name.indexOf("DECOY_") === 0 || this.name.indexOf("REV") === 0) {
 		return true;
+	} else {
+		return false;
 	}
 };
 
