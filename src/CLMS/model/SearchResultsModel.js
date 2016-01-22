@@ -76,7 +76,7 @@
 			}
 
 			function uniProtTxt (p){
-				if (/*interactor is protein AND*/ p.accession) {
+				if (/*interactor is protein AND*/ p.accession && p.isDecoy() === false) {
 					var accession = p.accession;
 					function uniprotWebService(){
 						var url = "http://www.uniprot.org/uniprot/" + accession + ".txt";
@@ -109,8 +109,8 @@
 						uniprotWebService();
 					}
 
-				} else {
-					interactorCount--; //no accession
+				} else { //not protein, no accession or isDecoy
+					interactorCount--; 
 					if (interactorCount === 0) doneProcessingUniProtText();
 				}
 			}
