@@ -21,9 +21,10 @@ CLMS.model.SpectrumMatch = function (containingModel, id,
   	this.crossLinks = [];
 
 	//for comparison of different data sets
-  	this.group = dataSetId.toString().trim();
-  	//~ CLMS.model.SpectrumMatch.groups.add(this.group);
-
+  	if (dataSetId) {
+		this.group = dataSetId.toString().trim();
+	}
+  	
 	if (run_name) {
 		this.runName = run_name.toString().trim();
 	}
@@ -109,7 +110,7 @@ CLMS.model.SpectrumMatch = function (containingModel, id,
 	linkPos1 = sanitisePositions(linkPos1);
 	linkPos2 = sanitisePositions(linkPos2);
 
-	if (pep1_positions.length == 1 && pep2_positions.length == 1) {
+	if (linkPos1.length == 1 && linkPos2.length == 1) {
 		CLMS.model.SpectrumMatch.unambigLinkFound = true;
 	}
 
