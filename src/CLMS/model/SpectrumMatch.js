@@ -421,18 +421,18 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
 	var crossLinkID;
 	if (p1ID === p2ID || p2ID === null) {
 		if ((res1 - 0) < (res2 - 0) || res2 === null) {
-			crossLinkID = res1 + "-" + res2;
+			crossLinkID = p1ID + "_" + res1 + "-" + p2ID + "_" + res2;
 		}
 		else {
-			crossLinkID = res2 + "-" + res1;
+			crossLinkID = p2ID + "_" + res2 + "-" +  p1ID + "_" + res1;
 			endsReversedInResLinkId = true;
 		}
 	}
 	else if (p1ID < p2ID) {
-		crossLinkID = res1 + "-" +  res2;
+		crossLinkID = p1ID + "_" + res1 + "-" + p2ID + "_" + res2;
 	}
 	else {
-		crossLinkID =  res2 + "-" + res1;
+		crossLinkID =  p2ID + "_" + res2 + "-" +  p1ID + "_" + res1;
 		endsReversedInResLinkId = true;
 	}
 
