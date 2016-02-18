@@ -6,8 +6,6 @@
 //		CLMS.model.CrossLink.js
 // 		the class representing a residue-residue link
 
-"use strict";
-
 //CLMS.model.CrossLink.prototype = new xiNET.Link();
 
 CLMS.model.CrossLink = function (id, proteinLink, fromResidue, toResidue) {

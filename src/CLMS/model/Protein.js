@@ -5,8 +5,6 @@
 //
 //		CLMS.model.Protein.js
 
-"use strict";
-
 CLMS.model.Protein = function (id, acc, name) {
 	this.id = id; // id may not be accession
 	this.accession = acc;

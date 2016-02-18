@@ -5,8 +5,6 @@
 //
 //      SearchResultsModel.js
 
-(function(win) {
-	"use strict"; // todo: we got some issues with 'use strict' and how we access the global namespace
 
 	win.CLMS = win.CLMS || {};
 	win.CLMS.model = win.CLMS.model || {};
@@ -465,4 +463,3 @@
 
 	});
 
-} (this));

@@ -6,9 +6,6 @@
 //		CLMS.model.ProteinLink.js
 // 		the class representing a protein-protein link
 
-"use strict";
-
-
 //~ CLMS.model.ProteinLink.prototype = new xiNET.Link();
 
 CLMS.model.ProteinLink = function (id, fromP, toP) {

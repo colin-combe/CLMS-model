@@ -6,8 +6,6 @@
 //
 //    author: Colin Combe
 
-"use strict";
-
 //constructor for annotations
 CLMS.model.AnnotatedRegion = function (annotName, startRes, endRes, colour, notes, cat) {
     this.name = annotName;

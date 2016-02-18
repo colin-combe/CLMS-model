@@ -5,8 +5,6 @@
 //
 //		CLMS.model.SpectrumMatch.js
 
-"use strict";
-
 CLMS.model.SpectrumMatch = function (containingModel, id,
 				pep1_protIDs, pep1_positions, pepSeq1, linkPos1,
 				pep2_protIDs, pep2_positions, pepSeq2, linkPos2,
