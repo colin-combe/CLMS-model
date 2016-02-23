@@ -15,7 +15,7 @@ CLMS.model.Protein = function (id, acc, name) {
 		this.name = id;
 	}
 	//links
-	this.proteinLinks = new Map();
+	//this.proteinLinks = new Map();
 	this.selfLink = null;//TODO: maybe dont need this, but xiNET is using it
 	//annotation scheme
 	this.annotatedRegions = null;//TODO: maybe dont need this, but xiNET is using it

@@ -310,11 +310,11 @@
 				//different ids/names but the same accession number.
 				addProteins(iProt1);
 				addProteins(iProt2);
-				var prots = interactorMap.values();
-				var protCount = prots.length;
+				var protCount = interactorMap.size;
 				var countSequences = 0;
-				for (var p = 0; p < protCount; p++){
-					var id = prots[p].id;
+				var protIter = interactorMap.values();
+				for (prot of protIter){
+					var id = prot.id;
 					this.xiNET_storage.getSequence(id, function(ident, seq){
 							interactorMap.get(ident).setSequence(seq);
 							countSequences++;
