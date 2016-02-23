@@ -8,19 +8,22 @@
 
 //CLMS.model.CrossLink.prototype = new xiNET.Link();
 
-CLMS.model.CrossLink = function (id, proteinLink, fromResidue, toResidue) {
+CLMS.model.CrossLink = function (id, fromProtein, fromResidue, toProtein, toResidue) {
 	this.id = id;
 	this.matches = new Array(0);
 	this.filteredMatches = new Array(0);
-	this.proteinLink = proteinLink;
+	
+	//this.proteinLink = proteinLink;
+	this.fromProtein = fromProtein;
 	this.fromResidue = fromResidue;
+	this.toProtein = toProtein; 
 	this.toResidue = toResidue;
 
 	this.ambig = false;
 }
 
 CLMS.model.CrossLink.prototype.isSelfLink = function() {
-	return (this.proteinLink.fromProtein === this.proteinLink.toProtein);
+	return (this.fromProtein === this.toProtein);
 }
 
 CLMS.model.CrossLink.prototype.isAmbiguous = function() {
@@ -32,11 +35,11 @@ CLMS.model.CrossLink.prototype.hasConfirmedHomomultimer = function() {
 }
 
 CLMS.model.CrossLink.prototype.getFromProtein = function() {
-	return this.proteinLink.fromProtein;
+	return this.fromProtein;
 };
 
 CLMS.model.CrossLink.prototype.getToProtein = function() {
-	return this.proteinLink.toProtein;
+	return this.toProtein;
 };
 
 CLMS.model.CrossLink.prototype.getFilteredMatches = function() {

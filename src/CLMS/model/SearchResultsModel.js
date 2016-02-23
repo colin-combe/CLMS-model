@@ -6,15 +6,15 @@
 //      SearchResultsModel.js
 
 
-	win.CLMS = win.CLMS || {};
-	win.CLMS.model = win.CLMS.model || {};
+	var CLMS = CLMS || {};
+	CLMS.model = CLMS.model || {};
 
-	win.CLMS.model.SearchResultsModel = Backbone.Model.extend ({
+	CLMS.model.SearchResultsModel = Backbone.Model.extend ({
 		defaults : {
 			interactors: new Map (), //map
 			matches: [], //array
 			crossLinks: new Map(), //map
-			proteinLinks: new Map(), //map
+			//~ proteinLinks: new Map(), //map
 			minScore: NaN,
 			maxScore: NaN,
 			groups: new Set()
@@ -85,7 +85,7 @@
 						d3.text(url, function (txt){
 							//~ console.log(accession + " retrieved from UniProt.");
 							if(typeof(Storage) !== "undefined") {
-								win.localStorage.setItem(xiNET_StorageNS  + "UniProtKB."+ accession, txt);
+								localStorage.setItem(xiNET_StorageNS  + "UniProtKB."+ accession, txt);
 								//~ console.log(accession + " UniProt added to local storage.");
 							}
 							processUniProtTxt(p, txt);
@@ -96,7 +96,7 @@
 						// Code for localStorage/sessionStorage.
 						//~ console.log("Local storage found.");
 						// Retrieve
-						var stored = win.localStorage.getItem(xiNET_StorageNS + "UniProtKB." + accession);
+						var stored = localStorage.getItem(xiNET_StorageNS + "UniProtKB." + accession);
 						if (stored){
 							console.log(accession + " UniProt from local storage.");
 							processUniProtTxt(p, stored);

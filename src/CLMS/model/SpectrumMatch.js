@@ -370,7 +370,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
 			pep1_start, pep1_length, pep2_start, pep2_length){
 	// we don't want two different ID's, e.g. one thats "33-66" and one thats "66-33"
 	//following puts lower protein_ID first in link_ID
-	var proteinLinkID, fromProt, toProt;
+	var /*proteinLinkID,*/ fromProt, toProt;
 
 	var proteins = this.containingModel.get("interactors");
 	var crossLinks = this.containingModel.get("crossLinks");
@@ -401,7 +401,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
 	}
 
 	//get or create protein-protein link
-	var link = proteinLinks.get(proteinLinkID);
+	/*var link = proteinLinks.get(proteinLinkID);
 	if (link === undefined) {
 		if (fromProt === undefined || toProt === undefined) {
 			alert("Something has gone wrong; a link has been added before a protein it links to. " +
@@ -413,7 +413,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
 		if (toProt !== null){
 			toProt.addLink(link);
 		}
-	}
+	}*/
 	// again, order id string by prot id or by residue if self-link
 	var endsReversedInResLinkId = false;
 	var crossLinkID;
@@ -435,37 +435,38 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
 	}
 
 	//get or create residue link
-	var resLink = link.crossLinks.get(crossLinkID);
+	var resLink = crossLinks.get(crossLinkID);
 	if (resLink === undefined) {
 		//WATCH OUT - residues need to be in correct order
 		if (p1ID === p2ID) {
 			if ((res1 - 0) < (res2 - 0) || res2 === 'n/a') {//TODO: the 'n/a' is a mistake? Already dealt with?
-				resLink = new CLMS.model.CrossLink(crossLinkID, link, res1, res2, this.containingModel);
+				resLink = new CLMS.model.CrossLink(crossLinkID, fromProt, res1, toProt, res2, this.containingModel);
 			} else {
-				resLink = new CLMS.model.CrossLink(crossLinkID, link, res2, res1, this.containingModel);
+				resLink = new CLMS.model.CrossLink(crossLinkID, fromProt, res2, toProt, res1, this.containingModel);
 			}
 		}
 		//
-		else if (p1ID == link.fromProtein.id) {
-			resLink = new CLMS.model.CrossLink(crossLinkID, link, res1, res2, this.containingModel);
+		else if (p1ID == fromProt.id) {
+			resLink = new CLMS.model.CrossLink(crossLinkID, fromProt, res1, toProt, res2, this.containingModel);
 		}
 		else {
 			//WATCH OUT - residues need to be in correct oprder
-			resLink = new CLMS.model.CrossLink(crossLinkID, link, res2, res1, this.containingModel);
+			resLink = new CLMS.model.CrossLink(crossLinkID, fromProt, res2, toProt, res1, this.containingModel);
 		}
-		link.crossLinks.set(crossLinkID, resLink);
+		//~ link.crossLinks.set(crossLinkID, resLink);
 		crossLinks.set(crossLinkID, resLink);
-		if (proteins.keys().length > 1) {
+		/*if (proteins.keys().length > 1) {
 			var linkCount = link.crossLinks.keys().length;
 			if (linkCount > ProteinLink.maxNoCrossLinks) {
 				ProteinLink.maxNoCrossLinks = linkCount;
 			}
-		}
+		}*/
 	}
 	//we have residue link we want - associate this match with it
 	//~ if (typeof resLink.matches === 'undefined' || resLink.matches == null){
 		//~ resLink.matches = [];
 	//~ }
+	
 	//fix this hack with the array?
 	if (endsReversedInResLinkId === false) {
 		resLink.matches.push([this, pep1_start, pep1_length, pep2_start, pep2_length]);
