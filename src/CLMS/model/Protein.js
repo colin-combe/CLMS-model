@@ -59,7 +59,7 @@ CLMS.model.Protein.prototype.isDecoy = function() {
 };
 
 CLMS.model.Protein.prototype.readableId = function(protein){
-	if (protein.accession && protein.name) {
+	if (this.accession && this.name) {
 		return "sp|" + this.accession + "|" + this.name;
 	}
 	else if (this.name) {
