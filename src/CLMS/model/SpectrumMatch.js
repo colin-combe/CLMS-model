@@ -374,7 +374,6 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
 
 	var proteins = this.containingModel.get("interactors");
 	var crossLinks = this.containingModel.get("crossLinks");
-	var proteinLinks = this.containingModel.get("proteinLinks");
 
 	//TODO: tidy up following
 	if (p2ID === null) { //its  a loop link or mono link
@@ -462,6 +461,12 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
 			}
 		}*/
 	}
+	
+	fromProt.crossLinks.push(resLink);
+	if (toProt != null){
+		toProt.crossLinks.push(resLink);
+	}
+	
 	//we have residue link we want - associate this match with it
 	//~ if (typeof resLink.matches === 'undefined' || resLink.matches == null){
 		//~ resLink.matches = [];

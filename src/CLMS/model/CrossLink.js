@@ -10,8 +10,8 @@
 
 CLMS.model.CrossLink = function (id, fromProtein, fromResidue, toProtein, toResidue) {
 	this.id = id;
-	this.matches = new Array(0);
-	this.filteredMatches = new Array(0);
+	this.matches = [];
+	this.filteredMatches = [];
 	
 	//this.proteinLink = proteinLink;
 	this.fromProtein = fromProtein;
@@ -69,7 +69,7 @@ CLMS.model.CrossLink.prototype.getFilteredMatches = function() {
 
 //used when filter changed
 CLMS.model.CrossLink.prototype.check = function(filter) {
-	if (this.controller.selfLinkShown === false && this.selfLink()) {
+	/*if (this.controller.selfLinkShown === false && this.selfLink()) {
 		this.hide();
 		return false;
 	}
@@ -81,9 +81,9 @@ CLMS.model.CrossLink.prototype.check = function(filter) {
 		this.ambig = false;
 		this.show();
 		return true;
-	}
-	var filteredMatches = this.getFilteredCLMS.model.SpectrumMatches();
-	var countFilteredMatches = filteredCLMS.model.SpectrumMatches.length;
+	}*/
+	var filteredMatches = this.getFilteredMatches();
+	var countFilteredMatches = filteredMatches.length;
 	if (countFilteredMatches > 0) {
 		/*this.tooltip = this.proteinLink.fromProtein.labelText + '_' + this.fromResidue
 					+ "-"  + ((this.proteinLink.toProtein != null)? this.proteinLink.toProtein.labelText:'null')

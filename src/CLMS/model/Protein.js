@@ -15,11 +15,12 @@ CLMS.model.Protein = function (id, acc, name) {
 		this.name = id;
 	}
 	//links
-	//this.proteinLinks = new Map();
-	this.selfLink = null;//TODO: maybe dont need this, but xiNET is using it
+	this.crossLinks = [];
 	//annotation scheme
-	this.annotatedRegions = null;//TODO: maybe dont need this, but xiNET is using it
+	//this.annotatedRegions = null;//TODO: maybe dont need this, but xiNET is using it
 }
+
+CLMS.model.Protein.subgraphs = []; // temop hack
 
 //sequence = amino acids in UPPERCASE, digits or lowercase can be used for modification info
 CLMS.model.Protein.prototype.setSequence = function(sequence){
@@ -57,8 +58,22 @@ CLMS.model.Protein.prototype.isDecoy = function() {
 	}
 };
 
+CLMS.model.Protein.prototype.readableId = function(protein){
+	if (protein.accession && protein.name) {
+		return "sp|" + this.accession + "|" + this.name;
+	}
+	else if (this.name) {
+		return protein.name;
+	}
+	else if (this.accession) {
+		return this.accession;
+	}
+	else {
+		return this.id;
+	}
+}
 
-CLMS.model.Protein.prototype.addLink = function(link) {
+/*CLMS.model.Protein.prototype.addLink = function(link) {
 	if (!this.proteinLinks.has(link.id)) {
 		this.proteinLinks.set(link.id, link);
 	}
@@ -69,7 +84,7 @@ CLMS.model.Protein.prototype.addLink = function(link) {
 	if (link.toProtein === null) {
 		this.linkerModifications = link;
 	}
-};
+};*/
 
 /*
  * following aren't in uml diagram but leave in for now -
@@ -79,7 +94,7 @@ CLMS.model.Protein.prototype.countExternalLinks = function() {
 	//~ if (this.isParked) {
 		//~ return 0;
 	//~ }
-	var countExternal = 0;
+	/*var countExternal = 0;
 	var c = this.proteinLinks.keys().length;
 	for (var l = 0; l < c; l++) {
 		var link = this.proteinLinks.values()[l];
@@ -90,7 +105,11 @@ CLMS.model.Protein.prototype.countExternalLinks = function() {
 			}
 		}
 	}
-	return countExternal;
+	return countExternal;*/
+	if (this.subgraph == null) {
+		this.getSubgraph();
+	}
+	return  this.subgraph.links.size();
 };
 
 CLMS.model.Protein.prototype.getSubgraph = function(subgraphs) {
@@ -100,29 +119,29 @@ CLMS.model.Protein.prototype.getSubgraph = function(subgraphs) {
 			links: new Map()
 		};
 		subgraph.nodes.set(this.id, this);
-		if (this.isParked === false) {
+		//~ if (this.isParked === false) {
 			this.subgraph = this.addConnectedNodes(subgraph);
-		}
-		//~ this.controller.subgraphs.push(subgraph); **
+		//~ }
+		CLMS.model.Protein.subgraphs.push(subgraph);
 	}
 	return this.subgraph;
 };
 
 CLMS.model.Protein.prototype.addConnectedNodes = function(subgraph) {
-	var links = this.proteinLinks.values();
-	var c = links.length;
-	for (var l = 0; l < c; l++) {
-		var link = links[l];
+	//~ var links = this.crossLinks.values();
+	for (crossLink of this.crossLinks) {
 		//visible, non-self links only
-		if (link.fromCLMS.model.Protein !== link.toCLMS.model.Protein && link.check() === true) {
-			if (!subgraph.links.has(link.id)) {
-				subgraph.links.set(link.id, link);
+		if (crossLink.fromProtein !== crossLink.toProtein && crossLink.check() === true) {
+			var linkId = crossLink.fromProtein.id + "-" + crossLink.toProtein.id;
+			var link = {"source":crossLink.fromProtein.id, "target":crossLink.toProtein.id};
+			if (!subgraph.links.has(linkId)) {
+				subgraph.links.set(linkId, link);
 				var otherEnd;
-				if (link.getFromCLMS.model.Protein() === this) {
-					otherEnd = link.getToCLMS.model.Protein();
+				if (crossLink.fromProtein === this) {
+					otherEnd = crossLink.toProtein;
 				}
 				else {
-					otherEnd = link.getFromCLMS.model.Protein();
+					otherEnd = crossLink.fromProtein;
 				}
 				if (otherEnd !== null) {
 					if (!subgraph.nodes.has(otherEnd.id)) {
