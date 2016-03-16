@@ -14,10 +14,9 @@
 			interactors: new Map (), //map
 			matches: [], //array
 			crossLinks: new Map(), //map
-			//~ proteinLinks: new Map(), //map
 			minScore: NaN,
 			maxScore: NaN,
-			groups: new Set()
+			searches: new Map()
 		},
 
 		initialize: function (options) {
@@ -27,9 +26,12 @@
 			this.options = _.extend(defaultOptions, options);
 
 			var self = this;
+			
+			
+			
 			var interactorMap = this.get("interactors");
 			if (this.options.rawInteractors) {
-				for (var i of options.rawInteractors){
+				for (i of this.options.rawInteractors){
 					var protein = new CLMS.model.Protein (i[0], i[1], i[2]);
 					protein.setSequence(i[3]);
 					interactorMap.set(protein.id, protein);
