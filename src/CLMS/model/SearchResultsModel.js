@@ -16,7 +16,7 @@
 			crossLinks: new Map(), //map
 			minScore: NaN,
 			maxScore: NaN,
-			searches: {},
+			searches: new Map(),
 			groups: new Set()
 		},
 
