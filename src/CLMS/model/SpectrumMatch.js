@@ -8,7 +8,7 @@
 CLMS.model.SpectrumMatch = function (containingModel, id,
 				pep1_protIDs, pep1_positions, pepSeq1, linkPos1,
 				pep2_protIDs, pep2_positions, pepSeq2, linkPos2,
-				score, dataSetId, autovalidated, validated, run_name, scan_number){
+				score, searchId, autovalidated, validated, run_name, scan_number, group){
 
 	this.id = id.toString().trim();
 
@@ -17,10 +17,11 @@ CLMS.model.SpectrumMatch = function (containingModel, id,
 	
   	//if the match is ambiguous it will relate to many crossLinks
   	this.crossLinks = [];
-
+	
+	this.searchId = searchId;
 	//for comparison of different data sets
-  	if (dataSetId) {
-		this.group = dataSetId.toString().trim();
+  	if (group) {
+		this.group = group.toString().trim();
 	}
   	
 	if (run_name) {
