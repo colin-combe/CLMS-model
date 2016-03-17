@@ -31,7 +31,7 @@
 			//search meta data
 			var searches = new Map();			
 			for(var propertyName in this.options.searches) {
-			   searches.set(propertyName, searches['propertyName']);
+			   searches.set(propertyName, this.options.searches[propertyName]);
 			}
 			this.set("searches", searches);
 			
