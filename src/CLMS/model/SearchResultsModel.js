@@ -57,9 +57,10 @@
 				console.log("l " + l);
 				for (var i = 0; i < l; i++) {
 					var match = new CLMS.model.SpectrumMatch (this, rawMatches[i][0], rawMatches[i][1], rawMatches[i][2], rawMatches[i][3],
-					rawMatches[i][4], rawMatches[i][5], rawMatches[i][6], rawMatches[i][7],
-					rawMatches[i][8], rawMatches[i][9], rawMatches[i][10], rawMatches[i][11],
-					rawMatches[i][12], rawMatches[i][13], rawMatches[i][14], rawMatches[i][15], rawMatches[i][16]);
+						rawMatches[i][4], rawMatches[i][5], rawMatches[i][6], rawMatches[i][7],
+						rawMatches[i][8], rawMatches[i][9], rawMatches[i][10], rawMatches[i][11],
+						rawMatches[i][12], rawMatches[i][13], rawMatches[i][14], 
+						rawMatches[i][15], rawMatches[i][16], rawMatches[i][17]);
 
 					matches.push(match);
 

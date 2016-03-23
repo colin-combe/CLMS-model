@@ -8,7 +8,7 @@
 CLMS.model.SpectrumMatch = function (containingModel, id,
 				pep1_protIDs, pep1_positions, pepSeq1, linkPos1,
 				pep2_protIDs, pep2_positions, pepSeq2, linkPos2,
-				score, searchId, autovalidated, validated, run_name, scan_number, group){
+				score, searchId, autovalidated, validated, run_name, scan_number, group, precursorCharge){
 
 	this.id = id.toString().trim();
 
@@ -30,6 +30,9 @@ CLMS.model.SpectrumMatch = function (containingModel, id,
   	if (scan_number) {
 		this.scanNumber = scan_number.toString().trim();
 	}
+	
+	this.precursorCharge = precursorCharge;
+	
   	//sanitise the inputs
 	//http://stackoverflow.com/questions/5515310/is-there-a-standard-function-to-check-for-null-undefined-or-blank-variables-in
 
