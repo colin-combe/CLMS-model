@@ -39,7 +39,7 @@
 			var interactorMap = this.get("interactors");
 			if (this.options.rawInteractors) {
 				for (i of this.options.rawInteractors){
-					var protein = new CLMS.model.Protein (i[0], i[1], i[2]);
+					var protein = new CLMS.model.Protein (i[0], i[1], i[2], i[4]);
 					protein.setSequence(i[3]);
 					interactorMap.set(protein.id, protein);
 				}

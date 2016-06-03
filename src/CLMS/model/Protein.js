@@ -5,7 +5,7 @@
 //
 //		CLMS.model.Protein.js
 
-CLMS.model.Protein = function (id, acc, name) {
+CLMS.model.Protein = function (id, acc, name, desc) {
 	this.id = id; // id may not be accession
 	this.accession = acc;
 	this.name = name;
@@ -14,6 +14,7 @@ CLMS.model.Protein = function (id, acc, name) {
 	} else if (!this.name) {
 		this.name = id;
 	}
+	this.description = desc;
 	//links
 	this.crossLinks = [];
 	//annotation scheme
