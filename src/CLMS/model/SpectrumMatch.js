@@ -439,7 +439,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
 
 	//get or create residue link
 	var resLink = crossLinks.get(crossLinkID);
-	if (resLink === undefined) {
+	if (typeof resLink == 'undefined') {
 		//WATCH OUT - residues need to be in correct order
 		if (p1ID === p2ID) {
 			if ((res1 - 0) < (res2 - 0) || res2 === 'n/a') {//TODO: the 'n/a' is a mistake? Already dealt with?
@@ -460,7 +460,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
 		crossLinks.set(crossLinkID, resLink);
 		
 		fromProt.crossLinks.push(resLink);
-		if (toProt != null){
+		if (toProt != null && (toProt != fromProt)){
 			toProt.crossLinks.push(resLink);
 		}
 
