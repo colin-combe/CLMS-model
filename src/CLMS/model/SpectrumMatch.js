@@ -458,18 +458,14 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
 		}
 		//~ link.crossLinks.set(crossLinkID, resLink);
 		crossLinks.set(crossLinkID, resLink);
-		/*if (proteins.keys().length > 1) {
-			var linkCount = link.crossLinks.keys().length;
-			if (linkCount > ProteinLink.maxNoCrossLinks) {
-				ProteinLink.maxNoCrossLinks = linkCount;
-			}
-		}*/
+		
+		fromProt.crossLinks.push(resLink);
+		if (toProt != null){
+			toProt.crossLinks.push(resLink);
+		}
+
 	}
 	
-	fromProt.crossLinks.push(resLink);
-	if (toProt != null){
-		toProt.crossLinks.push(resLink);
-	}
 	
 	//we have residue link we want - associate this match with it
 	//~ if (typeof resLink.matches === 'undefined' || resLink.matches == null){
