@@ -5,360 +5,172 @@
 //
 //		CLMS.model.SpectrumMatch.js
 
-CLMS.model.SpectrumMatch = function (containingModel, id,
-				pep1_protIDs, pep1_positions, pepSeq1, linkPos1,
-				pep2_protIDs, pep2_positions, pepSeq2, linkPos2,
-				score, searchId, autovalidated, validated, run_name, scan_number, group, precursorCharge){
-
-	this.id = id.toString().trim();
-
-
-	this.containingModel = containingModel;//reference to controlling xiNET.Controller object 
+CLMS.model.SpectrumMatch = function (containingModel, rawMatches){
 	
-  	//if the match is ambiguous it will relate to many crossLinks
-  	this.crossLinks = [];
+	// single 'rawMatch'looks like {"id":25918012,"ty":1,"pi":8485630,"lp":0,
+	// "sc":3.25918,"si":624, dc:"f", "av":"f", (optional v:"A", rj: "f" ),
+	// "r":"run","sn":6395,"pc":2},
+ 	//
+ 	// it's a join of spectrum_match and matched_peptide tables in DB,
+ 	// 
+ 	// id = spectrumMatch id, ty = "match_type" (match_type != protduct_type)
+ 	// pi = peptide_id, lp = link position, sc = score, si = search_id, 
+ 	// dc = is_decoy, av = autovalidated, v = validated, rj = rejected,
+ 	// r = run_name, sn = scan_number, pc = precursor charge  
+ 	
+ 	this.containingModel = containingModel; //containing BB model 
 	
-	this.searchId = searchId;
-	//for comparison of different data sets
-  	if (group) {
-		this.group = group.toString().trim();
-	}
-  	
-	if (run_name) {
-		this.runName = run_name.toString().trim();
-	}
-  	if (scan_number) {
-		this.scanNumber = scan_number.toString().trim();
-	}
-	
-	this.precursorCharge = precursorCharge;
-	
-  	//sanitise the inputs
-	//http://stackoverflow.com/questions/5515310/is-there-a-standard-function-to-check-for-null-undefined-or-blank-variables-in
-
-	//score - leaves this.score null if !isNaN(parseFloat(score))
-	if (score){
-		score = parseFloat(score);
-		if (!isNaN(score)){
-			this.score = score;
-		}
-	}
-
+	//following are duplicated in each raw_match (are from spectrum _match table) 
+	// take values from rawMatches[0]
+ 	this.id = rawMatches[0].id;
+  	this.searchId = rawMatches[0].si;
+	this.is_decoy = (rawMatches[0].dc == 't')? true : false;
+	this.runName = rawMatches[0].r;
+	this.scanNumber = rawMatches[0].sn;
+	this.precursorCharge = rawMatches[0].pc;
+	this.score = rawMatches[0].sc;
 	//autovalidated - another attribute
-	if (autovalidated){
-		autovalidated = autovalidated.toString().trim();
-		if (autovalidated !== ''){
-			if (autovalidated == "t" || autovalidated == "true" || autovalidated === true){
-				this.autovalidated = true;
-			} else {
-				this.autovalidated = false;
-			}
-			CLMS.model.SpectrumMatch.autoValidatedFound = true;
+	if (rawMatches[0].av){
+		if (rawMatches[0].av == "t"){
+			this.autovalidated = true;
+		} else {
+			this.autovalidated = false;
 		}
+		CLMS.model.SpectrumMatch.autoValidatedFound = true;
 	}
-
 	// used in Rappsilber Lab to record manual validation status
-	if (validated){
-		validated = validated.toString().trim();
-		this.validated = validated;
+	if (rawMatches[0].v){
+		this.validated = rawMatches[0].v;
 		CLMS.model.SpectrumMatch.manualValidatedFound = true;
 	}
 
-	//tidy up IDs, leaves protIDs null if empty, 'n/a' or '-'
-	// forbidden characters are ,;'"
-	function sanitiseProteinIDs(protIDs){
-		protIDs = protIDs.toString().trim();
-		if (/*protIDs !== '' &&*/ protIDs !== '-' && protIDs !== 'n/a'){
-			// eliminate all forms of quotation mark
-			// - sooner or later they're going to screw up javascript, prob whilst trying to generate>parse JSON
-			CLMS.model.SpectrumMatch.eliminateQuotes.lastIndex = 0;
-			protIDs = protIDs.replace(CLMS.model.SpectrumMatch.eliminateQuotes, '');
-			CLMS.model.SpectrumMatch.split.lastIndex = 0;
-			protIDs = protIDs.split(CLMS.model.SpectrumMatch.split);
-			var protIDCount = protIDs.length
-			for (var p = 0; p < protIDCount; p++ ){
-				protIDs[p] = protIDs[p].trim();
-			}
-		}
-		else {
-			protIDs = null;
-		}
-		return protIDs;
+	var peptides = this.containingModel.get("peptides");
+	this.matchedPeptides = [];
+	this.matchedPeptides[0] = peptides.get(rawMatches[0].pi);
+	// following will be inadequate for trimeric and higher order cross-links
+	if (rawMatches[1]) {
+		this.matchedPeptides[1] = peptides.get(rawMatches[1].pi);
 	}
+		
+  	//if the match is ambiguous it will relate to many crossLinks
+  	// TODO: for linears this could be left undefined? rest of code 
+	// would need defensive check
+  	this.crossLinks = [];
 
-	//protein IDs
-	pep1_protIDs = sanitiseProteinIDs(pep1_protIDs);
-	pep2_protIDs = sanitiseProteinIDs(pep2_protIDs);
-
-	//these are the peptide sequences before the modification info is removed
-	//(these att's not shown in uml diagram...)
-	this.pepSeq1raw = pepSeq1;
-	this.pepSeq2raw = pepSeq2;
-
-	this.pepSeq1 = null;
-	if (pepSeq1){
-		CLMS.model.SpectrumMatch.capitalsOnly.lastindex = 0;
-		this.pepSeq1 = pepSeq1.replace(CLMS.model.SpectrumMatch.capitalsOnly, '');
+	//TODO: could tidy following up, dont really need the pepSeq att's
+	this.pepSeq1raw = this.matchedPeptides[0].seq;
+	this.pepSeq1 = this.matchedPeptides[0].sequence;
+	linkPos1 = rawMatches[0].lp;
+	pep1_protIDs = this.matchedPeptides[0].prt;
+	pep1_positions = this.matchedPeptides[0].pos;	
+	// following will be inadequate for trimeric and higher order cross-links
+	if (rawMatches[1]) {
+		this.pepSeq2raw = this.matchedPeptides[1].seq;
+		this.pepSeq2 = this.matchedPeptides[1].sequence;
+		linkPos2 = rawMatches[1].lp;
+		pep2_protIDs = this.matchedPeptides[1].prt;
+		pep2_positions = this.matchedPeptides[1].pos;
+	} else {
+		linkPos2 = null;
+		pep2_protIDs = null;
+		pep2_positions = null;
 	}
-	this.pepSeq2 = null;
-	if (pepSeq2){
-		CLMS.model.SpectrumMatch.capitalsOnly.lastindex = 0;
-		this.pepSeq2 = pepSeq2.replace(CLMS.model.SpectrumMatch.capitalsOnly, '');
-	}
+	
+	//TODO: tidy up following
+	//non of following are strictly necesssary, because info is stored in assicated CrossLinks
+	//burns some memory for convenience when making table of matches or outputing CSV, etc
+	this.protein1 = pep1_protIDs;
+	this.pepPos1 = pep1_positions;
+	this.linkPos1 = linkPos1;
+	this.protein2 = pep2_protIDs;
+	this.pepPos2 = pep2_positions;
+	this.linkPos2  = linkPos2;
 
+	if (linkPos1 == 0) { //would have been -1 in DB but 1 was added to it during query
+		//its a linear - it will be added to matches model attribute but has no cross-links 
+		return;
+	} 
+	
 	var self = this;
-	pep1_positions = sanitisePositions(pep1_positions);
-	pep2_positions = sanitisePositions(pep2_positions);
-	linkPos1 = sanitisePositions(linkPos1);
-	linkPos2 = sanitisePositions(linkPos2);
-
-	if (linkPos1.length == 1 && linkPos2.length == 1) {
-		CLMS.model.SpectrumMatch.unambigLinkFound = true;
-	}
-
-	// tidy up postions (peptide and link positions),
-	// leaves positions null if empty, 'n/a' or '-'
-	// forbidden characters are ,;'"
-	function sanitisePositions(positions){
-		if (positions){
-			positions = positions.toString().trim();
-			if (positions !== '' && positions !== '-' && positions !== 'n/a'){
-				// eliminate all forms of quotation mark
-				CLMS.model.SpectrumMatch.eliminateQuotes.lastIndex = 0;
-				positions = positions.toString().replace(CLMS.model.SpectrumMatch.eliminateQuotes, '');
-				//; or , as seperator (need comma incase input field was an array, which has just had toString called on it)
-				CLMS.model.SpectrumMatch.split.lastIndex = 0;
-				positions = positions.split(CLMS.model.SpectrumMatch.split);
-				var posCount = positions.length;
-				for (var i2 = 0; i2 < posCount; i2++ ){
-					var pos = parseInt(positions[i2]);
-					if (isNaN(pos)) {
-						console.debug('Absurd non-numerical position. CLMS.model.SpectrumMatch id:'
-							 + self.id + ". So-called 'position':" + positions[i2]);
-					}
-					else {
-						positions[i2] = pos;
-					}
-				}
-			}
-			else {
-				positions = null;
-			}
-		}
-		else {
-			positions = null;
-		}
-		return positions;
-	}
-
-	//product type
-  	//0 = linker modified peptide (mono-link),
-  	// 1 = internally linked peptide (loop-link), 2 = cross-link
-	if (pep2_protIDs === null && (pep2_positions === null && linkPos2 === null)){
-		this.productType = 0;
-	}
-	else if (pep2_protIDs === null){
-		this.productType = 1;
-	}
-	else {
-		this.productType = 2;
-	}
-
+		
 	// the protein IDs and residue numers we eventually want to get:-
 	var p1ID, p2ID, res1, res2;
 	//used along the way:-
 	var iProt, jProt;
 
-	if (pep1_protIDs) {
-		if (this.productType === 0) { //its a linker modified peptide (mono-link)
-			if (pep1_positions !== null) {
-				for (var i = 0; i < pep1_positions.length; i++) {
-					iProt = i;
-					if (iProt >= pep1_protIDs.length) {
-						iProt = pep1_protIDs.length - 1;
-					}
-					p1ID = pep1_protIDs[iProt];
-					res1 = pep1_positions[i];
-					res1 += linkPos1[0] - 1;
-					this.associateWithLink(p1ID, null, res1, null, pep1_positions[i], this.pepSeq1.length, null, null);
-				}
+	//loop to produce all alternative linkage site combinations
+	//(position1 count * position2 count alternative)
+	for (var i = 0; i < pep1_positions.length; i++) {
+		for (var j = 0; j < pep2_positions.length; j++) {
+			// allowed, but undocumneted:
+			// may be more residue positions than prot ids in the arrays
+			// ( = multiple positions in one protein, we use the last protein id encountered)
+			var iProt = i, jProt = j;
+			if (iProt >= pep1_protIDs.length) {
+				iProt = pep1_protIDs.length - 1;
 			}
-			else {
-				for (var i = 0; i < linkPos1.length; i++) {
-					iProt = i;
-					if (iProt >= pep1_protIDs.length) {
-						iProt = pep1_protIDs.length - 1;
-					}
-					p1ID = pep1_protIDs[iProt];
-					res1 = linkPos1[i];
-					this.associateWithLink(p1ID, null, res1, null, null, null, null, null);
-				}
+			if (jProt >= pep2_protIDs.length) {
+				jProt = pep2_protIDs.length - 1;
 			}
+			p1ID = pep1_protIDs[iProt];
+			p2ID = pep2_protIDs[jProt];
+
+			// * residue numbering starts at 1 *
+			res1 = pep1_positions[i] - 0;
+			res2 = pep2_positions[j] - 0;
+			if (linkPos1 !== null) {
+				res1 += (linkPos1 - 1);
+			}
+			if (linkPos2 !== null) {
+				res2 += (linkPos2 - 1);
+			}
+
+			this.associateWithLink(p1ID, p2ID, res1, res2, pep1_positions[i] - 0, this.pepSeq1.length, pep2_positions[j], this.pepSeq2.length);
 		}
-		else if (this.productType === 1){// its an internally linked peptide (loop-link)
-			if (pep1_positions !== null) {
-				//loop to produce all alternative linkage site combinations for loop links
-				for (var i = 0; i < pep1_positions.length; i++) {
-					//must be same number of alternatives for res 2 as for res1 in loop link
+	}
 
-					// we allow following, though its not documented
-					// may be more residue positions than prot ids in the arrays
-					// ( = multiple positions in one protein)
-					var iProt = i;
-					if (iProt >= pep1_protIDs.length) {
-						iProt = pep1_protIDs.length - 1;
-					}
-					p1ID = pep1_protIDs[iProt];
+	//identify homodimers: if peptides overlap its a homodimer, this bit of code is not quite finished
+	this.confirmedHomomultimer = false;//not that simple - single match may possibly be both homodimer link and inter protein link (if ambiguous)
+	this.overlap = [];//again, not that simple - see note below
+	//if self link
+	if (p1ID === p2ID) {
+		//if /*unambiguous?*/ cross-link
+	   // if (pep1_positions && pep2_positions ){
+			//TODO: there is some problems here to do with ambiguity - overlap may occur in different places
+			//&& pep1_positions.length === 1 && pep2_positions.length === 1) {
+			//if both peptide sequnces defined
+			if (this.pepSeq1 && this.pepSeq2) {
 
-					// * residue numbering starts at 1 *
-					res1 = pep1_positions[i];
-					res2 = (pep2_positions)? pep2_positions[i] : pep1_positions[i];
-					if (linkPos1 !== null) {
-						res1 += linkPos1[0] - 1;
-					}
-					if (linkPos2 !== null) {
-						res2 += linkPos2[0] - 1;
-					}
-					this.associateWithLink(p1ID, null, res1, res2, pep1_positions[i], this.pepSeq1.length, null, null);
-				}
-			}
-			else {
-				for (var i = 0; i < linkPos1.length; i++) {
-					//must be same number of alternatives for res 2 as for res1 in loop link
-
-					// we allow following, though its not documented
-					// may be more residue positions than prot ids in the arrays
-					// ( = multiple positions in one protein)
-					var iProt = i;
-					if (iProt >= pep1_protIDs.length) {
-						iProt = pep1_protIDs.length - 1;
-					}
-					p1ID = pep1_protIDs[iProt];
-
-					// * residue numbering starts at 1 *
-					res1 = linkPos1[0];
-					res2 = linkPos2[0];
-					this.associateWithLink(p1ID, null, res1, res2, null, null, null, null);
-				}
-			}
-		}
-		else { //its cross-linked peptides
-			if (pep1_positions !== null) {
-				//loop to produce all alternative linkage site combinations
-				//(position1 count * position2 count alternative)
-				if (pep1_positions !== null) {
-					for (var i = 0; i < pep1_positions.length; i++) {
-						for (var j = 0; j < pep2_positions.length; j++) {
-							// allowed, but undocumneted:
-							// may be more residue positions than prot ids in the arrays
-							// ( = multiple positions in one protein, we use the last protein id encountered)
-							var iProt = i, jProt = j;
-							if (iProt >= pep1_protIDs.length) {
-								iProt = pep1_protIDs.length - 1;
-							}
-							if (jProt >= pep2_protIDs.length) {
-								jProt = pep2_protIDs.length - 1;
-							}
-							p1ID = pep1_protIDs[iProt];
-							p2ID = pep2_protIDs[jProt];
-
-							// * residue numbering starts at 1 *
-							res1 = pep1_positions[i] - 0;
-							res2 = pep2_positions[j] - 0;
-							if (linkPos1 !== null) {
-								res1 += (linkPos1 - 1);
-							}
-							if (linkPos2 !== null) {
-								res2 += (linkPos2 - 1);
-							}
-
-							this.associateWithLink(p1ID, p2ID, res1, res2, pep1_positions[i] - 0, this.pepSeq1.length, pep2_positions[j], this.pepSeq2.length);
-						}
-					}
-				}
-			}
-			else {
-				//loop to produce all alternative linkage site combinations
-				//(position1 count * position2 count alternatives)
-				for (var i = 0; i < linkPos1.length; i++) {
-					for (var j = 0; j < linkPos2.length; j++) {
-						// allowed, but undocumneted:
-						// may be more residue positions than prot ids in the arrays
-						// ( = multiple positions in one protein, we use the last protein id encountered)
-						var iProt = i, jProt = j;
-						if (iProt >= pep1_protIDs.length) {
-							iProt = pep1_protIDs.length - 1;
-						}
-						if (jProt >= pep2_protIDs.length) {
-							jProt = pep2_protIDs.length - 1;
-						}
-						p1ID = pep1_protIDs[iProt];
-						p2ID = pep2_protIDs[jProt];
-
-						// * residue numbering starts at 1 *
-						res1 = linkPos1[i] - 0;
-						res2 = linkPos2[j] - 0;
-						this.associateWithLink(p1ID, p2ID, res1, res2, null, null, null, null);
-					}
-				}
-			}
-		}
-
-		//identify homodimers: if peptides overlap its a homodimer, this bit of code is not quite finished
-		this.confirmedHomomultimer = false;//not that simple - single match may possibly be both homodimer link and inter protein link (if ambiguous)
-		this.overlap = [];//again, not that simple - see note below
-		//if self link
-		if (p1ID === p2ID) {
-			//if /*unambiguous?*/ cross-link
-		   // if (pep1_positions && pep2_positions ){
-				//TODO: there is some problems here to do with ambiguity - overlap may occur in different places
-				//&& pep1_positions.length === 1 && pep2_positions.length === 1) {
-				//if both peptide sequnces defined
-				if (this.pepSeq1 && this.pepSeq2) {
-
-					var pep1length = this.pepSeq1.length;
-					var pep2length = this.pepSeq2.length;
-					var pep1_start = pep1_positions[0];
-					var pep2_start = pep2_positions[0];
-					var pep1_end = pep1_start  + (pep1length - 1);
-					var pep2_end = pep2_start + (pep2length - 1);
-					if (pep1_start >= pep2_start && pep1_start <= pep2_end){
-					   //console.log("here");
-						this.confirmedHomomultimer = true;
-						this.overlap[0] = pep1_start - 1;
-						if (pep1_end < pep2_end) {
-							this.overlap[1] = pep1_end;
-						} else {
-							this.overlap[1] = pep2_end;
-						}
-					}
-					else if (pep2_start >= pep1_start && pep2_start <= pep1_end){
-						this.confirmedHomomultimer = true;
-						this.overlap[0] = pep2_start - 1;
-						if (pep2_end < pep1_end) {
-							this.overlap[1] = pep2_end;
-						} else {
-							this.overlap[1] = pep1_end;
-						}
-					}
-				}
-				else if (res1 === res2) {
+				var pep1length = this.pepSeq1.length;
+				var pep2length = this.pepSeq2.length;
+				var pep1_start = pep1_positions[0];
+				var pep2_start = pep2_positions[0];
+				var pep1_end = pep1_start  + (pep1length - 1);
+				var pep2_end = pep2_start + (pep2length - 1);
+				if (pep1_start >= pep2_start && pep1_start <= pep2_end){
 					this.confirmedHomomultimer = true;
-					this.overlap[0] = res1 -1;
-					this.overlap[1] = res2;
+					this.overlap[0] = pep1_start - 1;
+					if (pep1_end < pep2_end) {
+						this.overlap[1] = pep1_end;
+					} else {
+						this.overlap[1] = pep2_end;
+					}
 				}
-			//}
-		}
-
-		/*this.containingModel.matches.push(this);*/
-		//non of following are strictly necesssary, because info is stored in assicated CrossLinks
-		//burns some memory for convenience when making table of matches or outputing CSV, etc
-		this.protein1 = pep1_protIDs;
-		this.pepPos1 = pep1_positions;
-		this.linkPos1 = linkPos1;
-		this.protein2 = pep2_protIDs;
-		this.pepPos2 = pep2_positions;
-		this.linkPos2  = linkPos2;
+				else if (pep2_start >= pep1_start && pep2_start <= pep1_end){
+					this.confirmedHomomultimer = true;
+					this.overlap[0] = pep2_start - 1;
+					if (pep2_end < pep1_end) {
+						this.overlap[1] = pep2_end;
+					} else {
+						this.overlap[1] = pep1_end;
+					}
+				}
+			}
+			else if (res1 === res2) {
+				this.confirmedHomomultimer = true;
+				this.overlap[0] = res1 -1;
+				this.overlap[1] = res2;
+			}
 	}
 }
 
@@ -366,9 +178,6 @@ CLMS.model.SpectrumMatch = function (containingModel, id,
 CLMS.model.SpectrumMatch.autoValidatedFound = false;
 CLMS.model.SpectrumMatch.manualValidatedFound = false;
 CLMS.model.SpectrumMatch.unambigLinkFound = false;
-CLMS.model.SpectrumMatch.eliminateQuotes = /(['"])/g;
-CLMS.model.SpectrumMatch.split = /[;,]/g;
-CLMS.model.SpectrumMatch.capitalsOnly = /[^A-Z]/g;
 
 CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res1, res2, //following params may be null :-
 			pep1_start, pep1_length, pep2_start, pep2_length){
@@ -381,7 +190,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
 
 	//TODO: tidy up following
 	if (p2ID === null) { //its  a loop link or mono link
-		fromProt = this.containingModel.proteins.get(p1ID);
+		fromProt = proteins.get(p1ID);
 		if (res2 === null){// its a monolink
 			proteinLinkID = "" + p1ID + "-null";
 			toProt = null;
@@ -403,20 +212,6 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
 
 	}
 
-	//get or create protein-protein link
-	/*var link = proteinLinks.get(proteinLinkID);
-	if (link === undefined) {
-		if (fromProt === undefined || toProt === undefined) {
-			alert("Something has gone wrong; a link has been added before a protein it links to. " +
-					p1ID + "-" + p2ID);
-		}
-		link = new CLMS.model.ProteinLink(proteinLinkID, fromProt, toProt, this.containingModel);
-		proteinLinks.set(proteinLinkID, link);
-		fromProt.addLink(link);
-		if (toProt !== null){
-			toProt.addLink(link);
-		}
-	}*/
 	// again, order id string by prot id or by residue if self-link
 	var endsReversedInResLinkId = false;
 	var crossLinkID;
@@ -456,25 +251,13 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
 			//WATCH OUT - residues need to be in correct oprder
 			resLink = new CLMS.model.CrossLink(crossLinkID, fromProt, res2, toProt, res1, this.containingModel);
 		}
-		//~ link.crossLinks.set(crossLinkID, resLink);
 		crossLinks.set(crossLinkID, resLink);
-		/*if (proteins.keys().length > 1) {
-			var linkCount = link.crossLinks.keys().length;
-			if (linkCount > ProteinLink.maxNoCrossLinks) {
-				ProteinLink.maxNoCrossLinks = linkCount;
-			}
-		}*/
 	}
 	
 	fromProt.crossLinks.push(resLink);
 	if (toProt != null){
 		toProt.crossLinks.push(resLink);
 	}
-	
-	//we have residue link we want - associate this match with it
-	//~ if (typeof resLink.matches === 'undefined' || resLink.matches == null){
-		//~ resLink.matches = [];
-	//~ }
 	
 	//fix this hack with the array?
 	if (endsReversedInResLinkId === false) {
@@ -483,29 +266,4 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
 		resLink.matches.push([this, pep2_start, pep2_length, pep1_start, pep1_length]);
 	}
 	this.crossLinks.push(resLink);
-}
-/*
-CLMS.model.SpectrumMatch.prototype.meetsFilterCriteria = function() {
-	if (this.isAmbig() && this.containingModel.ambigShown === false) {
-		return false;
-	}
-	if (typeof this.containingModel.filter == 'function') {
-		return this.containingModel.filter(this);
-	}
-	else if (typeof this.containingModel.cutOff !== 'undefined' && typeof this.score !== 'undefined') {
-		if (this.score >= this.containingModel.cutOff)
-			return true;
-		else
-			return false;
-	}
-	else {
-		return true;
-	}
-}*/
-
-CLMS.model.SpectrumMatch.prototype.isAmbig = function() {
-	if (this.crossLinks.length > 1) {
-		return true;
-	}
-	return false;
 }

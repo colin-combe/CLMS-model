@@ -6,41 +6,24 @@
 //		CLMS.model.CrossLink.js
 // 		the class representing a residue-residue link
 
-//CLMS.model.CrossLink.prototype = new xiNET.Link();
-
 CLMS.model.CrossLink = function (id, fromProtein, fromResidue, toProtein, toResidue) {
 	this.id = id;
 	this.matches = [];
 	this.filteredMatches = [];
 	
-	//this.proteinLink = proteinLink;
 	this.fromProtein = fromProtein;
 	this.fromResidue = fromResidue;
 	this.toProtein = toProtein; 
 	this.toResidue = toResidue;
-
-	this.ambig = false;
 }
 
 CLMS.model.CrossLink.prototype.isSelfLink = function() {
 	return (this.fromProtein === this.toProtein);
 }
 
-CLMS.model.CrossLink.prototype.isAmbiguous = function() {
-	return this.ambig;
-}
-
 CLMS.model.CrossLink.prototype.hasConfirmedHomomultimer = function() {
 	return this.confirmedHomomultimer;
 }
-
-CLMS.model.CrossLink.prototype.getFromProtein = function() {
-	return this.fromProtein;
-};
-
-CLMS.model.CrossLink.prototype.getToProtein = function() {
-	return this.toProtein;
-};
 
 CLMS.model.CrossLink.prototype.getFilteredMatches = function() {
 	
