@@ -267,3 +267,10 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
 	}
 	this.crossLinks.push(resLink);
 }
+
+CLMS.model.SpectrumMatch.prototype.isAmbig = function() {
+	if (this.crossLinks.length > 1) {
+		return true;
+	}
+	return false;
+}
