@@ -17,8 +17,7 @@
 			crossLinks: new Map(), //map
 			minScore: NaN,
 			maxScore: NaN,
-			searches: new Map()//,
-			//groups: new Set()
+			searches: new Map()
 		},
 
 		initialize: function (options) {
@@ -28,17 +27,18 @@
 			this.options = _.extend(defaultOptions, options);
 
 			var self = this;
-			
+
 			//search meta data
-			var searches = new Map();			
+			var searches = new Map();
 			for(var propertyName in this.options.searches) {
-			   searches.set(propertyName, this.options.searches[propertyName]);
+				var search = this.options.searches[propertyName];
+				searches.set(propertyName, search);
 			}
-			this.set("searches", searches);		
+			this.set("searches", searches);
 			
 			// we will be removing modification info from sequences
 			var capitalsOnly = /[^A-Z]/g;
-			
+
 			//proteins or 'participants'
 			var interactors = new Map();// lets not call this 'interactors' after all
 			var proteins = this.options.proteins;
@@ -52,7 +52,7 @@
 				interactors.set(protein.id, protein);
 			}
 			this.set("interactors", interactors);
-			
+
 			//peptides
 			var peptides = new Map();
 			var peptide;
@@ -63,13 +63,12 @@
 				peptides.set(peptide.id, peptide);
 			}
 			this.set("peptides", peptides);
-						
+
 			var rawMatches = this.options.rawMatches;
 			if (rawMatches) {
 				var matches = this.get("matches");
 				var minScore = this.get("minScore");
 				var maxScore = this.get("maxScore");
-				//var groups = this.get("groups");
 
 				var l = rawMatches.length, match;
 				for (var i = 0; i < l; i++) {
@@ -81,7 +80,7 @@
 					else {
 						match = new CLMS.model.SpectrumMatch (this, [rawMatches[i]]);
 					}
-					
+
 					matches.push(match);
 
 					if (!maxScore || match.score > maxScore) {
@@ -90,9 +89,6 @@
 					else if (!minScore || match.score < minScore) {
 						minScore = this.score;
 					}
-
-					//groups.add(match.group);
-
 				}
 			}
 

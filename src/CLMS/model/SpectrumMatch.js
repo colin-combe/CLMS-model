@@ -23,7 +23,7 @@ CLMS.model.SpectrumMatch = function (containingModel, rawMatches){
 	//following are duplicated in each raw_match (are from spectrum _match table) 
 	// take values from rawMatches[0]
  	this.id = rawMatches[0].id;
-  	this.searchId = rawMatches[0].si;
+  	this.searchId = rawMatches[0].si.toString();
 	this.is_decoy = (rawMatches[0].dc == 't')? true : false;
 	this.runName = rawMatches[0].r;
 	this.scanNumber = rawMatches[0].sn;
@@ -237,7 +237,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
 	if (typeof resLink == 'undefined') {
 		//WATCH OUT - residues need to be in correct order
 		if (p1ID === p2ID) {
-			if ((res1 - 0) < (res2 - 0) || res2 === 'n/a') {//TODO: the 'n/a' is a mistake? Already dealt with?
+			if ((res1 - 0) < (res2 - 0)) {
 				resLink = new CLMS.model.CrossLink(crossLinkID, fromProt, res1, toProt, res2, this.containingModel);
 			} else {
 				resLink = new CLMS.model.CrossLink(crossLinkID, fromProt, res2, toProt, res1, this.containingModel);
@@ -258,7 +258,6 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
 			toProt.crossLinks.push(resLink);
 		}
 	}
-	
 	
 	//fix this hack with the array?
 	if (endsReversedInResLinkId === false) {
