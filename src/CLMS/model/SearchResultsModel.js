@@ -123,11 +123,11 @@
 						// Retrieve
 						var stored = localStorage.getItem(xiNET_StorageNS + "UniProtKB." + accession);
 						if (stored){
-							console.log(accession + " UniProt from local storage.");
+							//console.log(accession + " UniProt from local storage.");
 							processUniProtTxt(p, stored);
 						}
 						else {
-							console.log(accession + " UniProt not in local storage.");
+							//console.log(accession + " UniProt not in local storage.");
 							uniprotWebService();
 						}
 					}
