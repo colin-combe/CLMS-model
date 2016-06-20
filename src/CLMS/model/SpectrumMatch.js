@@ -57,36 +57,22 @@ CLMS.model.SpectrumMatch = function (containingModel, rawMatches){
 	// would need defensive check
   	this.crossLinks = [];
 
-	//TODO: could tidy following up, dont really need the pepSeq att's
+	//TODO: could tidy following up
 	this.pepSeq1raw = this.matchedPeptides[0].seq;
 	this.pepSeq1 = this.matchedPeptides[0].sequence;
-	linkPos1 = rawMatches[0].lp;
-	pep1_protIDs = this.matchedPeptides[0].prt;
-	pep1_positions = this.matchedPeptides[0].pos;	
+	this.linkPos1 = rawMatches[0].lp;
+	this.protein1 = this.matchedPeptides[0].prt;
+	this.pepPos1 = this.matchedPeptides[0].pos;	
 	// following will be inadequate for trimeric and higher order cross-links
 	if (rawMatches[1]) {
 		this.pepSeq2raw = this.matchedPeptides[1].seq;
 		this.pepSeq2 = this.matchedPeptides[1].sequence;
-		linkPos2 = rawMatches[1].lp;
-		pep2_protIDs = this.matchedPeptides[1].prt;
-		pep2_positions = this.matchedPeptides[1].pos;
-	} else {
-		linkPos2 = null;
-		pep2_protIDs = null;
-		pep2_positions = null;
+		this.linkPos2 = rawMatches[1].lp;
+		this.protein2 = this.matchedPeptides[1].prt;
+		this.pepPos2 = this.matchedPeptides[1].pos;
 	}
 	
-	//TODO: tidy up following
-	//non of following are strictly necesssary, because info is stored in assicated CrossLinks
-	//burns some memory for convenience when making table of matches or outputing CSV, etc
-	this.protein1 = pep1_protIDs;
-	this.pepPos1 = pep1_positions;
-	this.linkPos1 = linkPos1;
-	this.protein2 = pep2_protIDs;
-	this.pepPos2 = pep2_positions;
-	this.linkPos2  = linkPos2;
-
-	if (linkPos1 == 0) { //would have been -1 in DB but 1 was added to it during query
+	if (this.linkPos1 == 0) { //would have been -1 in DB but 1 was added to it during query
 		//its a linear - it will be added to matches model attribute but has no cross-links 
 		return;
 	} 
@@ -100,32 +86,17 @@ CLMS.model.SpectrumMatch = function (containingModel, rawMatches){
 
 	//loop to produce all alternative linkage site combinations
 	//(position1 count * position2 count alternative)
-	for (var i = 0; i < pep1_positions.length; i++) {
-		for (var j = 0; j < pep2_positions.length; j++) {
-			// allowed, but undocumneted:
-			// may be more residue positions than prot ids in the arrays
-			// ( = multiple positions in one protein, we use the last protein id encountered)
-			var iProt = i, jProt = j;
-			if (iProt >= pep1_protIDs.length) {
-				iProt = pep1_protIDs.length - 1;
-			}
-			if (jProt >= pep2_protIDs.length) {
-				jProt = pep2_protIDs.length - 1;
-			}
-			p1ID = pep1_protIDs[iProt];
-			p2ID = pep2_protIDs[jProt];
+	for (var i = 0; i < this.pepPos1.length; i++) {
+		for (var j = 0; j < this.pepPos2.length; j++) {
+
+			p1ID = this.protein1[i];
+			p2ID = this.protein2[j];
 
 			// * residue numbering starts at 1 *
-			res1 = pep1_positions[i] - 0;
-			res2 = pep2_positions[j] - 0;
-			if (linkPos1 !== null) {
-				res1 += (linkPos1 - 1);
-			}
-			if (linkPos2 !== null) {
-				res2 += (linkPos2 - 1);
-			}
+			res1 = this.pepPos1[i] - 1 + this.linkPos1;
+			res2 = this.pepPos2[j] - 1 + this.linkPos2;
 
-			this.associateWithLink(p1ID, p2ID, res1, res2, pep1_positions[i] - 0, this.pepSeq1.length, pep2_positions[j], this.pepSeq2.length);
+			this.associateWithLink(p1ID, p2ID, res1, res2, this.pepPos1[i] - 0, this.pepSeq1.length, this.pepPos2[j], this.pepSeq2.length);
 		}
 	}
 
@@ -143,8 +114,8 @@ CLMS.model.SpectrumMatch = function (containingModel, rawMatches){
 
 				var pep1length = this.pepSeq1.length;
 				var pep2length = this.pepSeq2.length;
-				var pep1_start = pep1_positions[0];
-				var pep2_start = pep2_positions[0];
+				var pep1_start = this.pepPos1[0];
+				var pep2_start = this.pepPos2[0];
 				var pep1_end = pep1_start  + (pep1length - 1);
 				var pep2_end = pep2_start + (pep2length - 1);
 				if (pep1_start >= pep2_start && pep1_start <= pep2_end){
