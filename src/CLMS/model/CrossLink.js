@@ -1,143 +1,126 @@
-//		xiNET cross-link viewer
-//		Copyright 2013 Rappsilber Laboratory, University of Edinburgh
+//      xiNET cross-link viewer
+//      Copyright 2013 Rappsilber Laboratory, University of Edinburgh
 //
-//		author: Colin Combe
+//      author: Colin Combe
 //
-//		CLMS.model.CrossLink.js
-// 		the class representing a residue-residue link
-
-//CLMS.model.CrossLink.prototype = new xiNET.Link();
+//      CLMS.model.CrossLink.js
+//      the class representing a residue-residue link
 
 CLMS.model.CrossLink = function (id, fromProtein, fromResidue, toProtein, toResidue) {
-	this.id = id;
-	this.matches = [];
-	this.filteredMatches = [];
-	
-	//this.proteinLink = proteinLink;
-	this.fromProtein = fromProtein;
-	this.fromResidue = fromResidue;
-	this.toProtein = toProtein; 
-	this.toResidue = toResidue;
+    this.id = id;
+    this.matches = [];
+    this.filteredMatches = [];
 
-	this.ambig = false;
+    this.fromProtein = fromProtein;
+    this.fromResidue = fromResidue;
+    this.toProtein = toProtein;
+    this.toResidue = toResidue;
 }
 
 CLMS.model.CrossLink.prototype.isSelfLink = function() {
-	return (this.fromProtein === this.toProtein);
-}
-
-CLMS.model.CrossLink.prototype.isAmbiguous = function() {
-	return this.ambig;
+    return (this.fromProtein === this.toProtein);
 }
 
 CLMS.model.CrossLink.prototype.hasConfirmedHomomultimer = function() {
-	return this.confirmedHomomultimer;
+    return this.confirmedHomomultimer;
 }
 
-CLMS.model.CrossLink.prototype.getFromProtein = function() {
-	return this.fromProtein;
-};
-
-CLMS.model.CrossLink.prototype.getToProtein = function() {
-	return this.toProtein;
-};
-
 CLMS.model.CrossLink.prototype.getFilteredMatches = function() {
-	
-	/*this.ambig = true;
-	this.confirmedHomomultimer = false;
-	this.intraMolecular = false; //i.e. type 1, loop link, intra peptide, internally linked peptide, etc
-	var filteredMatches = [];
-	var count = this.matches? this.matches.length : 0;
-	for (var i = 0; i < count; i++) {
-		var match = this.matches[i][0];
-		if (match.meetsFilterCriteria()) {
-			filteredMatches.push(this.matches[i]);
-			if (match.isAmbig() === false) {
-				this.ambig = false;
-			}
-			if (match.hd === true) {
-				this.confirmedHomomultimer = true;
-			}
-			if (match.type === 1){
-				this.intraMolecular = true;
-			}
-		}
-	}*/
-	return this.filteredMatches;
+
+    /*this.ambig = true;
+    this.confirmedHomomultimer = false;
+    this.intraMolecular = false; //i.e. type 1, loop link, intra peptide, internally linked peptide, etc
+    var filteredMatches = [];
+    var count = this.matches? this.matches.length : 0;
+    for (var i = 0; i < count; i++) {
+        var match = this.matches[i][0];
+        if (match.meetsFilterCriteria()) {
+            filteredMatches.push(this.matches[i]);
+            if (match.isAmbig() === false) {
+                this.ambig = false;
+            }
+            if (match.hd === true) {
+                this.confirmedHomomultimer = true;
+            }
+            if (match.type === 1){
+                this.intraMolecular = true;
+            }
+        }
+    }*/
+    return this.filteredMatches;
 };
 
 //used when filter changed
 CLMS.model.CrossLink.prototype.check = function(filter) {
-	/*if (this.controller.selfLinkShown === false && this.selfLink()) {
-		this.hide();
-		return false;
-	}
-	if (this.proteinLink.hidden) {
-		this.hide();
-		return false;
-	}
-	if (typeof this.matches === 'undefined' || this.matches == null) {
-		this.ambig = false;
-		this.show();
-		return true;
-	}*/
-	var filteredMatches = this.getFilteredMatches();
-	var countFilteredMatches = filteredMatches.length;
-	if (countFilteredMatches > 0) {
-		/*this.tooltip = this.proteinLink.fromProtein.labelText + '_' + this.fromResidue
-					+ "-"  + ((this.proteinLink.toProtein != null)? this.proteinLink.toProtein.labelText:'null')
-					+ '_' + this.toResidue + ' (' + countFilteredCLMS.model.SpectrumMatches;
-		if (countFilteredCLMS.model.SpectrumMatches == 1) {
-			this.tooltip += ' match)';
-		} else {
-			this.tooltip += ' matches)';
+    /*if (this.controller.selfLinkShown === false && this.selfLink()) {
+        this.hide();
+        return false;
+    }
+    if (this.proteinLink.hidden) {
+        this.hide();
+        return false;
+    }
+    if (typeof this.matches === 'undefined' || this.matches == null) {
+        this.ambig = false;
+        this.show();
+        return true;
+    }*/
+    var filteredMatches = this.getFilteredMatches();
+    var countFilteredMatches = filteredMatches.length;
+    if (countFilteredMatches > 0) {
+        /*this.tooltip = this.proteinLink.fromProtein.labelText + '_' + this.fromResidue
+                    + "-"  + ((this.proteinLink.toProtein != null)? this.proteinLink.toProtein.labelText:'null')
+                    + '_' + this.toResidue + ' (' + countFilteredCLMS.model.SpectrumMatches;
+        if (countFilteredCLMS.model.SpectrumMatches == 1) {
+            this.tooltip += ' match)';
+        } else {
+            this.tooltip += ' matches)';
 
-		this.show();
-		this.dashedLine(this.ambig);
-		if (this.controller.groups.values().length > 1 && this.controller.groups.values().length < 5) {
-			var groupCheck = new Set();
-			for (var i=0; i < countFilteredCLMS.model.SpectrumMatches; i++) {
-				var match = filteredCLMS.model.SpectrumMatches[i][0];//fix this weirdness with array?
-				groupCheck.add(match.group);
-			}
-			if (groupCheck.values().length == 1){
-				var c = this.controller.linkColours(groupCheck.values()[0]);
-				this.line.setAttribute("stroke", c);
-		  		this.line.setAttribute("transform", "scale (1 1)");
-				this.highlightLine.setAttribute("transform", "scale (1 1)");
-			}
-			else  {
-				this.line.setAttribute("stroke", "#000000");
-				if (this.selfLink()){
-					this.line.setAttribute("transform", "scale (1 -1)");
-					this.highlightLine.setAttribute("transform", "scale (1 -1)");
-				}
-			}
-			//else this.line.setAttribute("stroke", "purple");//shouldn't happen
-		}
-		else if (this.selfLink() === true && this.colour == null){
-			if (this.confirmedHomomultimer === true) {
-				this.line.setAttribute("stroke", xiNET.homodimerLinkColour.toRGB());
-				this.line.setAttribute("transform", "scale(1, -1)");
-				this.line.setAttribute("stroke-width", xiNET.homodimerLinkWidth);
-				this.highlightLine.setAttribute("transform", "scale(1, -1)");
-			}
-			else {
-				this.line.setAttribute("stroke", xiNET.defaultSelfLinkColour.toRGB());
-				this.line.setAttribute("transform", "scale(1, 1)");
-				this.line.setAttribute("stroke-width", xiNET.linkWidth);
-				this.highlightLine.setAttribute("transform", "scale(1, 1)");
-			}
+        this.show();
+        this.dashedLine(this.ambig);
+        if (this.controller.groups.values().length > 1 && this.controller.groups.values().length < 5) {
+            var groupCheck = new Set();
+            for (var i=0; i < countFilteredCLMS.model.SpectrumMatches; i++) {
+                var match = filteredCLMS.model.SpectrumMatches[i][0];//fix this weirdness with array?
+                groupCheck.add(match.group);
+            }
+            if (groupCheck.values().length == 1){
+                var c = this.controller.linkColours(groupCheck.values()[0]);
+                this.line.setAttribute("stroke", c);
+                this.line.setAttribute("transform", "scale (1 1)");
+                this.highlightLine.setAttribute("transform", "scale (1 1)");
+            }
+            else  {
+                this.line.setAttribute("stroke", "#000000");
+                if (this.selfLink()){
+                    this.line.setAttribute("transform", "scale (1 -1)");
+                    this.highlightLine.setAttribute("transform", "scale (1 -1)");
+                }
+            }
+            //else this.line.setAttribute("stroke", "purple");//shouldn't happen
+        }
+        else if (this.selfLink() === true && this.colour == null){
+            if (this.confirmedHomomultimer === true) {
+                this.line.setAttribute("stroke", xiNET.homodimerLinkColour.toRGB());
+                this.line.setAttribute("transform", "scale(1, -1)");
+                this.line.setAttribute("stroke-width", xiNET.homodimerLinkWidth);
+                this.highlightLine.setAttribute("transform", "scale(1, -1)");
+            }
+            else {
+                this.line.setAttribute("stroke", xiNET.defaultSelfLinkColour.toRGB());
+                this.line.setAttribute("transform", "scale(1, 1)");
+                this.line.setAttribute("stroke-width", xiNET.linkWidth);
+                this.highlightLine.setAttribute("transform", "scale(1, 1)");
+            }
 
-		}*/
+        }*/
 
 
-		return true;
-	}
-	else {
-		//~ this.hide();
-		return false;
-	}
+        return true;
+    }
+    else {
+        //~ this.hide();
+        return false;
+    }
 };
 
