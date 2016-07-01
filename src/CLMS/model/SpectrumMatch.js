@@ -70,10 +70,29 @@ CLMS.model.SpectrumMatch = function (containingModel, rawMatches){
         this.linkPos2 = rawMatches[1].lp;
         this.protein2 = this.matchedPeptides[1].prt;
         this.pepPos2 = this.matchedPeptides[1].pos;
+    } else {
+	    this.pepSeq2raw = null;
+        this.pepSeq2 = null;
+        this.linkPos2 = null;
+        this.protein2 = [];
+        this.pepPos2 = [];
     }
 
     if (this.linkPos1 == 0) { //would have been -1 in DB but 1 was added to it during query
         //its a linear - it will be added to matches model attribute but has no cross-links
+        for (var i = 0; i < this.pepPos1.length; i++) {
+			//~ for (var j = 0; j < this.pepPos2.length; j++) {
+
+				p1ID = this.protein1[i];
+				//~ p2ID = this.protein2[j];
+
+				// * residue numbering starts at 1 *
+				res1 = this.pepPos1[i] - 1 + this.linkPos1;
+				//~ res2 = this.pepPos2[j] - 1 + this.linkPos2;
+
+				this.associateWithLink(p1ID, p2ID, res1, res2, this.pepPos1[i] - 0, this.pepSeq1.length, this.pepPos2[j], this.pepSeq2.length);
+			//~ }
+		}
         return;
     }
 
@@ -160,18 +179,19 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
     var crossLinks = this.containingModel.get("crossLinks");
 
     //TODO: tidy up following
-    if (p2ID === null) { //its  a loop link or mono link
-        fromProt = proteins.get(p1ID);
-        if (res2 === null){// its a monolink
-            proteinLinkID = "" + p1ID + "-null";
-            toProt = null;
-        }
-        else { //its a loop link
-            proteinLinkID = "" + p1ID + "-" + p1ID;
-            toProt = fromProt;
-        }
-    }
-    else if (p1ID <= p2ID) {
+    //~ if (p2ID === null) { //its  a loop link or mono link
+        //~ fromProt = proteins.get(p1ID);
+        //~ if (res2 === null){// its a monolink
+            //~ proteinLinkID = "" + p1ID + "-null";
+            //~ toProt = null;
+        //~ }
+        //~ else { //its a loop link
+            //~ proteinLinkID = "" + p1ID + "-" + p1ID;
+            //~ toProt = fromProt;
+        //~ }
+    //~ }
+    //~ else 
+    if (p1ID <= p2ID) {
         proteinLinkID = "" + p1ID + "-" + p2ID;
         fromProt = proteins.get(p1ID);
         toProt = (p2ID !== null)? proteins.get(p2ID) : null;
