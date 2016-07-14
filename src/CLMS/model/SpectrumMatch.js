@@ -23,6 +23,7 @@ CLMS.model.SpectrumMatch = function (containingModel, rawMatches){
     //following are duplicated in each raw_match (are from spectrum _match table)
     // take values from rawMatches[0]
     this.id = rawMatches[0].id;
+    this.spectrumId = rawMatches[0].spec;
     this.searchId = rawMatches[0].si.toString();
     this.is_decoy = (rawMatches[0].dc == 't')? true : false;
     this.runName = rawMatches[0].r;
@@ -56,14 +57,14 @@ CLMS.model.SpectrumMatch = function (containingModel, rawMatches){
     this.crossLinks = [];
 
     //TODO: could tidy following up
-    this.pepSeq1raw = this.matchedPeptides[0].seq;
+    this.pepSeq1raw = this.matchedPeptides[0].seq_mods;
     this.pepSeq1 = this.matchedPeptides[0].sequence;
     this.linkPos1 = rawMatches[0].lp;
     this.protein1 = this.matchedPeptides[0].prt;
     this.pepPos1 = this.matchedPeptides[0].pos;
     // following will be inadequate for trimeric and higher order cross-links
     if (rawMatches[1]) {
-        this.pepSeq2raw = this.matchedPeptides[1].seq;
+        this.pepSeq2raw = this.matchedPeptides[1].seq_mods;
         this.pepSeq2 = this.matchedPeptides[1].sequence;
         this.linkPos2 = rawMatches[1].lp;
         this.protein2 = this.matchedPeptides[1].prt;

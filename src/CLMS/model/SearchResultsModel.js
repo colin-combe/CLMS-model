@@ -10,14 +10,17 @@
     CLMS.model = CLMS.model || {};
 
     CLMS.model.SearchResultsModel = Backbone.Model.extend ({
-        defaults : {
-            interactors: new Map (), //map
-            peptides: new Map (), //map
-            matches: [], //array
-            crossLinks: new Map(), //map
-            minScore: NaN,
-            maxScore: NaN,
-            searches: new Map()
+		//http://stackoverflow.com/questions/19835163/backbone-model-collection-property-not-empty-on-new-model-creation
+        defaults :  function() {
+			return {
+				interactors: new Map (), //map
+				peptides: new Map (), //map
+				matches: [], //array
+				crossLinks: new Map(), //map
+				minScore: NaN,
+				maxScore: NaN,
+				searches: new Map()
+			};
         },
 
         initialize: function (options) {
@@ -46,7 +49,7 @@
             for (var propertyName in proteins) {
                 capitalsOnly.lastIndex = 0;
                 protein = proteins[propertyName];
-                protein.sequence = protein.seq.replace(capitalsOnly, '');
+                protein.sequence = protein.seq_mods.replace(capitalsOnly, '');
                 protein.size = protein.sequence.length;
                 protein.crossLinks = [];
                 interactors.set(protein.id, protein);
@@ -59,7 +62,7 @@
             for (var propertyName in this.options.peptides) {
                 capitalsOnly.lastIndex = 0;
                 peptide = this.options.peptides[propertyName];
-                peptide.sequence = peptide.seq.replace(capitalsOnly, '');
+                peptide.sequence = peptide.seq_mods.replace(capitalsOnly, '');
                 peptides.set(peptide.id, peptide);
             }
             this.set("peptides", peptides);
