@@ -238,7 +238,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
         }
     }
 
-	var peptidePositions = [];
+	var peptidePositions = []; //TODO - needs rethought about
     if (endsReversedInResLinkId === false) {
 		peptidePositions.push({start: pep1_start, length: pep1_length});
 		peptidePositions.push({start: pep2_start, length: pep2_length});
