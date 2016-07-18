@@ -30,7 +30,7 @@
             this.options = _.extend(defaultOptions, options);
 
             var self = this;
-
+			this.set("sid", this.options.sid);
             //search meta data
             var searches = new Map();
             for(var propertyName in this.options.searches) {
