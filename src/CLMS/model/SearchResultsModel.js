@@ -101,9 +101,9 @@
             var candidatePDBs = new Set();
             var uniprotFeatureTypes = new Set();
 
-            for (var protein of interactors.values()){
-                uniProtTxt(protein);
-            }
+            //~ for (var protein of interactors.values()){
+                //~ uniProtTxt(protein);
+            //~ }
 
             function uniProtTxt (p){
                 if (/*interactor is protein AND*/ p.accession && !p.is_decoy) {

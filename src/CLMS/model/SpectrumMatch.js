@@ -246,7 +246,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
     	peptidePositions.push({start: pep2_start, length: pep2_length});
 		peptidePositions.push({start: pep1_start, length: pep1_length});
 	}
-    resLink.matchesAndPeptidePositions.push({match: this, pepPos: peptidePositions});
+    resLink.matches_pp.push({match: this, pepPos: peptidePositions});
     this.crossLinks.push(resLink);
 }
 

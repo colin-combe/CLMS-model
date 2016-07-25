@@ -8,8 +8,8 @@
 
 CLMS.model.CrossLink = function (id, fromProtein, fromResidue, toProtein, toResidue) {
     this.id = id;
-    this.matchesAndPeptidePositions = [];
-    this.filteredMatchesAndPeptidePositions = [];
+    this.matches_pp = [];
+    this.filteredMatches_pp = [];
 
     this.fromProtein = fromProtein;
     this.fromResidue = fromResidue;
@@ -27,7 +27,7 @@ CLMS.model.CrossLink.prototype.hasConfirmedHomomultimer = function() {
 */
 //used when filter changed
 CLMS.model.CrossLink.prototype.check = function(filter) {
-    if (this.filteredMatchesAndPeptidePositions.length > 0) {return true;}
+    if (this.filteredMatches_pp.length > 0) {return true;}
     else { return false;}
 };
 
