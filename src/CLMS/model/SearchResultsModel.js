@@ -104,7 +104,8 @@
             //~ for (var protein of interactors.values()){
                 //~ uniProtTxt(protein);
             //~ }
-
+			CLMSUI.vent.trigger("uniprotDataParsed", self);
+			
             function uniProtTxt (p){
                 if (/*interactor is protein AND*/ p.accession && !p.is_decoy) {
                     var accession = p.accession;
