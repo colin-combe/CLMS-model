@@ -158,7 +158,7 @@ CLMS.model.SpectrumMatch = function (containingModel, rawMatches){
     }
 }
 
-//static variables
+//static variables - todo: these should be someehwre else... in model instance
 CLMS.model.SpectrumMatch.autoValidatedFound = false;
 CLMS.model.SpectrumMatch.manualValidatedFound = false;
 CLMS.model.SpectrumMatch.unambigLinkFound = false;
