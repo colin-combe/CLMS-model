@@ -109,10 +109,10 @@
                         var url = "http://www.uniprot.org/uniprot/" + accession + ".txt";
                         d3.text(url, function (txt) {
                             //~ console.log(accession + " retrieved from UniProt.");
-                            if(typeof(Storage) !== "undefined") {
-                                localStorage.setItem(xiNET_StorageNS  + "UniProtKB."+ accession, txt);
-                                //~ console.log(accession + " UniProt added to local storage.");
-                            }
+                            //~ if(typeof(Storage) !== "undefined") {
+                                //~ localStorage.setItem(xiNET_StorageNS  + "UniProtKB."+ accession, txt);
+                                //~ //console.log(accession + " UniProt added to local storage.");
+                            //~ }
                             processUniProtTxt(p, txt);
                         });
                     }
