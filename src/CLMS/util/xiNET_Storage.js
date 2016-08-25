@@ -39,24 +39,24 @@ xiNET_Storage.prototype.getUniProtTxt = function (id, callback){
 		});
 	}
 
-	if(typeof(Storage) !== "undefined") {
-		// Code for localStorage/sessionStorage.
-		//~ console.log("Local storage found.");
-		// Retrieve
-		var stored = localStorage.getItem(xiNET_Storage.ns + "UniProtKB." + accession);
-		if (stored){
-			//~ console.log(accession + " UniProt from local storage.");
-			callback(id, stored);
-		}
-		else {
-			//~ console.log(accession + " UniProt not in local storage.");
-			uniprotWebService();
-		}
-	}
-	else {
+	//~ if(typeof(Storage) !== "undefined") {
+		//~ // Code for localStorage/sessionStorage.
+		console.log("Local storage found.");
+		//~ // Retrieve
+		//~ var stored = localStorage.getItem(xiNET_Storage.ns + "UniProtKB." + accession);
+		//~ if (stored){
+			console.log(accession + " UniProt from local storage.");
+			//~ callback(id, stored);
+		//~ }
+		//~ else {
+			console.log(accession + " UniProt not in local storage.");
+			//~ uniprotWebService();
+		//~ }
+	//~ }
+	//~ else {
 		//~ console.log("No local storage found.");
 		uniprotWebService();
-	}
+	//~ }
 }
 
 xiNET_Storage.prototype.getSequence = function (id, callback){
@@ -89,24 +89,24 @@ xiNET_Storage.prototype.getSequence = function (id, callback){
 		});
 	}
 
-	if(typeof(Storage) !== "undefined") {
-		// Code for localStorage/sessionStorage.
+	//~ if(typeof(Storage) !== "undefined") {
+		//~ // Code for localStorage/sessionStorage.
 		//~ console.log("Local storage found.");
-		// Retrieve
-		var stored = localStorage.getItem(xiNET_Storage.ns + "UniProtKB.fasta." + accession);
-		if (stored){
+		//~ // Retrieve
+		//~ var stored = localStorage.getItem(xiNET_Storage.ns + "UniProtKB.fasta." + accession);
+		//~ if (stored){
 			//~ console.log(accession + " UniProt from local storage.");
-			callback(id, stored);
-		}
-		else {
+			//~ callback(id, stored);
+		//~ }
+		//~ else {
 			//~ console.log(accession + " UniProt not in local storage.");
-			uniprotWebServiceFASTA();
-		}
-	}
-	else {
+			//~ uniprotWebServiceFASTA();
+		//~ }
+	//~ }
+	//~ else {
 		//~ console.log("No local storage found.");
 		uniprotWebServiceFASTA();
-	}
+	//~ }
 }
 
 xiNET_Storage.prototype.getUniProtFeatures = function (id, callback){
@@ -179,21 +179,21 @@ xiNET_Storage.prototype.getSuperFamFeatures = function (id, callback){
 		callback(id, features);
   	}
 
-	if(typeof(Storage) !== "undefined") {
+	//~ if(typeof(Storage) !== "undefined") {
 		//~ console.log("Local storage found.");
-		// Retrieve
-		var stored = localStorage.getItem(xiNET_Storage.ns + "SuperFamDAS."  + accession);
-		if (stored){
+		//~ // Retrieve
+		//~ var stored = localStorage.getItem(xiNET_Storage.ns + "SuperFamDAS."  + accession);
+		//~ if (stored){
 			//~ console.log(accession + " SuperFamDAS from local storage.");
-			parseSuperFamDAS(stored);
-		}
-		else {
+			//~ parseSuperFamDAS(stored);
+		//~ }
+		//~ else {
 			//~ console.log(accession + " SuperFamDAS not in local storage.");
-			superFamDAS();
-		}
-	}
-	else {
+			//~ superFamDAS();
+		//~ }
+	//~ }
+	//~ else {
 		//~ console.log("No local storage found.");
 		superFamDAS();
-	}
+	//~ }
 }
