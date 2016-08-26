@@ -15,7 +15,7 @@
 			return {
 				interactors: new Map (), //map
 				peptides: new Map (), //map
-				matches: [], //array
+				matches: new Map (), //map
 				crossLinks: new Map(), //map
 				minScore: NaN,
 				maxScore: NaN,
@@ -84,7 +84,7 @@
                         match = new CLMS.model.SpectrumMatch (this, [rawMatches[i]]);
                     }
 
-                    matches.push(match);
+                    matches.set(match.id, match);
 
                     if (!maxScore || match.score > maxScore) {
                         maxScore = match.score;
