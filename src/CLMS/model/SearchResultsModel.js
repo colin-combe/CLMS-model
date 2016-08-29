@@ -39,6 +39,8 @@
             }
             this.set("searches", searches);
 
+            this.set("xiNETLayout", options.xiNETLayout);
+
             // we will be removing modification info from sequences
             var capitalsOnly = /[^A-Z]/g;
 
