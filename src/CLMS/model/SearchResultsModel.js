@@ -99,49 +99,29 @@
 
             var interactorCount = interactors.size;
             var xiNET_StorageNS = "xiNET.";
-            var pdbRegex = /DR...PDB;.(....);/g
-            var candidatePDBs = new Set();
             var uniprotFeatureTypes = new Set();
 
-            //~ for (var protein of interactors.values()){
-                //~ uniProtTxt(protein);
-            //~ }
-			CLMSUI.vent.trigger("uniprotDataParsed", self);
+			var uniprotAccRegex = /[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}/
+			if (interactors.size < 31) {
+				for (var protein of interactors.values()){
+					uniProtTxt(protein);
+				}
+            }
+			else {
+				CLMSUI.vent.trigger("uniprotDataParsed", self);
+			}
 			
             function uniProtTxt (p){
-                if (/*interactor is protein AND*/ p.accession && !p.is_decoy) {
-                    var accession = p.accession;
+				uniprotAccRegex.lastIndex = 0;
+				
+                if (!p.is_decoy && uniprotAccRegex.test(p.accession)) {
                     function uniprotWebService(){
-                        var url = "http://www.uniprot.org/uniprot/" + accession + ".txt";
+                        var url = "http://www.uniprot.org/uniprot/" + p.accession + ".txt";
                         d3.text(url, function (txt) {
-                            //~ console.log(accession + " retrieved from UniProt.");
-                            //~ if(typeof(Storage) !== "undefined") {
-                                //~ localStorage.setItem(xiNET_StorageNS  + "UniProtKB."+ accession, txt);
-                                //~ //console.log(accession + " UniProt added to local storage.");
-                            //~ }
                             processUniProtTxt(p, txt);
                         });
                     }
-
-                    if(Storage){
-                        // Code for localStorage/sessionStorage.
-                        //~ console.log("Local storage found.");
-                        // Retrieve
-                        var stored = localStorage.getItem(xiNET_StorageNS + "UniProtKB." + accession);
-                        if (stored){
-                            //console.log(accession + " UniProt from local storage.");
-                            processUniProtTxt(p, stored);
-                        }
-                        else {
-                            //console.log(accession + " UniProt not in local storage.");
-                            uniprotWebService();
-                        }
-                    }
-                    else {
-                        //~ console.log("No local storage found.");
-                        uniprotWebService();
-                    }
-
+                    uniprotWebService();
                 } else { //not protein, no accession or isDecoy
                     interactorCount--;
                     if (interactorCount === 0) doneProcessingUniProtText();
@@ -158,17 +138,9 @@
                 for (var l = 1; l < lineCount; l++){
                     var line = lines[l];
 
-                    if (line.indexOf("DR") === 0){
-                        pdbRegex.lastIndex = 0;
-                        var match = pdbRegex.exec(line);
-                        if (match) {
-                            candidatePDBs.add(match[1].toString().trim());
-                        }
-                    }
-
                     if (line.indexOf("FT") === 0){
                         var fields = line.split(/\s{2,}/g);
-                        if (fields.length > 4 ) {// && fields[1] === 'DOMAIN') {
+                        if (fields.length > 4 && fields[1] === 'DOMAIN') {
                             uniprotFeatureTypes.add(fields[1]);
                         //console.log(fields[1]);fields[4].substring(0, fields[4].indexOf("."))
                             var name = fields[4].substring(0, fields[4].indexOf("."));
@@ -200,13 +172,10 @@
                     //~ console.log(protein.id + "\t" + protein.accession + "\t" + protein.sequence)
                     //~ console.log(protein.id + "\t" + protein.accession + "\t" + protein.canonicalSeq)
                 //~ }
-                //~ console.log("candidatePDBs:" + Array.from(candidatePDBs.values()).toString());
                 //~ console.log("uniprotFeatureTypes:" + Array.from(uniprotFeatureTypes.values()).toString());
-                self.set("candidatePDBs", candidatePDBs);
                 self.set("uniprotFeatureTypes", uniprotFeatureTypes);
                 CLMSUI.vent.trigger("uniprotDataParsed", self);
             }
 
         }
     });
-
