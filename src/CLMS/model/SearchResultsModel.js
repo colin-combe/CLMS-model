@@ -140,7 +140,7 @@
 
                     if (line.indexOf("FT") === 0){
                         var fields = line.split(/\s{2,}/g);
-                        if (fields.length > 4 ) {// && fields[1] === 'DOMAIN') {
+                        if (fields.length > 4 && fields[1] === 'DOMAIN') {
                             uniprotFeatureTypes.add(fields[1]);
                         //console.log(fields[1]);fields[4].substring(0, fields[4].indexOf("."))
                             var name = fields[4].substring(0, fields[4].indexOf("."));
