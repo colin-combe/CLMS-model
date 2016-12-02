@@ -56,7 +56,7 @@
                 protein.crossLinks = [];
                 interactors.set(protein.id, protein);
             }
-            this.set("interactors", interactors);
+            this.set("participants", interactors);
 
             //peptides
             var peptides = new Map();
