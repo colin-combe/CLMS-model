@@ -159,8 +159,8 @@
                 sequence = sequence.replace(/[^A-Z]/g, '');
                 p.canonicalSeq = sequence;
 
-                interactorCount--;
-                if (interactorCount === 0) doneProcessingUniProtText();
+                participantCount--;
+                if (participantCount === 0) doneProcessingUniProtText();
             }
 
             function doneProcessingUniProtText(){
