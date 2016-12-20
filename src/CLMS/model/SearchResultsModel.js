@@ -114,9 +114,9 @@
             function uniProtTxt (p){
 				uniprotAccRegex.lastIndex = 0;
                 if (!p.is_decoy && uniprotAccRegex.test(p.accession)) {
-					var url = "http://www.uniprot.org/uniprot/" + p.accession + ".txt";
-					d3.text(url, function (txt) {
-						processUniProtTxt(p, txt);
+					var url = "https://www.ebi.ac.uk/proteins/api/features/" + p.accession + ".json";
+					d3.json(url, function (json) {
+						processUniProtTxt(p, json);
 					});
                 } else { //not protein, no accession or isDecoy
                     participantCount--;
@@ -124,41 +124,11 @@
                 }
             }
 
-            function processUniProtTxt(p, txt){
-
-                txt = txt || "";
-                var features = [];
-                var sequence = "";
-                var lines = txt.split('\n');
-                var lineCount = lines.length;
-                for (var l = 1; l < lineCount; l++){
-                    var line = lines[l];
-
-                    if (line.indexOf("FT") === 0){
-                        var fields = line.split(/\s{2,}/g);
-                        if (fields.length > 4 && fields[1] === 'DOMAIN') {
-                            uniprotFeatureTypes.add(fields[1]);
-                        //console.log(fields[1]);fields[4].substring(0, fields[4].indexOf("."))
-                            var name = fields[4].substring(0, fields[4].indexOf("."));
-                            features.push(new CLMS.model.AnnotatedRegion (name, fields[2], fields[3], null, fields[4], fields[1]));
-                        }
-                    }
-
-                    if (line.indexOf("SQ") === 0){
-                        //sequence = line;
-                        l++;
-                        for (l; l < lineCount; l++){
-                            line = lines[l];
-                            sequence += line;
-                        }
-                    }
-                }
-
-                p.uniprotFeatures = features;
-
-                sequence = sequence.replace(/[^A-Z]/g, '');
-                p.canonicalSeq = sequence;
-
+            function processUniProtTxt(p, json){
+                p.uniprot = json;
+                p.uniprotFeatures = p.uniprot.features;
+                //~ sequence = sequence.replace(/[^A-Z]/g, '');
+                p.canonicalSeq = p.uniprot.sequence;
                 participantCount--;
                 if (participantCount === 0) doneProcessingUniProtText();
             }
