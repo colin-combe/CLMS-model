@@ -99,10 +99,9 @@
             }
 
             var participantCount = participants.size;
-            var uniprotFeatureTypes = new Set();
-
+            
 			var uniprotAccRegex = /[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}/
-			if (participantCount < 31) {
+			if (participantCount < 101) {
 				for (var protein of participants.values()){
 					uniProtTxt(protein);
 				}
@@ -120,7 +119,9 @@
 					});
                 } else { //not protein, no accession or isDecoy
                     participantCount--;
-                    if (participantCount === 0) doneProcessingUniProtText();
+                    if (participantCount === 0) {
+						CLMSUI.vent.trigger("uniprotDataParsed", self);
+					}
                 }
             }
 
@@ -130,12 +131,9 @@
                 //~ sequence = sequence.replace(/[^A-Z]/g, '');
                 p.canonicalSeq = p.uniprot.sequence;
                 participantCount--;
-                if (participantCount === 0) doneProcessingUniProtText();
-            }
-
-            function doneProcessingUniProtText(){
-                self.set("uniprotFeatureTypes", uniprotFeatureTypes);
-                CLMSUI.vent.trigger("uniprotDataParsed", self);
+                if (participantCount === 0) {
+					CLMSUI.vent.trigger("uniprotDataParsed", self);
+				}
             }
 
         }
