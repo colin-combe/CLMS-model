@@ -127,9 +127,6 @@
 
             function processUniProtTxt(p, json){
                 p.uniprot = json;
-                p.uniprotFeatures = p.uniprot.features;
-                //~ sequence = sequence.replace(/[^A-Z]/g, '');
-                p.canonicalSeq = p.uniprot.sequence;
                 participantCount--;
                 if (participantCount === 0) {
 					CLMSUI.vent.trigger("uniprotDataParsed", self);
