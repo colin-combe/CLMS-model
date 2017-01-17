@@ -169,7 +169,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res
     //following puts lower protein_ID first in link_ID
     var fromProt, toProt;
 
-    var proteins = this.containingModel.get("interactors");
+    var proteins = this.containingModel.get("participants");
     var crossLinks = this.containingModel.get("crossLinks");
 
     if (!p2ID) { //its  a linear peptide (no crosslinker of any product type))

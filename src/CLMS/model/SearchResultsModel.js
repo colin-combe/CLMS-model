@@ -13,7 +13,7 @@
 		//http://stackoverflow.com/questions/19835163/backbone-model-collection-property-not-empty-on-new-model-creation
         defaults :  function() {
 			return {
-				interactors: new Map (), //map
+				participants: new Map (), //map
 				peptides: new Map (), //map
 				matches: new Map (), //map
 				crossLinks: new Map(), //map
@@ -44,19 +44,20 @@
             // we will be removing modification info from sequences
             var capitalsOnly = /[^A-Z]/g;
 
-            //proteins or 'participants'
-            var interactors = new Map();// lets not call this 'interactors' after all
+            // participants - I think this is the correct (PSI-MI) compliant term
+            var participants = new Map();
             var proteins = this.options.proteins;
-            var protein;
+            var participant;
             for (var propertyName in proteins) {
                 capitalsOnly.lastIndex = 0;
-                protein = proteins[propertyName];
-                protein.sequence = protein.seq_mods.replace(capitalsOnly, '');
-                protein.size = protein.sequence.length;
-                protein.crossLinks = [];
-                interactors.set(protein.id, protein);
+                participant = proteins[propertyName];
+                participant.sequence = participant.seq_mods.replace(capitalsOnly, '');
+                participant.size = participant.sequence.length;
+                participant.crossLinks = [];
+                participant.hidden = false;//?
+                participants.set(participant.id, participant);
             }
-            this.set("interactors", interactors);
+            this.set("participants", participants);
 
             //peptides
             var peptides = new Map();
@@ -97,13 +98,11 @@
                 }
             }
 
-            var interactorCount = interactors.size;
-            var xiNET_StorageNS = "xiNET.";
-            var uniprotFeatureTypes = new Set();
-
+            var participantCount = participants.size;
+            
 			var uniprotAccRegex = /[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}/
-			if (interactors.size < 31) {
-				for (var protein of interactors.values()){
+			if (participantCount < 101) {
+				for (var protein of participants.values()){
 					uniProtTxt(protein);
 				}
             }
@@ -113,68 +112,25 @@
 			
             function uniProtTxt (p){
 				uniprotAccRegex.lastIndex = 0;
-				
                 if (!p.is_decoy && uniprotAccRegex.test(p.accession)) {
-                    function uniprotWebService(){
-                        var url = "http://www.uniprot.org/uniprot/" + p.accession + ".txt";
-                        d3.text(url, function (txt) {
-                            processUniProtTxt(p, txt);
-                        });
-                    }
-                    uniprotWebService();
+					var url = "https://www.ebi.ac.uk/proteins/api/features/" + p.accession + ".json";
+					d3.json(url, function (json) {
+						processUniProtTxt(p, json);
+					});
                 } else { //not protein, no accession or isDecoy
-                    interactorCount--;
-                    if (interactorCount === 0) doneProcessingUniProtText();
+                    participantCount--;
+                    if (participantCount === 0) {
+						CLMSUI.vent.trigger("uniprotDataParsed", self);
+					}
                 }
             }
 
-            function processUniProtTxt(p, txt){
-
-                txt = txt || "";
-                var features = [];
-                var sequence = "";
-                var lines = txt.split('\n');
-                var lineCount = lines.length;
-                for (var l = 1; l < lineCount; l++){
-                    var line = lines[l];
-
-                    if (line.indexOf("FT") === 0){
-                        var fields = line.split(/\s{2,}/g);
-                        if (fields.length > 4 && fields[1] === 'DOMAIN') {
-                            uniprotFeatureTypes.add(fields[1]);
-                        //console.log(fields[1]);fields[4].substring(0, fields[4].indexOf("."))
-                            var name = fields[4].substring(0, fields[4].indexOf("."));
-                            features.push(new CLMS.model.AnnotatedRegion (name, fields[2], fields[3], null, fields[4], fields[1]));
-                        }
-                    }
-
-                    if (line.indexOf("SQ") === 0){
-                        //sequence = line;
-                        l++;
-                        for (l; l < lineCount; l++){
-                            line = lines[l];
-                            sequence += line;
-                        }
-                    }
-                }
-
-                p.uniprotFeatures = features;
-
-                sequence = sequence.replace(/[^A-Z]/g, '');
-                p.canonicalSeq = sequence;
-
-                interactorCount--;
-                if (interactorCount === 0) doneProcessingUniProtText();
-            }
-
-            function doneProcessingUniProtText(){
-                //~ for (var protein of interactorMap.values()) {
-                    //~ console.log(protein.id + "\t" + protein.accession + "\t" + protein.sequence)
-                    //~ console.log(protein.id + "\t" + protein.accession + "\t" + protein.canonicalSeq)
-                //~ }
-                //~ console.log("uniprotFeatureTypes:" + Array.from(uniprotFeatureTypes.values()).toString());
-                self.set("uniprotFeatureTypes", uniprotFeatureTypes);
-                CLMSUI.vent.trigger("uniprotDataParsed", self);
+            function processUniProtTxt(p, json){
+                p.uniprot = json;
+                participantCount--;
+                if (participantCount === 0) {
+					CLMSUI.vent.trigger("uniprotDataParsed", self);
+				}
             }
 
         }
