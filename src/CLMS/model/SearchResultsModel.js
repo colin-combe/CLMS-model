@@ -19,7 +19,8 @@
 				crossLinks: new Map(), //map
 				minScore: NaN,
 				maxScore: NaN,
-				searches: new Map()
+				searches: new Map(),
+				decoysPresent: false,
 			};
         },
 

@@ -26,6 +26,9 @@ CLMS.model.SpectrumMatch = function (containingModel, rawMatches){
     this.spectrumId = rawMatches[0].spec;
     this.searchId = rawMatches[0].si.toString();
     this.is_decoy = (rawMatches[0].dc == 't')? true : false;
+    if (this.is_decoy === true) {
+		this.containingModel.set("decoysPresent", true)
+	}
     this.runName = rawMatches[0].r;
     this.scanNumber = rawMatches[0].sn;
     this.precursorCharge = rawMatches[0].pc;
