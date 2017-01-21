@@ -52,16 +52,15 @@
             this.set("spectrumSources", spectrumSources);
 
             // we will be removing modification info from sequences
-            var capitalsOnly = /[^A-Z]/g;
+            var notUpperCase = /[^A-Z]/g;
 
-            // participants - I think this is the correct (PSI-MI) compliant term
             var participants = new Map();
             var proteins = this.options.proteins;
             var participant;
             for (var propertyName in proteins) {
-                capitalsOnly.lastIndex = 0;
+                notUpperCase.lastIndex = 0;
                 participant = proteins[propertyName];
-                participant.sequence = participant.seq_mods.replace(capitalsOnly, '');
+                participant.sequence = participant.seq_mods.replace(notUpperCase, '');
                 participant.size = participant.sequence.length;
                 participant.crossLinks = [];
                 participant.hidden = false;//?
@@ -73,9 +72,9 @@
             var peptides = new Map();
             var peptide;
             for (var propertyName in this.options.peptides) {
-                capitalsOnly.lastIndex = 0;
+                notUpperCase.lastIndex = 0;
                 peptide = this.options.peptides[propertyName];
-                peptide.sequence = peptide.seq_mods.replace(capitalsOnly, '');
+                peptide.sequence = peptide.seq_mods.replace(notUpperCase, '');
                 peptides.set(peptide.id, peptide);
             }
             this.set("peptides", peptides);
