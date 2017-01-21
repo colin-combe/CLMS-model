@@ -29,7 +29,7 @@ CLMS.model.SpectrumMatch = function (containingModel, rawMatches){
     if (this.is_decoy === true) {
 		this.containingModel.set("decoysPresent", true)
 	}
-    this.runName = rawMatches[0].r;
+    this.src = +rawMatches[0].src;
     this.scanNumber = rawMatches[0].sn;
     this.precursorCharge = rawMatches[0].pc;
     this.score = rawMatches[0].sc;
@@ -258,4 +258,9 @@ CLMS.model.SpectrumMatch.prototype.isAmbig = function() {
         return true;
     }
     return false;
+}
+
+CLMS.model.SpectrumMatch.prototype.runName = function() {
+	var runName = this.containingModel.get("spectrumSources").get(this.src);
+    return runName;
 }

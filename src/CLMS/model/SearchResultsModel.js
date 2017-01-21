@@ -40,7 +40,16 @@
             }
             this.set("searches", searches);
 
-            this.set("xiNETLayout", options.xiNETLayout);
+            this.set("xiNETLayout", options.xiNETLayout);//hack - todo:fix
+            
+            //spectrum sources
+            var spectrumSources = new Map();
+            var specSource;
+            for (var propertyName in this.options.spectrumSources) {
+                specSource = this.options.spectrumSources[propertyName];
+                spectrumSources.set(+specSource.id, specSource.name);
+            }
+            this.set("spectrumSources", spectrumSources);
 
             // we will be removing modification info from sequences
             var capitalsOnly = /[^A-Z]/g;
