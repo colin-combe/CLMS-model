@@ -109,7 +109,7 @@
 
             var participantCount = participants.size;
             
-			var uniprotAccRegex = /[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}/
+			var uniprotAccRegex = /[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}/;
 			if (participantCount < 101) {
 				for (var protein of participants.values()){
 					uniProtTxt(protein);
