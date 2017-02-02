@@ -26,8 +26,8 @@ CLMS.model.CrossLink.prototype.hasConfirmedHomomultimer = function() {
 }
 */
 //used when filter changed
-CLMS.model.CrossLink.prototype.check = function(filter) {
+/*CLMS.model.CrossLink.prototype.check = function(filter) {
     if (this.filteredMatches_pp.length > 0) {return true;}
     else { return false;}
-};
+};*/
 
