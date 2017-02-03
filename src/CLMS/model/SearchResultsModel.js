@@ -14,11 +14,10 @@
         defaults :  function() {
 			return {
 				participants: new Map (), //map
-				peptides: new Map (), //map
-				matches: new Map (), //map
+				//peptides: new Map (), //map
+				matches: [],
 				crossLinks: new Map(), //map
-				minScore: NaN,
-				maxScore: NaN,
+				scoreExtent: null,
 				searches: new Map(),
 				decoysPresent: false,
 			};
@@ -77,36 +76,38 @@
                 peptide.sequence = peptide.seq_mods.replace(notUpperCase, '');
                 peptides.set(peptide.id, peptide);
             }
-            this.set("peptides", peptides);
+            //this.set("peptides", peptides);
 
             var rawMatches = this.options.rawMatches;
             if (rawMatches) {
                 var matches = this.get("matches");
-                var minScore = this.get("minScore");
-                var maxScore = this.get("maxScore");
+                var minScore = Number.MIN_VALUE;
+                var maxScore = Number.MAX_VALUE;
 
                 var l = rawMatches.length, match;
                 for (var i = 0; i < l; i++) {
                     //TODO: this will need updated for ternary or higher order crosslinks
                     if ((i < (l - 1)) && rawMatches[i].id == rawMatches[i+1].id){
-                        match = new CLMS.model.SpectrumMatch (this, [rawMatches[i], rawMatches[i+1]]);
+                        match = new CLMS.model.SpectrumMatch (this, peptides, [rawMatches[i], rawMatches[i+1]]);
                         i++;
                     }
                     else {
-                        match = new CLMS.model.SpectrumMatch (this, [rawMatches[i]]);
+                        match = new CLMS.model.SpectrumMatch (this, peptides, [rawMatches[i]]);
                     }
 
-                    matches.set(match.id, match);
+                    matches.push(match);//set(match.id, match);
 
-                    if (!maxScore || match.score > maxScore) {
+                    if (match.score > maxScore) {
                         maxScore = match.score;
                     }
-                    else if (!minScore || match.score < minScore) {
+                    else if (match.score < minScore) {
                         minScore = this.score;
                     }
                 }
             }
-
+            
+			this.set("scoreExtent", [minScore, maxScore]);
+			
             var participantCount = participants.size;
             
 			var uniprotAccRegex = /[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}/;

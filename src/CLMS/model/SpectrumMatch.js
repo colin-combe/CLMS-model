@@ -5,7 +5,7 @@
 //
 //      CLMS.model.SpectrumMatch.js
 
-CLMS.model.SpectrumMatch = function (containingModel, rawMatches){
+CLMS.model.SpectrumMatch = function (containingModel, peptides, rawMatches){
 
     // single 'rawMatch'looks like {"id":25918012,"ty":1,"pi":8485630,"lp":0,
     // "sc":3.25918,"si":624, dc:"f", "av":"f", (optional v:"A", rj: "f" ),
@@ -48,7 +48,6 @@ CLMS.model.SpectrumMatch = function (containingModel, rawMatches){
         CLMS.model.manualValidatedFound = true;
     }
 
-    var peptides = this.containingModel.get("peptides");
     this.matchedPeptides = [];
     this.matchedPeptides[0] = peptides.get(rawMatches[0].pi);
     // following will be inadequate for trimeric and higher order cross-links
