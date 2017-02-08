@@ -5,7 +5,7 @@
 //
 //      CLMS.model.SpectrumMatch.js
 
-CLMS.model.SpectrumMatch = function (containingModel, peptides, rawMatches){
+CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, peptides, rawMatches){
 
     // single 'rawMatch'looks like {"id":25918012,"ty":1,"pi":8485630,"lp":0,
     // "sc":3.25918,"si":624, dc:"f", "av":"f", (optional v:"A", rj: "f" ),
@@ -30,9 +30,9 @@ CLMS.model.SpectrumMatch = function (containingModel, peptides, rawMatches){
 		this.containingModel.set("decoysPresent", true)
 	}
     this.src = +rawMatches[0].src;
-    this.scanNumber = rawMatches[0].sn;
-    this.precursorCharge = rawMatches[0].pc;
-    this.score = rawMatches[0].sc;
+    this.scanNumber = +rawMatches[0].sn;
+    this.precursorCharge = +rawMatches[0].pc;
+    this.score = +rawMatches[0].sc;
     //autovalidated - another attribute
     if (rawMatches[0].av){
         if (rawMatches[0].av == "t"){
@@ -40,12 +40,12 @@ CLMS.model.SpectrumMatch = function (containingModel, peptides, rawMatches){
         } else {
             this.autovalidated = false;
         }
-        CLMS.model.autoValidatedFound = true;
+        this.containingModel.set("autoValidatedPresent", true);
     }
     // used in Rappsilber Lab to record manual validation status
     if (rawMatches[0].v){
         this.validated = rawMatches[0].v;
-        CLMS.model.manualValidatedFound = true;
+         this.containingModel.set("manualValidatedPresent", true);
     }
 
     this.matchedPeptides = [];
@@ -78,7 +78,7 @@ CLMS.model.SpectrumMatch = function (containingModel, peptides, rawMatches){
 		
 			res1 = this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
 		
-			this.associateWithLink(p1ID, p2ID, res1, res2, this.matchedPeptides[0].pos[i] - 0, this.matchedPeptides[0].sequence.length, this.matchedPeptides[1].pos[j], this.matchedPeptides[1].sequence.length);
+			this.associateWithLink(participants, crossLinks, p1ID, p2ID, res1, res2, this.matchedPeptides[0].pos[i] - 0, this.matchedPeptides[0].sequence.length, this.matchedPeptides[1].pos[j], this.matchedPeptides[1].sequence.length);
         }
         return;
     }
@@ -102,7 +102,7 @@ CLMS.model.SpectrumMatch = function (containingModel, peptides, rawMatches){
             res1 = this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
             res2 = this.matchedPeptides[1].pos[j] - 1 + this.linkPos2;
 
-            this.associateWithLink(p1ID, p2ID, res1, res2, this.matchedPeptides[0].pos[i] - 0, this.matchedPeptides[0].sequence.length, this.matchedPeptides[1].pos[j], this.matchedPeptides[1].sequence.length);
+            this.associateWithLink(participants, crossLinks, p1ID, p2ID, res1, res2, this.matchedPeptides[0].pos[i] - 0, this.matchedPeptides[0].sequence.length, this.matchedPeptides[1].pos[j], this.matchedPeptides[1].sequence.length);
         }
     }
 
@@ -151,19 +151,14 @@ CLMS.model.SpectrumMatch = function (containingModel, peptides, rawMatches){
     }
 }
 
-//static variables - todo: these should be someehwre else... in model instance
-CLMS.model.SpectrumMatch.autoValidatedFound = false;
-CLMS.model.SpectrumMatch.manualValidatedFound = false;
-CLMS.model.SpectrumMatch.unambigLinkFound = false;
-
-CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res1, res2, //following params may be null :-
+CLMS.model.SpectrumMatch.prototype.associateWithLink = function (proteins, crossLinks, p1ID, p2ID, res1, res2, //following params may be null :-
             pep1_start, pep1_length, pep2_start, pep2_length){
     // we don't want two different ID's, e.g. one thats "33-66" and one thats "66-33"
     //following puts lower protein_ID first in link_ID
     var fromProt, toProt;
 
-    var proteins = this.containingModel.get("participants");
-    var crossLinks = this.containingModel.get("crossLinks");
+    //~ var proteins = this.containingModel.get("participants");
+    //~ var crossLinks = this.containingModel.get("crossLinks");
 
     if (!p2ID) { //its  a linear peptide (no crosslinker of any product type))
         fromProt = proteins.get(p1ID);

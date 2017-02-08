@@ -8,6 +8,7 @@
 
     var CLMS = CLMS || {};
     CLMS.model = CLMS.model || {};
+    CLMS.uniprotAccRegex = /[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}/;
 
     CLMS.model.SearchResultsModel = Backbone.Model.extend ({
 		//http://stackoverflow.com/questions/19835163/backbone-model-collection-property-not-empty-on-new-model-creation
@@ -31,6 +32,7 @@
 
             var self = this;
 			this.set("sid", this.options.sid);
+            
             //search meta data
             var searches = new Map();
             for(var propertyName in this.options.searches) {
@@ -78,6 +80,8 @@
             }
             //this.set("peptides", peptides);
 
+			var crossLinks = this.get("crossLinks");
+
             var rawMatches = this.options.rawMatches;
             if (rawMatches) {
                 var matches = this.get("matches");
@@ -88,11 +92,11 @@
                 for (var i = 0; i < l; i++) {
                     //TODO: this will need updated for ternary or higher order crosslinks
                     if ((i < (l - 1)) && rawMatches[i].id == rawMatches[i+1].id){
-                        match = new CLMS.model.SpectrumMatch (this, peptides, [rawMatches[i], rawMatches[i+1]]);
+                        match = new CLMS.model.SpectrumMatch (this, participants, crossLinks, peptides, [rawMatches[i], rawMatches[i+1]]);
                         i++;
                     }
                     else {
-                        match = new CLMS.model.SpectrumMatch (this, peptides, [rawMatches[i]]);
+                        match = new CLMS.model.SpectrumMatch (this, participants, crossLinks, peptides, [rawMatches[i]]);
                     }
 
                     matches.push(match);//set(match.id, match);
@@ -110,7 +114,6 @@
 			
             var participantCount = participants.size;
             
-			var uniprotAccRegex = /[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}/;
 			if (participantCount < 101) {
 				for (var protein of participants.values()){
 					uniProtTxt(protein);
@@ -121,8 +124,8 @@
 			}
 			
             function uniProtTxt (p){
-				uniprotAccRegex.lastIndex = 0;
-                if (!p.is_decoy && uniprotAccRegex.test(p.accession)) {
+				CLMS.uniprotAccRegex.lastIndex = 0;
+                if (!p.is_decoy && CLMS.uniprotAccRegex.test(p.accession)) {
 					var url = "https://www.ebi.ac.uk/proteins/api/features/" + p.accession + ".json";
 					d3.json(url, function (json) {
 						processUniProtTxt(p, json);

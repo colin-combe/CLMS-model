@@ -20,6 +20,7 @@ CLMS.model.CrossLink = function (id, fromProtein, fromResidue, toProtein, toResi
 CLMS.model.CrossLink.prototype.isSelfLink = function() {
     return (this.fromProtein === this.toProtein);
 }
+
 /*
 CLMS.model.CrossLink.prototype.hasConfirmedHomomultimer = function() {
     return this.confirmedHomomultimer;
