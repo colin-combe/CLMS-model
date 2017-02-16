@@ -61,14 +61,6 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
     if (rawMatches[1]) {
         this.linkPos2 = rawMatches[1].lp;
 	}
-    else {
-        this.matchedPeptides[1] = {};
-        this.matchedPeptides[1].seq_mods = "";
-        this.matchedPeptides[1].sequence = "";
-        this.linkPos2 = null;
-        this.matchedPeptides[1].prt = [];
-        this.matchedPeptides[1].pos = [];
-    }
 
     if (this.linkPos1 == 0) { //would have been -1 in DB but 1 was added to it during query
         //its a linear
@@ -78,8 +70,8 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
 		
 			res1 = this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
 		
-			this.associateWithLink(participants, crossLinks, p1ID, p2ID, res1, res2, this.matchedPeptides[0].pos[i] - 0, this.matchedPeptides[0].sequence.length, this.matchedPeptides[1].pos[j], this.matchedPeptides[1].sequence.length);
-        }
+			this.associateWithLink(participants, crossLinks, p1ID, p2ID, 
+			res1, res2, this.matchedPeptides[0].pos[i] - 0, this.matchedPeptides[0].sequence.length);}
         return;
     }
 
@@ -153,11 +145,6 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
 
 CLMS.model.SpectrumMatch.prototype.associateWithLink = function (proteins, crossLinks, p1ID, p2ID, res1, res2, //following params may be null :-
             pep1_start, pep1_length, pep2_start, pep2_length){
-
-	/*
-	 *Its in here thats taking the time during initialisation
-	 * 
-	 */
 				
     // we don't want two different ID's, e.g. one thats "33-66" and one thats "66-33"
     //following puts lower protein_ID first in link_ID
