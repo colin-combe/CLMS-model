@@ -153,6 +153,12 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
 
 CLMS.model.SpectrumMatch.prototype.associateWithLink = function (proteins, crossLinks, p1ID, p2ID, res1, res2, //following params may be null :-
             pep1_start, pep1_length, pep2_start, pep2_length){
+
+	/*
+	 *Its in here thats taking the time during initialisation
+	 * 
+	 */
+				
     // we don't want two different ID's, e.g. one thats "33-66" and one thats "66-33"
     //following puts lower protein_ID first in link_ID
     var fromProt, toProt;
