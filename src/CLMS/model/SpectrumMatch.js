@@ -5,7 +5,7 @@
 //
 //      CLMS.model.SpectrumMatch.js
 
-CLMS.model.SpectrumMatch = function (containingModel, rawMatches){
+CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, peptides, rawMatches){
 
     // single 'rawMatch'looks like {"id":25918012,"ty":1,"pi":8485630,"lp":0,
     // "sc":3.25918,"si":624, dc:"f", "av":"f", (optional v:"A", rj: "f" ),
@@ -26,10 +26,13 @@ CLMS.model.SpectrumMatch = function (containingModel, rawMatches){
     this.spectrumId = rawMatches[0].spec;
     this.searchId = rawMatches[0].si.toString();
     this.is_decoy = (rawMatches[0].dc == 't')? true : false;
-    this.runName = rawMatches[0].r;
-    this.scanNumber = rawMatches[0].sn;
-    this.precursorCharge = rawMatches[0].pc;
-    this.score = rawMatches[0].sc;
+    if (this.is_decoy === true) {
+		this.containingModel.set("decoysPresent", true)
+	}
+    this.src = +rawMatches[0].src;
+    this.scanNumber = +rawMatches[0].sn;
+    this.precursorCharge = +rawMatches[0].pc;
+    this.score = +rawMatches[0].sc;
     //autovalidated - another attribute
     if (rawMatches[0].av){
         if (rawMatches[0].av == "t"){
@@ -37,15 +40,14 @@ CLMS.model.SpectrumMatch = function (containingModel, rawMatches){
         } else {
             this.autovalidated = false;
         }
-        CLMS.model.autoValidatedFound = true;
+        this.containingModel.set("autoValidatedPresent", true);
     }
     // used in Rappsilber Lab to record manual validation status
     if (rawMatches[0].v){
         this.validated = rawMatches[0].v;
-        CLMS.model.manualValidatedFound = true;
+         this.containingModel.set("manualValidatedPresent", true);
     }
 
-    var peptides = this.containingModel.get("peptides");
     this.matchedPeptides = [];
     this.matchedPeptides[0] = peptides.get(rawMatches[0].pi);
     // following will be inadequate for trimeric and higher order cross-links
@@ -55,38 +57,21 @@ CLMS.model.SpectrumMatch = function (containingModel, rawMatches){
 
     //if the match is ambiguous it will relate to many crossLinks
     this.crossLinks = [];
-
-    //TODO: could tidy following up
-    this.pepSeq1raw = this.matchedPeptides[0].seq_mods;
-    this.pepSeq1 = this.matchedPeptides[0].sequence;
     this.linkPos1 = rawMatches[0].lp;
-    this.protein1 = this.matchedPeptides[0].prt;
-    this.pepPos1 = this.matchedPeptides[0].pos;
-    // following will be inadequate for trimeric and higher order cross-links
     if (rawMatches[1]) {
-        this.pepSeq2raw = this.matchedPeptides[1].seq_mods;
-        this.pepSeq2 = this.matchedPeptides[1].sequence;
         this.linkPos2 = rawMatches[1].lp;
-        this.protein2 = this.matchedPeptides[1].prt;
-        this.pepPos2 = this.matchedPeptides[1].pos;
-    } else {
-        this.pepSeq2raw = "";
-        this.pepSeq2 = "";
-        this.linkPos2 = null;
-        this.protein2 = [];
-        this.pepPos2 = [];
-    }
+	}
 
     if (this.linkPos1 == 0) { //would have been -1 in DB but 1 was added to it during query
         //its a linear
-        for (var i = 0; i < this.pepPos1.length; i++) {
+        for (var i = 0; i < this.matchedPeptides[0].pos.length; i++) {
             
-			p1ID = this.protein1[i];
+			p1ID = this.matchedPeptides[0].prt[i];
 		
-			res1 = this.pepPos1[i] - 1 + this.linkPos1;
+			res1 = this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
 		
-			this.associateWithLink(p1ID, p2ID, res1, res2, this.pepPos1[i] - 0, this.pepSeq1.length, this.pepPos2[j], this.pepSeq2.length);
-        }
+			this.associateWithLink(participants, crossLinks, p1ID, p2ID, 
+			res1, res2, this.matchedPeptides[0].pos[i] - 0, this.matchedPeptides[0].sequence.length);}
         return;
     }
 
@@ -99,17 +84,17 @@ CLMS.model.SpectrumMatch = function (containingModel, rawMatches){
 
     //loop to produce all alternative linkage site combinations
     //(position1 count * position2 count alternative)
-    for (var i = 0; i < this.pepPos1.length; i++) {
-        for (var j = 0; j < this.pepPos2.length; j++) {
+    for (var i = 0; i < this.matchedPeptides[0].pos.length; i++) {
+        for (var j = 0; j < this.matchedPeptides[1].pos.length; j++) {
 
-            p1ID = this.protein1[i];
-            p2ID = this.protein2[j];
+            p1ID = this.matchedPeptides[0].prt[i];
+            p2ID = this.matchedPeptides[1].prt[j];
 
             // * residue numbering starts at 1 *
-            res1 = this.pepPos1[i] - 1 + this.linkPos1;
-            res2 = this.pepPos2[j] - 1 + this.linkPos2;
+            res1 = this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
+            res2 = this.matchedPeptides[1].pos[j] - 1 + this.linkPos2;
 
-            this.associateWithLink(p1ID, p2ID, res1, res2, this.pepPos1[i] - 0, this.pepSeq1.length, this.pepPos2[j], this.pepSeq2.length);
+            this.associateWithLink(participants, crossLinks, p1ID, p2ID, res1, res2, this.matchedPeptides[0].pos[i] - 0, this.matchedPeptides[0].sequence.length, this.matchedPeptides[1].pos[j], this.matchedPeptides[1].sequence.length);
         }
     }
 
@@ -123,12 +108,12 @@ CLMS.model.SpectrumMatch = function (containingModel, rawMatches){
             //TODO: there is some problems here to do with ambiguity - overlap may occur in different places
             //&& pep1_positions.length === 1 && pep2_positions.length === 1) {
             //if both peptide sequnces defined
-            if (this.pepSeq1 && this.pepSeq2) {
+            if (this.matchedPeptides[0].sequence && this.matchedPeptides[1].sequence) {
 
-                var pep1length = this.pepSeq1.length;
-                var pep2length = this.pepSeq2.length;
-                var pep1_start = this.pepPos1[0];
-                var pep2_start = this.pepPos2[0];
+                var pep1length = this.matchedPeptides[0].sequence.length;
+                var pep2length = this.matchedPeptides[1].sequence.length;
+                var pep1_start = this.matchedPeptides[0].pos[0];
+                var pep2_start = this.matchedPeptides[1].pos[0];
                 var pep1_end = pep1_start  + (pep1length - 1);
                 var pep2_end = pep2_start + (pep2length - 1);
                 if (pep1_start >= pep2_start && pep1_start <= pep2_end){
@@ -158,19 +143,15 @@ CLMS.model.SpectrumMatch = function (containingModel, rawMatches){
     }
 }
 
-//static variables - todo: these should be someehwre else... in model instance
-CLMS.model.SpectrumMatch.autoValidatedFound = false;
-CLMS.model.SpectrumMatch.manualValidatedFound = false;
-CLMS.model.SpectrumMatch.unambigLinkFound = false;
-
-CLMS.model.SpectrumMatch.prototype.associateWithLink = function (p1ID, p2ID, res1, res2, //following params may be null :-
+CLMS.model.SpectrumMatch.prototype.associateWithLink = function (proteins, crossLinks, p1ID, p2ID, res1, res2, //following params may be null :-
             pep1_start, pep1_length, pep2_start, pep2_length){
+				
     // we don't want two different ID's, e.g. one thats "33-66" and one thats "66-33"
     //following puts lower protein_ID first in link_ID
     var fromProt, toProt;
 
-    var proteins = this.containingModel.get("participants");
-    var crossLinks = this.containingModel.get("crossLinks");
+    //~ var proteins = this.containingModel.get("participants");
+    //~ var crossLinks = this.containingModel.get("crossLinks");
 
     if (!p2ID) { //its  a linear peptide (no crosslinker of any product type))
         fromProt = proteins.get(p1ID);
@@ -255,4 +236,9 @@ CLMS.model.SpectrumMatch.prototype.isAmbig = function() {
         return true;
     }
     return false;
+}
+
+CLMS.model.SpectrumMatch.prototype.runName = function() {
+	var runName = this.containingModel.get("spectrumSources").get(this.src);
+    return runName;
 }

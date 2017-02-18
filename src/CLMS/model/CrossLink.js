@@ -20,14 +20,15 @@ CLMS.model.CrossLink = function (id, fromProtein, fromResidue, toProtein, toResi
 CLMS.model.CrossLink.prototype.isSelfLink = function() {
     return (this.fromProtein === this.toProtein);
 }
+
 /*
 CLMS.model.CrossLink.prototype.hasConfirmedHomomultimer = function() {
     return this.confirmedHomomultimer;
 }
 */
 //used when filter changed
-CLMS.model.CrossLink.prototype.check = function(filter) {
+/*CLMS.model.CrossLink.prototype.check = function(filter) {
     if (this.filteredMatches_pp.length > 0) {return true;}
     else { return false;}
-};
+};*/
 
