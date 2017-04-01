@@ -253,12 +253,12 @@ CLMS.model.SpectrumMatch.prototype.expMZ = function() {
 }
 
 CLMS.model.SpectrumMatch.prototype.expMass = function() {
-	return this.precursorMZ * this.precursorCharge;
+	return this.precursorMZ * Math.abs(this.precursorCharge);
 }
 
 
 CLMS.model.SpectrumMatch.prototype.matchMZ = function() {
-	return this.calc_mass / this.precursorCharge;
+	return this.calc_mass / Math.abs(this.precursorCharge);
 }
 
 CLMS.model.SpectrumMatch.prototype.matchMass = function() {
