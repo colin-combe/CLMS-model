@@ -41,6 +41,7 @@
             }
             this.set("searches", searches);
 
+			//enzyme specificity
             var postAaSet = new Set();
             var aaConstrainedCTermSet = new Set();
             var aaConstrainedNTermSet = new Set();
@@ -91,6 +92,32 @@
 					);
 				}
 			}
+			
+			//crosslink specificity
+			var linkableResSet = new Set();
+            for (var s = 0; s < searchCount; s++) {
+                var search = searchArray[s];
+                var crosslinkers = search.crosslinkers;
+                var crosslinkerCount = crosslinkers.length;
+                for (var cl = 0; cl < crosslinkerCount ; cl++) {
+                    var crosslinkerDescription = crosslinkers[cl].description;
+                    var linkedAARegex = /LINKEDAMINOACIDS:(.*?);/g;
+                    var result = null;
+                    while ((result = linkedAARegex.exec(crosslinkerDescription)) !== null) {
+						var resArray = result[1].split(',');
+						var resCount = resArray.length;
+						for (var r = 0; r < resCount; r++){
+							var resRegex = /([A-Z])(.*)?/
+							var resMatch = resRegex.exec(resArray[r]);
+							if (resMatch) {
+								linkableResSet.add(resMatch[1]);
+							}
+						}
+					}
+                }
+            }
+
+			this.set("crosslinkerSpecificity", Array.from(linkableResSet));
             
             //saved config should end up including filter settings not just xiNET layout
             this.set("xiNETLayout", options.xiNETLayout);
@@ -225,7 +252,37 @@
 					}
 				}
 			}
-			console.log("sp:", specificity, "df:", digestibleResiduesAsFeatures);
+			//console.log("sp:", specificity, "df:", digestibleResiduesAsFeatures);
             return digestibleResiduesAsFeatures;
+        },
+
+        getCrosslinkableResiduesAsFeatures(participant){
+            var crosslinkableResiduesAsFeatures = [];
+            
+            var sequence = participant.sequence;
+            var seqLength = sequence.length;
+            var specificity = this.get("crosslinkerSpecificity");
+            
+            var specifCount = specificity.length;
+            for (var i = 0; i < specifCount; i++){
+				var spec = specificity[i];
+				for (var s = 0; s < seqLength; s++) {
+					if (sequence[s] == spec) {
+						crosslinkableResiduesAsFeatures.push(
+							{
+								begin: s + 1, 
+								end: s + 1, 
+								name: "Crosslinkable residue", 
+								protID: participant.id, 
+								id: participant.id+" Crosslinkable residue"+(s+1), 
+								category: "Crosslinkable residue", 
+								type: spec.type
+							}
+                        );
+					}
+				}
+			}
+			//console.log("sp:", specificity, "clf:", crosslinkableResiduesAsFeatures);
+            return crosslinkableResiduesAsFeatures;
         }
     });
