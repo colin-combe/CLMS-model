@@ -11,17 +11,17 @@
     CLMS.uniprotAccRegex = /[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}/;
 
     CLMS.model.SearchResultsModel = Backbone.Model.extend ({
-		//http://stackoverflow.com/questions/19835163/backbone-model-collection-property-not-empty-on-new-model-creation
+        //http://stackoverflow.com/questions/19835163/backbone-model-collection-property-not-empty-on-new-model-creation
         defaults :  function() {
-			return {
-				participants: new Map (), //map
-				//peptides: new Map (), //map
-				matches: [],
-				crossLinks: new Map(), //map
-				scoreExtent: null,
-				searches: new Map(),
-				decoysPresent: false,
-			};
+            return {
+                participants: new Map (), //map
+                //peptides: new Map (), //map
+                matches: [],
+                crossLinks: new Map(), //map
+                scoreExtent: null,
+                searches: new Map(),
+                decoysPresent: false,
+            };
         },
 
         initialize: function (options) {
@@ -31,8 +31,8 @@
             this.options = _.extend(defaultOptions, options);
 
             var self = this;
-			this.set("sid", this.options.sid);
-            
+            this.set("sid", this.options.sid);
+
             //search meta data
             var searches = new Map();
             for(var propertyName in this.options.searches) {
@@ -41,8 +41,59 @@
             }
             this.set("searches", searches);
 
-            this.set("xiNETLayout", options.xiNETLayout);//hack - todo:fix
+            var postAaSet = new Set();
+            var aaConstrainedCTermSet = new Set();
+            var aaConstrainedNTermSet = new Set();
+            var searchArray = Array.from(searches.values());
+            var searchCount = searchArray.length;
+            for (var s = 0; s < searchCount; s++) {
+                var search = searchArray[s];
+                var enzymes = search.enzymes;
+                var enzymeCount = enzymes.length;
+                for (var e = 0; e < enzymeCount ; e++) {
+                    var enzymeDescription = enzymes[e].description;
+                    var postAARegex = /DIGESTED:(.*?);/g;
+                    var postAAMatch = postAARegex.exec(enzymeDescription);
+                    getResiduesFromEnzymeDescription (postAAMatch, postAaSet);
+                    
+                    var cTermRegex = /CTERMDIGEST:(.*?);/g;
+                    var ctMatch = cTermRegex.exec(enzymeDescription);
+                    getResiduesFromEnzymeDescription (ctMatch, aaConstrainedCTermSet);
+                    
+					var nTermRegex = /NTERMDIGEST:(.*?);/g;
+					var ntMatch = nTermRegex.exec(enzymeDescription);
+                    getResiduesFromEnzymeDescription (ntMatch, aaConstrainedNTermSet);
+                }
+            }
             
+            function getResiduesFromEnzymeDescription (regexMatch, residueSet) {
+				if (regexMatch && regexMatch.length > 1) {
+					var resArray = regexMatch[1].split(',');
+					var resCount = resArray.length;
+                    for (var r = 0; r < resCount; r++){
+						residueSet.add(resArray[r]);
+					}
+				}
+			}
+			
+			var enzymeSpecificity = [];
+			addEnzymeSpecificityResidues(postAaSet, "Post AA constrained");
+			addEnzymeSpecificityResidues(aaConstrainedCTermSet, "AA constrained c-term");
+			addEnzymeSpecificityResidues(aaConstrainedNTermSet, "AA constrained n-term");
+			this.set("enzymeSpecificity", enzymeSpecificity);
+			
+            function addEnzymeSpecificityResidues (residueSet, type) {
+				var resArray = Array.from(residueSet.values());
+				var resCount = resArray.length;
+				for (var r = 0; r < resCount; r++) {
+					enzymeSpecificity.push(
+						{aa: resArray[r] , type: type}
+					);
+				}
+			}
+            
+            //saved config should end up including filter settings not just xiNET layout
+            this.set("xiNETLayout", options.xiNETLayout);
             //spectrum sources
             var spectrumSources = new Map();
             var specSource;
@@ -80,7 +131,7 @@
             }
             //this.set("peptides", peptides);
 
-			var crossLinks = this.get("crossLinks");
+            var crossLinks = this.get("crossLinks");
 
             var rawMatches = this.options.rawMatches;
             if (rawMatches) {
@@ -109,32 +160,32 @@
                     }
                 }
             }
-            
-			this.set("scoreExtent", [minScore, maxScore]);
-			
+
+            this.set("scoreExtent", [minScore, maxScore]);
+
             var participantCount = participants.size;
-            
-			if (participantCount < 101) {
-				for (var protein of participants.values()){
-					uniProtTxt(protein);
-				}
+
+            if (participantCount < 101) {
+                for (var protein of participants.values()){
+                    uniProtTxt(protein);
+                }
             }
-			else {
-				CLMSUI.vent.trigger("uniprotDataParsed", self);
-			}
-			
+            else {
+                CLMSUI.vent.trigger("uniprotDataParsed", self);
+            }
+
             function uniProtTxt (p){
-				CLMS.uniprotAccRegex.lastIndex = 0;
+                CLMS.uniprotAccRegex.lastIndex = 0;
                 if (!p.is_decoy && CLMS.uniprotAccRegex.test(p.accession)) {
-					var url = "https://www.ebi.ac.uk/proteins/api/features/" + p.accession + ".json";
-					d3.json(url, function (json) {
-						processUniProtTxt(p, json);
-					});
+                    var url = "https://www.ebi.ac.uk/proteins/api/features/" + p.accession + ".json";
+                    d3.json(url, function (json) {
+                        processUniProtTxt(p, json);
+                    });
                 } else { //not protein, no accession or isDecoy
                     participantCount--;
                     if (participantCount === 0) {
-						CLMSUI.vent.trigger("uniprotDataParsed", self);
-					}
+                        CLMSUI.vent.trigger("uniprotDataParsed", self);
+                    }
                 }
             }
 
@@ -142,9 +193,39 @@
                 p.uniprot = json;
                 participantCount--;
                 if (participantCount === 0) {
-					CLMSUI.vent.trigger("uniprotDataParsed", self);
-				}
+                    CLMSUI.vent.trigger("uniprotDataParsed", self);
+                }
             }
 
+        },
+
+        getDigestibleResiduesAsFeatures(participant){
+            var digestibleResiduesAsFeatures = [];
+            
+            var sequence = participant.sequence;
+            var seqLength = sequence.length;
+            var specificity = this.get("enzymeSpecificity");
+            
+            var specifCount = specificity.length;
+            for (var i = 0; i < specifCount; i++){
+				var spec = specificity[i];
+				for (var s = 0; s < seqLength; s++) {
+					if (sequence[s] == spec.aa) {
+						digestibleResiduesAsFeatures.push(
+							{
+								begin: s + 1, 
+								end: s + 1, 
+								name: spec.type, 
+								protID: participant.id, 
+								id: participant.id+" "+spec.type+(s+1), 
+								category: "Digestible residue", 
+								type: spec.type
+							}
+                        );
+					}
+				}
+			}
+			console.log("sp:", specificity, "df:", digestibleResiduesAsFeatures);
+            return digestibleResiduesAsFeatures;
         }
     });
