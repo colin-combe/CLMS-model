@@ -193,8 +193,9 @@
             var participantCount = participants.size;
 
             if (participantCount < 101) {
-                for (var protein of participants.values()){
-                    uniProtTxt(protein);
+				var participantArray = Array.from(participants.values()); 
+                for (var p = 0; p < participantCount; p++ ){
+                    uniProtTxt(participantArray[p]);
                 }
             }
             else {
