@@ -277,5 +277,5 @@ CLMS.model.SpectrumMatch.prototype.matchMass = function() {
 }
 
 CLMS.model.SpectrumMatch.prototype.massError = function() {
-	return this.expMass() - this.matchMass();
+	return (this.expMass() - this.matchMass()) / this.matchMass();
 }
