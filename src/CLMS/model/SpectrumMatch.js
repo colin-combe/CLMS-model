@@ -262,13 +262,14 @@ CLMS.model.SpectrumMatch.prototype.expMZ = function() {
 	return this.precursorMZ;
 }
 
+CLMS.model.SpectrumMatch.hydrogenMass = 1.00811;
+
 CLMS.model.SpectrumMatch.prototype.expMass = function() {
-	return this.precursorMZ * this.precursorCharge;
+	return this.precursorMZ * this.precursorCharge - (this.precursorCharge * CLMS.model.SpectrumMatch.hydrogenMass);
 }
 
-
 CLMS.model.SpectrumMatch.prototype.matchMZ = function() {
-	return this.calc_mass / this.precursorCharge;
+	return (this.calc_mass + (this.precursorCharge * CLMS.model.SpectrumMatch.hydrogenMass))/ this.precursorCharge ;
 }
 
 CLMS.model.SpectrumMatch.prototype.matchMass = function() {
