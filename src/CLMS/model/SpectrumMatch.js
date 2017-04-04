@@ -13,10 +13,12 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
     //
     // it's a join of spectrum_match and matched_peptide tables in DB,
     //
+    // may seem convoluted but its to reduce amount of data need to transfer
+    //
     // id = spectrumMatch id, ty = "match_type" (match_type != protduct_type)
     // pi = peptide_id, lp = link position, sc = score, si = search_id,
     // dc = is_decoy, av = autovalidated, v = validated, rj = rejected,
-    // r = run_name, sn = scan_number, pc = precursor charge
+    // r = run_name, sn = scan_number, pc_c = precursor charge
 
     this.containingModel = containingModel; //containing BB model
 
@@ -31,7 +33,20 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
 	}
     this.src = +rawMatches[0].src;
     this.scanNumber = +rawMatches[0].sn;
-    this.precursorCharge = +rawMatches[0].pc;
+
+    this.precursorCharge = +rawMatches[0].pc_c;
+    if (this.precursorCharge == -1) {
+		this.precursorCharge = undefined;
+	}
+
+	//not currently used - questions about what its based on, typically -1
+    //~ this.precursorIntensity = +rawMatches[0].pc_i;
+    //~ if (this.precursorIntensity == -1) {
+		//~ this.precursorIntensity = undefined;
+	//~ }
+
+	this.precursorMZ = +rawMatches[0].pc_mz;
+    this.calc_mass = +rawMatches[0].cm;
     this.score = +rawMatches[0].sc;
     //autovalidated - another attribute
     if (rawMatches[0].av){
@@ -241,4 +256,25 @@ CLMS.model.SpectrumMatch.prototype.isAmbig = function() {
 CLMS.model.SpectrumMatch.prototype.runName = function() {
 	var runName = this.containingModel.get("spectrumSources").get(this.src);
     return runName;
+}
+
+CLMS.model.SpectrumMatch.prototype.expMZ = function() {
+	return this.precursorMZ;
+}
+
+CLMS.model.SpectrumMatch.prototype.expMass = function() {
+	return this.precursorMZ * this.precursorCharge;
+}
+
+
+CLMS.model.SpectrumMatch.prototype.matchMZ = function() {
+	return this.calc_mass / this.precursorCharge;
+}
+
+CLMS.model.SpectrumMatch.prototype.matchMass = function() {
+	return this.calc_mass;
+}
+
+CLMS.model.SpectrumMatch.prototype.massError = function() {
+	return this.expMass() - this.matchMass();
 }
