@@ -193,8 +193,9 @@
             var participantCount = participants.size;
 
             if (participantCount < 101) {
-				var participantArray = Array.from(participants.values()); 
-                for (var p = 0; p < participantCount; p++ ){
+				            var participantArray = Array.from(participants.values()); 
+                var invariantCount = participantCount;
+                for (var p = 0; p < invariantCount; p++ ){
                     uniProtTxt(participantArray[p]);
                 }
             }
@@ -206,6 +207,7 @@
                 CLMS.uniprotAccRegex.lastIndex = 0;
                 if (!p.is_decoy && CLMS.uniprotAccRegex.test(p.accession)) {
                     var url = "https://www.ebi.ac.uk/proteins/api/features/" + p.accession + ".json";
+
                     d3.json(url, function (json) {
                         processUniProtTxt(p, json);
                     });
