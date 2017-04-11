@@ -24,19 +24,15 @@
             };
         },
 
-        initialize: function (options) {
-
-            var defaultOptions = {};
-
-            this.options = _.extend(defaultOptions, options);
+        parseJSON: function (options) {
 
             var self = this;
-            this.set("sid", this.options.sid);
+            this.set("sid", options.sid);
 
             //search meta data
             var searches = new Map();
-            for(var propertyName in this.options.searches) {
-                var search = this.options.searches[propertyName];
+            for(var propertyName in options.searches) {
+                var search = options.searches[propertyName];
                 searches.set(propertyName, search);
             }
             this.set("searches", searches);
@@ -124,8 +120,8 @@
             //spectrum sources
             var spectrumSources = new Map();
             var specSource;
-            for (var propertyName in this.options.spectrumSources) {
-                specSource = this.options.spectrumSources[propertyName];
+            for (var propertyName in options.spectrumSources) {
+                specSource = options.spectrumSources[propertyName];
                 spectrumSources.set(+specSource.id, specSource.name);
             }
             this.set("spectrumSources", spectrumSources);
@@ -134,7 +130,7 @@
             var notUpperCase = /[^A-Z]/g;
 
             var participants = new Map();
-            var proteins = this.options.proteins;
+            var proteins = options.proteins;
             var participant;
             for (var propertyName in proteins) {
                 notUpperCase.lastIndex = 0;
@@ -150,9 +146,9 @@
             //peptides
             var peptides = new Map();
             var peptide;
-            for (var propertyName in this.options.peptides) {
+            for (var propertyName in options.peptides) {
                 notUpperCase.lastIndex = 0;
-                peptide = this.options.peptides[propertyName];
+                peptide = options.peptides[propertyName];
                 peptide.sequence = peptide.seq_mods.replace(notUpperCase, '');
                 peptides.set(peptide.id, peptide);
             }
@@ -160,7 +156,7 @@
 
             var crossLinks = this.get("crossLinks");
 
-            var rawMatches = this.options.rawMatches;
+            var rawMatches = options.rawMatches;
             if (rawMatches) {
                 var matches = this.get("matches");
                 var minScore = Number.MIN_VALUE;
@@ -188,7 +184,8 @@
                 }
             }
 
-            this.set("scoreExtent", [minScore, maxScore]);
+            this.set("minScore", minScore);
+            this.set("maxScore", maxScore);
 
             var participantCount = participants.size;
 
@@ -287,5 +284,9 @@
 			}
 			//console.log("sp:", specificity, "clf:", crosslinkableResiduesAsFeatures);
             return crosslinkableResiduesAsFeatures;
-        }
+        },
+
+        parseCSV: function (csv) {
+			console.log(csv);
+		},
     });
