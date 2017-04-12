@@ -62,14 +62,18 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
         this.validated = rawMatches[0].v;
          this.containingModel.set("manualValidatedPresent", true);
     }
-
-    this.matchedPeptides = [];
-    this.matchedPeptides[0] = peptides.get(rawMatches[0].pi);
-    // following will be inadequate for trimeric and higher order cross-links
-    if (rawMatches[1]) {
-        this.matchedPeptides[1] = peptides.get(rawMatches[1].pi);
-    }
-
+    
+	if (peptides.size) {
+		this.matchedPeptides = [];
+		this.matchedPeptides[0] = peptides.get(rawMatches[0].pi);
+		// following will be inadequate for trimeric and higher order cross-links
+		if (rawMatches[1]) {
+			this.matchedPeptides[1] = peptides.get(rawMatches[1].pi);
+		}
+	} else {
+		this.matchedPeptides = rawMatches;
+	}
+	
     //if the match is ambiguous it will relate to many crossLinks
     this.crossLinks = [];
     this.linkPos1 = rawMatches[0].lp;
@@ -101,6 +105,10 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
     //(position1 count * position2 count alternative)
     for (var i = 0; i < this.matchedPeptides[0].pos.length; i++) {
         for (var j = 0; j < this.matchedPeptides[1].pos.length; j++) {
+
+			//~ if (i > 0 || j > 0) {
+				this.containingModel.set("ambiguousPresent", true);
+			//~ }
 
             p1ID = this.matchedPeptides[0].prt[i];
             p2ID = this.matchedPeptides[1].prt[j];
