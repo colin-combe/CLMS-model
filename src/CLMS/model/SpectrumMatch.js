@@ -106,9 +106,9 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
     for (var i = 0; i < this.matchedPeptides[0].pos.length; i++) {
         for (var j = 0; j < this.matchedPeptides[1].pos.length; j++) {
 
-			//~ if (i > 0 || j > 0) {
+			if (i > 0 || j > 0) {
 				this.containingModel.set("ambiguousPresent", true);
-			//~ }
+			}
 
             p1ID = this.matchedPeptides[0].prt[i];
             p2ID = this.matchedPeptides[1].prt[j];
