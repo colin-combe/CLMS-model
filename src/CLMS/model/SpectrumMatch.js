@@ -76,9 +76,9 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
 	
     //if the match is ambiguous it will relate to many crossLinks
     this.crossLinks = [];
-    this.linkPos1 = rawMatches[0].lp;
+    this.linkPos1 = +rawMatches[0].lp;
     if (rawMatches[1]) {
-        this.linkPos2 = rawMatches[1].lp;
+        this.linkPos2 = +rawMatches[1].lp;
 	}
 
     if (this.linkPos1 == 0) { //would have been -1 in DB but 1 was added to it during query
@@ -114,8 +114,16 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
             p2ID = this.matchedPeptides[1].prt[j];
 
             // * residue numbering starts at 1 *
-            res1 = this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
-            res2 = this.matchedPeptides[1].pos[j] - 1 + this.linkPos2;
+            if (this.matchedPeptides[0].pos[i] > 0) {
+				res1 = this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
+			} else {
+				res1 = this.linkPos1;
+			} 
+			if (this.matchedPeptides[1].pos[j] > 0) {
+				res2 = this.matchedPeptides[1].pos[j] - 1 + this.linkPos2;
+			} else {
+				res2 = this.linkPos2;
+			}
 
             this.associateWithLink(participants, crossLinks, p1ID, p2ID, res1, res2, this.matchedPeptides[0].pos[i] - 0, this.matchedPeptides[0].sequence.length, this.matchedPeptides[1].pos[j], this.matchedPeptides[1].sequence.length);
         }

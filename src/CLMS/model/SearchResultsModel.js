@@ -19,6 +19,7 @@
                 scoreExtent: null,
                 searches: new Map(),
                 decoysPresent: false,
+                ambiguousPresent: false,
             };
         },
         
@@ -419,18 +420,18 @@
 				//read links
 				addCSVLinks();
 				//take out unlinked
-				var prots = this.proteins.values();
-				var protCount = prots.length;
-				for (var p = 0; p < protCount; p++) {
-					var prot = prots[p];
-					if (prot.proteinLinks.keys().length === 0) {
-						this.proteins.remove(prot.id);
-					}
-				}
-				if (annotations){
-					self.addAnnotations(annotations);
-				}
-				self.initProteins();
+				//~ var prots = this.proteins.values();
+				//~ var protCount = prots.length;
+				//~ for (var p = 0; p < protCount; p++) {
+					//~ var prot = prots[p];
+					//~ if (prot.proteinLinks.keys().length === 0) {
+						//~ this.proteins.remove(prot.id);
+					//~ }
+				//~ }
+				//~ if (annotations){
+					//~ self.addAnnotations(annotations);
+				//~ }
+				//~ self.initProteins();
 			}
 			else { // no FASTA file
 				//we may encounter proteins with
@@ -448,13 +449,8 @@
 							self.initProtein(prot);
 							countSequences++;
 							if (countSequences === protCount){
-								//~ if (annotations){
-									//~ self.addAnnotations(annotations);
-								//~ }
-								//~ self.initProteins();
-												addCSVLinks();
-
-								}
+								addCSVLinks();
+							}
 						}
 					);
 				}
@@ -600,6 +596,9 @@
 									score);
 					}
 				}
+				self.trigger ("change:matches", self);
+				//todo: oh oh, the following isn't right
+				CLMSUI.compositeModelInst.applyFilter();
 			};
 			
 			function addMatch (id,
@@ -625,6 +624,7 @@
 													crossLinks, 
 													new Map (), 
 													rawMatches);
+				self.get("matches").push(match);
 					
 			};
 			
