@@ -63,6 +63,10 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
          this.containingModel.set("manualValidatedPresent", true);
     }
     
+    if (!this.autovalidated && !this.validated) {
+		this.containingModel.set("unvalidatedPresent", true);
+	}
+    
 	if (peptides.size) {
 		this.matchedPeptides = [];
 		this.matchedPeptides[0] = peptides.get(rawMatches[0].pi);
@@ -185,6 +189,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (proteins, cross
     //~ var crossLinks = this.containingModel.get("crossLinks");
 
     if (!p2ID) { //its  a linear peptide (no crosslinker of any product type))
+		clmsBBModel.set("linearsPresent", true);
         fromProt = proteins.get(p1ID);
     }
     else if (p1ID <= p2ID) {
