@@ -133,16 +133,11 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
         }
     }
 
-    //identify homodimers: if peptides overlap its a homodimer, this bit of code is not quite finished
-    this.confirmedHomomultimer = false;//not that simple - single match may possibly be both homodimer link and inter protein link (if ambiguous)
-    this.overlap = [];//again, not that simple - see note below
-    //if self link
+    //identify homodimers: if peptides overlap its a homodimer
+    this.confirmedHomomultimer = false;
+    this.overlap = [];
     if (p1ID === p2ID) {
-        //if /*unambiguous?*/ cross-link
-       // if (pep1_positions && pep2_positions ){
-            //TODO: there is some problems here to do with ambiguity - overlap may occur in different places
-            //&& pep1_positions.length === 1 && pep2_positions.length === 1) {
-            //if both peptide sequnces defined
+		
             if (this.matchedPeptides[0].sequence && this.matchedPeptides[1].sequence) {
 
                 var pep1length = this.matchedPeptides[0].sequence.length;
@@ -255,7 +250,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (proteins, cross
         }
     }
 
-	var peptidePositions = []; //TODO - needs rethought about
+	var peptidePositions = [];
     if (endsReversedInResLinkId === false) {
 		peptidePositions.push({start: pep1_start, length: pep1_length});
 		peptidePositions.push({start: pep2_start, length: pep2_length});

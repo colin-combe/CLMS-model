@@ -423,19 +423,7 @@
 
                 //read links
                 addCSVLinks();
-                //take out unlinked
-                //~ var prots = this.proteins.values();
-                //~ var protCount = prots.length;
-                //~ for (var p = 0; p < protCount; p++) {
-                    //~ var prot = prots[p];
-                    //~ if (prot.proteinLinks.keys().length === 0) {
-                        //~ this.proteins.remove(prot.id);
-                    //~ }
-                //~ }
-                //~ if (annotations){
-                    //~ self.addAnnotations(annotations);
-                //~ }
-                //~ self.initProteins();
+
             }
             else { // no FASTA file
                 //we may encounter proteins with
@@ -444,9 +432,9 @@
                 addProteins(iProt2);
                 var protCount = participants.size;
                 var countSequences = 0;
-                var protIter = participants.values();
-                //FIX OF
-                for (prot of protIter){
+                var protArray = Array.from(participants.values());
+                for (var p = 0; p < protCount; p++){
+					var prot = protArray[p];
                     if (prot.is_decoy == false) {
                         var id = prot.id;
                         uniprotWebServiceFASTA(id, function(ident, seq){
