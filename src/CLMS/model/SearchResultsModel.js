@@ -309,9 +309,11 @@
             return crosslinkableResiduesAsFeatures;
         },
 
-        parseCSV: function(csv, fasta/*, annotations*/) {
+        parseCSV: function(csv, fileInfo, fasta) {
             var self = this;
-
+			this.get("searches").set(fileInfo.name, fileInfo);
+			fileInfo.group = fileInfo.name;
+			var fileName = fileInfo.name;
             var participants = this.get("participants");
 
             var rows = d3.csv.parseRows(csv);
@@ -319,19 +321,10 @@
             for (var h = 0; h < headers.length; h++) {
                 headers[h] = headers[h].trim();
             }
-            //console.log(headers.toString());
+            
             var iProt1 = headers.indexOf('Protein1');
-            var iRes1 = headers.indexOf('PepPos1');
             var iProt2 = headers.indexOf('Protein2');
-            var iRes2 = headers.indexOf('PepPos2');
-            var iScore = headers.indexOf('Score');
-            var iId = headers.indexOf('Id');
-            var iLinkPosition1 = headers.indexOf('LinkPos1');
-            var iPepSeq1 = headers.indexOf('PepSeq1');
-            var iLinkPosition2 = headers.indexOf('LinkPos2');
-            var iPepSeq2 = headers.indexOf('PepSeq2');
-            var iType = headers.indexOf('Type');//for xQuest looplinks and monolinks
-            //missing Protein column
+            //missing Protein column?
             if (iProt1 === -1){
                 alert("Failed to read column 'Protein1' from CSV file");
                 return;
@@ -340,6 +333,31 @@
                 alert("Failed to read column 'Protein2' from CSV file");
                 return;
             }
+            
+            if (headers.indexOf('fromSite')) {
+				fileInfo.type = "probably Francis / xiFDR";
+				
+				var iLinkPosition1 = headers.indexOf('fromSite');
+            	var iLinkPosition2 = headers.indexOf('ToSite');
+            	var iId = headers.indexOf('LinkID');
+				var iScore = headers.indexOf('Score');
+            					
+			}
+			
+			var iType = headers.indexOf('Type');//for xQuest looplinks and monolinks
+             var iRes1 = headers.indexOf('PepPos1');
+            var iRes2 = headers.indexOf('PepPos2');
+            var iPepSeq1 = headers.indexOf('PepSeq1');
+            var iPepSeq2 = headers.indexOf('PepSeq2');
+            
+            /*
+            //console.log(headers.toString());
+           var iScore = headers.indexOf('Score');
+            var iId = headers.indexOf('Id');
+            var iLinkPosition1 = headers.indexOf('LinkPos1');
+            var iLinkPosition2 = headers.indexOf('LinkPos2');
+            var iType = headers.indexOf('Type');//for xQuest looplinks and monolinks
+
             //missing Residue column(s)
             if (iLinkPosition1 === -1){
                 // we could try a different sometimes used column name
@@ -361,7 +379,7 @@
             if (iScore === -1){
                 // we could try a different sometimes used column name
                 iScore = headers.indexOf('ld-Score');
-            }
+            }*/
 
             var countRows = rows.length;
             if (fasta){ //FASTA file provided
@@ -676,7 +694,7 @@
                 return this.getRealProteinID(decoy.id) === real.id;
             },
 
-         isMatchingProteinPairFromIDs: function (prot1ID, prot2ID) {
+        isMatchingProteinPairFromIDs: function (prot1ID, prot2ID) {
                 if (prot1ID === prot2ID) { return true; }
                 var prot1 = this.get("participants").get(prot1ID);
                 var prot2 = this.get("participants").get(prot2ID);
