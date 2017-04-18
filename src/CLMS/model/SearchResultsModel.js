@@ -205,9 +205,9 @@
 
             function uniProtTxt (p){
                 CLMS.uniprotAccRegex.lastIndex = 0;
-                if (!p.is_decoy && CLMS.uniprotAccRegex.test(p.accession)) {
-                    var url = "https://www.ebi.ac.uk/proteins/api/features/" + p.accession + ".json";
-
+                var regexMatch = CLMS.uniprotAccRegex.exec(p.accession);
+		if (!p.is_decoy && regexMatch) {
+		    var url = "https://www.ebi.ac.uk/proteins/api/features/" + match[0] + ".json";		
                     d3.json(url, function (json) {
                         processUniProtTxt(p, json);
                     });
