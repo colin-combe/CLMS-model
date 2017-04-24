@@ -207,8 +207,8 @@
                 }
 
 				function uniProtTxt (p){
-					CLMS.uniprotAccRegex.lastIndex = 0;
-					var regexMatch = CLMS.uniprotAccRegex.exec(p.accession);
+					self.commonRegexes.uniprotAccession.lastIndex = 0;
+					var regexMatch = self.commonRegexes.uniprotAccession.exec(p.accession);
 					if (!p.is_decoy && regexMatch) {
 						var url = "https://www.ebi.ac.uk/proteins/api/features/" + regexMatch[0] + ".json";		
 						d3.json(url, function (json) {
@@ -221,7 +221,7 @@
 							CLMSUI.vent.trigger("uniprotDataParsed", self);
 						}
 					}
-                },
+                };
 
                 function processUniProtTxt(p, json){
                     p.uniprot = json;
@@ -229,7 +229,7 @@
                     if (participantCount === 0) {
                         CLMSUI.vent.trigger("uniprotDataParsed", self);
                     }
-                }
+                };
             }
 
         },
