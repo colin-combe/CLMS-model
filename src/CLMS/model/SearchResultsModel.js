@@ -243,11 +243,7 @@
             if (protObj.sequence) protObj.size = protObj.sequence.length;
             protObj.crossLinks = [];
             protObj.hidden = false;//?
-            protObj.is_decoy = false;
-            if (protObj.name.indexOf("DECOY") == 0) {
-                protObj.is_decoy = true;
-            }
-            //~ return protObj;
+
         },
 
         getDigestibleResiduesAsFeatures(participant){
@@ -499,6 +495,11 @@
                             if (!participants.has(id)) {
                                 var protein = {id:id, name:name, accession:acc};
                                 participants.set(id, protein);
+                                if (name.indexOf("DECOY") == 0) {
+									protein.is_decoy = true;
+								} else {
+									protein.is_decoy = false;
+								}
                                 self.initProtein(protein);
 
                             }
@@ -563,6 +564,7 @@
                     else {
                         id = row;
                     }
+                    //~ console.log(id);
                     if (iScore !== -1){
                         score = rows[row][iScore];
                     }
@@ -618,8 +620,10 @@
                     }
                 }
                 self.trigger ("change:matches", self);
+                
                 //todo: oh oh, the following isn't right
-                CLMSUI.compositeModelInst.applyFilter();
+                //~ CLMSUI.compositeModelInst.get("filterModel").set("unval",true);
+                alert("csv file loaded");
             };
 
             function addMatch (id,
