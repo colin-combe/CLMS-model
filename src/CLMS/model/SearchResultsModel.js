@@ -170,7 +170,7 @@
 
                     var l = rawMatches.length, match;
                     for (var i = 0; i < l; i++) {
-                        //TODO: this will need updated for ternary or higher order crosslinks
+                        //this would need updated for trimeric or higher order crosslinks
                         if ((i < (l - 1)) && rawMatches[i].id == rawMatches[i+1].id){
                             match = new CLMS.model.SpectrumMatch (this, participants, crossLinks, peptides, [rawMatches[i], rawMatches[i+1]]);
                             i++;
@@ -206,21 +206,22 @@
                     CLMSUI.vent.trigger("uniprotDataParsed", self);
                 }
 
-                function uniProtTxt (p){
-                    self.commonRegexes.uniprotAccession.lastIndex = 0;
-                    if (!p.is_decoy && self.commonRegexes.uniprotAccession.test(p.accession)) {
-                        var url = "https://www.ebi.ac.uk/proteins/api/features/" + p.accession + ".json";
-
-                        d3.json(url, function (json) {
-                            processUniProtTxt(p, json);
-                        });
-                    } else { //not protein, no accession or isDecoy
-                        participantCount--;
-                        if (participantCount === 0) {
-                            CLMSUI.vent.trigger("uniprotDataParsed", self);
-                        }
-                    }
-                }
+				function uniProtTxt (p){
+					CLMS.uniprotAccRegex.lastIndex = 0;
+					var regexMatch = CLMS.uniprotAccRegex.exec(p.accession);
+					if (!p.is_decoy && regexMatch) {
+						var url = "https://www.ebi.ac.uk/proteins/api/features/" + regexMatch[0] + ".json";		
+						d3.json(url, function (json) {
+							processUniProtTxt(p, json);
+						});
+					} else { 
+						//not protein, no accession or isDecoy        
+						participantCount--;
+						if (participantCount === 0) {
+							CLMSUI.vent.trigger("uniprotDataParsed", self);
+						}
+					}
+                },
 
                 function processUniProtTxt(p, json){
                     p.uniprot = json;
