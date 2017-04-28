@@ -184,7 +184,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (proteins, cross
     //~ var crossLinks = this.containingModel.get("crossLinks");
 
     if (!p2ID) { //its  a linear peptide (no crosslinker of any product type))
-		clmsBBModel.set("linearsPresent", true);
+		this.containingModel.set("linearsPresent", true);
         fromProt = proteins.get(p1ID);
     }
     else if (p1ID <= p2ID) {
