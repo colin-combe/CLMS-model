@@ -42,6 +42,16 @@
                     searches.set(propertyName, search);
                 }
                 this.set("searches", searches);
+                
+                var getResiduesFromEnzymeDescription = function (regexMatch, residueSet) {
+                    if (regexMatch && regexMatch.length > 1) {
+                        var resArray = regexMatch[1].split(',');
+                        var resCount = resArray.length;
+                        for (var r = 0; r < resCount; r++){
+                            residueSet.add(resArray[r]);
+                        }
+                    }
+                };
 
                 //enzyme specificity
                 var postAaSet = new Set();
@@ -68,24 +78,8 @@
                         getResiduesFromEnzymeDescription (ntMatch, aaConstrainedNTermSet);
                     }
                 }
-
-                function getResiduesFromEnzymeDescription (regexMatch, residueSet) {
-                    if (regexMatch && regexMatch.length > 1) {
-                        var resArray = regexMatch[1].split(',');
-                        var resCount = resArray.length;
-                        for (var r = 0; r < resCount; r++){
-                            residueSet.add(resArray[r]);
-                        }
-                    }
-                }
-
-                var enzymeSpecificity = [];
-                addEnzymeSpecificityResidues(postAaSet, "Post AA constrained");
-                addEnzymeSpecificityResidues(aaConstrainedCTermSet, "AA constrained c-term");
-                addEnzymeSpecificityResidues(aaConstrainedNTermSet, "AA constrained n-term");
-                this.set("enzymeSpecificity", enzymeSpecificity);
-
-                function addEnzymeSpecificityResidues (residueSet, type) {
+                
+                var addEnzymeSpecificityResidues = function (residueSet, type) {
                     var resArray = Array.from(residueSet.values());
                     var resCount = resArray.length;
                     for (var r = 0; r < resCount; r++) {
@@ -93,7 +87,13 @@
                             {aa: resArray[r] , type: type}
                         );
                     }
-                }
+                };
+
+                var enzymeSpecificity = [];
+                addEnzymeSpecificityResidues(postAaSet, "Post AA constrained");
+                addEnzymeSpecificityResidues(aaConstrainedCTermSet, "AA constrained c-term");
+                addEnzymeSpecificityResidues(aaConstrainedNTermSet, "AA constrained n-term");
+                this.set("enzymeSpecificity", enzymeSpecificity);
 
                 //crosslink specificity
                 var linkableResSet = new Set();
@@ -194,19 +194,16 @@
                 this.set("maxScore", maxScore);
 
                 var participantCount = participants.size;
-
-                if (participantCount < 101 && participantCount > 0) {
-                    var participantArray = Array.from(participants.values());
-                    var invariantCount = participantCount;
-                    for (var p = 0; p < invariantCount; p++ ){
-                        uniProtTxt(participantArray[p]);
+                
+                function processUniProtTxt(p, json){
+                    p.uniprot = json;
+                    participantCount--;
+                    if (participantCount === 0) {
+                        CLMSUI.vent.trigger("uniprotDataParsed", self);
                     }
                 }
-                else {
-                    CLMSUI.vent.trigger("uniprotDataParsed", self);
-                }
-
-				function uniProtTxt (p){
+                
+                function uniProtTxt (p){
 					self.commonRegexes.uniprotAccession.lastIndex = 0;
 					var regexMatch = self.commonRegexes.uniprotAccession.exec(p.accession);
 					if (!p.is_decoy && regexMatch) {
@@ -221,15 +218,19 @@
 							CLMSUI.vent.trigger("uniprotDataParsed", self);
 						}
 					}
-                };
+                }
 
-                function processUniProtTxt(p, json){
-                    p.uniprot = json;
-                    participantCount--;
-                    if (participantCount === 0) {
-                        CLMSUI.vent.trigger("uniprotDataParsed", self);
+                if (participantCount < 101 && participantCount > 0) {
+                    var participantArray = Array.from(participants.values());
+                    var invariantCount = participantCount;
+                    for (var p = 0; p < invariantCount; p++ ){
+                        uniProtTxt(participantArray[p]);
                     }
-                };
+                }
+                else {
+                    CLMSUI.vent.trigger("uniprotDataParsed", self);
+                }
+
             }
 
         },
