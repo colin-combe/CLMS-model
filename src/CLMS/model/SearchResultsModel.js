@@ -236,7 +236,7 @@
         },
 
         //adds some attributes we want to protein object
-        initProtein(protObj){
+        initProtein: function(protObj){
             if (protObj.seq_mods) {
                 this.commonRegexes.notUpperCase.lastIndex = 0;
                 protObj.sequence = protObj.seq_mods.replace(this.commonRegexes.notUpperCase, '');
@@ -247,7 +247,7 @@
 
         },
 
-        getDigestibleResiduesAsFeatures(participant){
+        getDigestibleResiduesAsFeatures: function (participant){
             var digestibleResiduesAsFeatures = [];
 
             var sequence = participant.sequence;
@@ -277,7 +277,7 @@
             return digestibleResiduesAsFeatures;
         },
 
-        getCrosslinkableResiduesAsFeatures(participant){
+        getCrosslinkableResiduesAsFeatures: function(participant){
             var crosslinkableResiduesAsFeatures = [];
 
             var sequence = participant.sequence;
