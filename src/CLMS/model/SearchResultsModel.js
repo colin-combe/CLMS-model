@@ -7,6 +7,16 @@
 
 
     var CLMS = CLMS || {};
+
+	CLMS.arrayFromMapValues = function (map) {
+		if (map.values) {return Array.from(map.values());}
+		else {
+			var array = [];
+			map.forEach(function (key, value, map) {array.push(value)});
+			return array;
+		}
+	};
+    
     CLMS.model = CLMS.model || {};
 
     CLMS.model.SearchResultsModel = Backbone.Model.extend ({
@@ -28,7 +38,7 @@
             notUpperCase: /[^A-Z]/g,
             decoyNames: /(REV_)|(RAN_)|(DECOY_)/,
         },
-
+        
         //our SpectrumMatches are constructed from the rawMatches and peptides arrays in this json
         parseJSON: function (json) {
             if (json) {
@@ -57,7 +67,7 @@
                 var postAaSet = new Set();
                 var aaConstrainedCTermSet = new Set();
                 var aaConstrainedNTermSet = new Set();
-                var searchArray = Array.from(searches.values());
+                var searchArray = CLMS.arrayFromMapValues(searches);
                 var searchCount = searchArray.length;
                 for (var s = 0; s < searchCount; s++) {
                     var search = searchArray[s];
@@ -80,7 +90,7 @@
                 }
                 
                 var addEnzymeSpecificityResidues = function (residueSet, type) {
-                    var resArray = Array.from(residueSet.values());
+                    var resArray = CLMS.arrayFromMapValues(residueSet);
                     var resCount = resArray.length;
                     for (var r = 0; r < resCount; r++) {
                         enzymeSpecificity.push(
@@ -221,7 +231,7 @@
                 }
 
                 if (participantCount < 101 && participantCount > 0) {
-                    var participantArray = Array.from(participants.values());
+                    var participantArray = CLMS.arrayFromMapValues(participants);
                     var invariantCount = participantCount;
                     for (var p = 0; p < invariantCount; p++ ){
                         uniProtTxt(participantArray[p]);
@@ -448,7 +458,7 @@
                 addProteins(iProt2);
                 var protCount = participants.size;
                 var countSequences = 0;
-                var protArray = Array.from(participants.values());
+                var protArray = CLMS.arrayFromMapValues(participants);
                 for (var p = 0; p < protCount; p++){
 					var prot = protArray[p];
                     if (prot.is_decoy == false) {
@@ -660,7 +670,7 @@
         initDecoyLookup: function (prefixes) {
             // Make map of reverse/random decoy proteins to real proteins
             prefixes = prefixes || ["REV_", "RAN_", "DECOY_", "DECOY:"];
-            var prots = Array.from(this.get("participants").values());
+            var prots = CLMS.arrayFromMapValues(this.get("participants"));
             var nameMap = d3.map ();
             var accessionMap = d3.map ();
             prots.forEach (function (prot) {
