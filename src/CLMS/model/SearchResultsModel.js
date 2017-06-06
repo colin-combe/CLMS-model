@@ -17,6 +17,15 @@
 		}
 	};
     
+	CLMS.arrayFromMapEntries = function (map) {
+		if (map.entries) {return Array.from(map.entries());}
+		else {
+			var array = [];
+			map.forEach(function (value, key, map) {array.push([key, value])});
+			return array;
+		}
+	};
+    
     CLMS.model = CLMS.model || {};
 
     CLMS.model.SearchResultsModel = Backbone.Model.extend ({
