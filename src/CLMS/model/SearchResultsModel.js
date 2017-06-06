@@ -12,7 +12,7 @@
 		if (map.values) {return Array.from(map.values());}
 		else {
 			var array = [];
-			map.forEach(function (key, value, map) {array.push(value)});
+			map.forEach(function (value, key, map) {array.push(value)});
 			return array;
 		}
 	};
