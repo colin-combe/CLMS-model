@@ -7,6 +7,35 @@
 
 
     var CLMS = CLMS || {};
+
+    //For IE, which doesn't yet support values(). entries(), or keys() on ECMA6 Map
+    CLMS.arrayFromMapValues = function (map) {
+        if (map.values) {return Array.from(map.values());}
+        else {
+            var array = [];
+            map.forEach(function (value, key, map) {array.push(value)});
+            return array;
+        }
+    };
+
+    CLMS.arrayFromMapEntries = function (map) {
+        if (map.entries) {return Array.from(map.entries());}
+        else {
+            var array = [];
+            map.forEach(function (value, key, map) {array.push([key, value])});
+            return array;
+        }
+    };
+
+    CLMS.arrayFromMapKeys = function (map) {
+        if (map.keys) {return Array.from(map.keys());}
+        else {
+            var array = [];
+            map.forEach(function (value, key, map) {array.push(key)});
+            return array;
+        }
+    };
+
     CLMS.model = CLMS.model || {};
 
     CLMS.model.SearchResultsModel = Backbone.Model.extend ({
@@ -42,7 +71,7 @@
                     searches.set(propertyName, search);
                 }
                 this.set("searches", searches);
-                
+
                 var getResiduesFromEnzymeDescription = function (regexMatch, residueSet) {
                     if (regexMatch && regexMatch.length > 1) {
                         var resArray = regexMatch[1].split(',');
@@ -57,7 +86,7 @@
                 var postAaSet = new Set();
                 var aaConstrainedCTermSet = new Set();
                 var aaConstrainedNTermSet = new Set();
-                var searchArray = Array.from(searches.values());
+                var searchArray = CLMS.arrayFromMapValues(searches);
                 var searchCount = searchArray.length;
                 for (var s = 0; s < searchCount; s++) {
                     var search = searchArray[s];
@@ -78,9 +107,9 @@
                         getResiduesFromEnzymeDescription (ntMatch, aaConstrainedNTermSet);
                     }
                 }
-                
+
                 var addEnzymeSpecificityResidues = function (residueSet, type) {
-                    var resArray = Array.from(residueSet.values());
+                    var resArray = CLMS.arrayFromMapValues(residueSet);
                     var resCount = resArray.length;
                     for (var r = 0; r < resCount; r++) {
                         enzymeSpecificity.push(
@@ -194,7 +223,7 @@
                 this.set("maxScore", maxScore);
 
                 var participantCount = participants.size;
-                
+
                 function processUniProtTxt(p, json){
                     p.uniprot = json;
                     participantCount--;
@@ -202,26 +231,26 @@
                         CLMSUI.vent.trigger("uniprotDataParsed", self);
                     }
                 }
-                
+
                 function uniProtTxt (p){
-					self.commonRegexes.uniprotAccession.lastIndex = 0;
-					var regexMatch = self.commonRegexes.uniprotAccession.exec(p.accession);
-					if (!p.is_decoy && regexMatch) {
-						var url = "https://www.ebi.ac.uk/proteins/api/features/" + regexMatch[0] + ".json";		
-						d3.json(url, function (json) {
-							processUniProtTxt(p, json);
-						});
-					} else { 
-						//not protein, no accession or isDecoy        
-						participantCount--;
-						if (participantCount === 0) {
-							CLMSUI.vent.trigger("uniprotDataParsed", self);
-						}
-					}
+                    self.commonRegexes.uniprotAccession.lastIndex = 0;
+                    var regexMatch = self.commonRegexes.uniprotAccession.exec(p.accession);
+                    if (!p.is_decoy && regexMatch) {
+                        var url = "https://www.ebi.ac.uk/proteins/api/features/" + regexMatch[0] + ".json";
+                        d3.json(url, function (json) {
+                            processUniProtTxt(p, json);
+                        });
+                    } else {
+                        //not protein, no accession or isDecoy
+                        participantCount--;
+                        if (participantCount === 0) {
+                            CLMSUI.vent.trigger("uniprotDataParsed", self);
+                        }
+                    }
                 }
 
                 if (participantCount < 101 && participantCount > 0) {
-                    var participantArray = Array.from(participants.values());
+                    var participantArray = CLMS.arrayFromMapValues(participants);
                     var invariantCount = participantCount;
                     for (var p = 0; p < invariantCount; p++ ){
                         uniProtTxt(participantArray[p]);
@@ -236,7 +265,7 @@
         },
 
         //adds some attributes we want to protein object
-        initProtein(protObj){
+        initProtein: function(protObj){
             if (protObj.seq_mods) {
                 this.commonRegexes.notUpperCase.lastIndex = 0;
                 protObj.sequence = protObj.seq_mods.replace(this.commonRegexes.notUpperCase, '');
@@ -247,7 +276,7 @@
 
         },
 
-        getDigestibleResiduesAsFeatures(participant){
+        getDigestibleResiduesAsFeatures: function (participant){
             var digestibleResiduesAsFeatures = [];
 
             var sequence = participant.sequence;
@@ -277,7 +306,7 @@
             return digestibleResiduesAsFeatures;
         },
 
-        getCrosslinkableResiduesAsFeatures(participant){
+        getCrosslinkableResiduesAsFeatures: function(participant){
             var crosslinkableResiduesAsFeatures = [];
 
             var sequence = participant.sequence;
@@ -309,9 +338,9 @@
 
         parseCSV: function(csv, fileInfo, fasta) {
             var self = this;
-			this.get("searches").set(fileInfo.name, fileInfo);
-			fileInfo.group = fileInfo.name;
-			var fileName = fileInfo.name;
+            this.get("searches").set(fileInfo.name, fileInfo);
+            fileInfo.group = fileInfo.name;
+            var fileName = fileInfo.name;
             var participants = this.get("participants");
 
             var rows = d3.csv.parseRows(csv);
@@ -319,7 +348,7 @@
             for (var h = 0; h < headers.length; h++) {
                 headers[h] = headers[h].trim();
             }
-            
+
             var iProt1 = headers.indexOf('Protein1');
             var iProt2 = headers.indexOf('Protein2');
             //missing Protein column?
@@ -331,23 +360,23 @@
                 alert("Failed to read column 'Protein2' from CSV file");
                 return;
             }
-            
+
             if (headers.indexOf('fromSite')) {
-				fileInfo.type = "probably Francis / xiFDR";
-				
-				var iLinkPosition1 = headers.indexOf('fromSite');
-            	var iLinkPosition2 = headers.indexOf('ToSite');
-            	var iId = headers.indexOf('LinkID');
-				var iScore = headers.indexOf('Score');
-            					
-			}
-			
-			var iType = headers.indexOf('Type');//for xQuest looplinks and monolinks
+                fileInfo.type = "probably Francis / xiFDR";
+
+                var iLinkPosition1 = headers.indexOf('fromSite');
+                var iLinkPosition2 = headers.indexOf('ToSite');
+                var iId = headers.indexOf('LinkID');
+                var iScore = headers.indexOf('Score');
+
+            }
+
+            var iType = headers.indexOf('Type');//for xQuest looplinks and monolinks
              var iRes1 = headers.indexOf('PepPos1');
             var iRes2 = headers.indexOf('PepPos2');
             var iPepSeq1 = headers.indexOf('PepSeq1');
             var iPepSeq2 = headers.indexOf('PepSeq2');
-            
+
             /*
             //console.log(headers.toString());
            var iScore = headers.indexOf('Score');
@@ -448,9 +477,9 @@
                 addProteins(iProt2);
                 var protCount = participants.size;
                 var countSequences = 0;
-                var protArray = Array.from(participants.values());
+                var protArray = CLMS.arrayFromMapValues(participants);
                 for (var p = 0; p < protCount; p++){
-					var prot = protArray[p];
+                    var prot = protArray[p];
                     if (prot.is_decoy == false) {
                         var id = prot.id;
                         uniprotWebServiceFASTA(id, function(ident, seq){
@@ -497,10 +526,10 @@
                                 var protein = {id:id, name:name, accession:acc};
                                 participants.set(id, protein);
                                 if (name.indexOf("DECOY") == 0) {
-									protein.is_decoy = true;
-								} else {
-									protein.is_decoy = false;
-								}
+                                    protein.is_decoy = true;
+                                } else {
+                                    protein.is_decoy = false;
+                                }
                                 self.initProtein(protein);
 
                             }
@@ -621,7 +650,7 @@
                     }
                 }
                 self.trigger ("change:matches", self);
-                
+
                 //todo: oh oh, the following isn't right
                 //~ CLMSUI.compositeModelInst.get("filterModel").set("unval",true);
                 alert("csv file loaded");
@@ -660,7 +689,7 @@
         initDecoyLookup: function (prefixes) {
             // Make map of reverse/random decoy proteins to real proteins
             prefixes = prefixes || ["REV_", "RAN_", "DECOY_", "DECOY:"];
-            var prots = Array.from(this.get("participants").values());
+            var prots = CLMS.arrayFromMapValues(this.get("participants"));
             var nameMap = d3.map ();
             var accessionMap = d3.map ();
             prots.forEach (function (prot) {
@@ -710,10 +739,10 @@
         isIntraLink: function (crossLink) {
                 return (crossLink.toProtein && this.isMatchingProteinPair (crossLink.toProtein, crossLink.fromProtein));
         },
-		
-		isDecoyLink: function (crossLink) {
-               return (crossLink.fromProtein.is_decoy == true 
-					|| (crossLink.toProtein && crossLink.toProtein.is_decoy == true));
+
+        isDecoyLink: function (crossLink) {
+               return (crossLink.fromProtein.is_decoy == true
+                    || (crossLink.toProtein && crossLink.toProtein.is_decoy == true));
         },
 
         getSearchRandomId : function (match) {
