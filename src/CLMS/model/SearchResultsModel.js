@@ -651,8 +651,7 @@
                 }
                 self.trigger ("change:matches", self);
 
-                //todo: oh oh, the following isn't right
-                //~ CLMSUI.compositeModelInst.get("filterModel").set("unval",true);
+                CLMSUI.compositeModelInst.get("filterModel").set("unval",true);
                 alert("csv file loaded");
             };
 
