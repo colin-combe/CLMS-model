@@ -39,12 +39,6 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
 		this.precursorCharge = undefined;
 	}
 
-	//not currently used - questions about what its based on, typically -1
-    //~ this.precursorIntensity = +rawMatches[0].pc_i;
-    //~ if (this.precursorIntensity == -1) {
-		//~ this.precursorIntensity = undefined;
-	//~ }
-
 	this.precursorMZ = +rawMatches[0].pc_mz;
     this.calc_mass = +rawMatches[0].cm;
     this.score = +rawMatches[0].sc;
@@ -278,14 +272,14 @@ CLMS.model.SpectrumMatch.prototype.expMZ = function() {
 	return this.precursorMZ;
 }
 
-CLMS.model.SpectrumMatch.hydrogenMass = 1.00811;
+CLMS.model.SpectrumMatch.protonMass = 1.007276466879;
 
 CLMS.model.SpectrumMatch.prototype.expMass = function() {
-	return this.precursorMZ * this.precursorCharge - (this.precursorCharge * CLMS.model.SpectrumMatch.hydrogenMass);
+	return this.precursorMZ * this.precursorCharge - (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass);
 }
 
 CLMS.model.SpectrumMatch.prototype.matchMZ = function() {
-	return (this.calc_mass + (this.precursorCharge * CLMS.model.SpectrumMatch.hydrogenMass))/ this.precursorCharge ;
+	return (this.calc_mass + (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass))/ this.precursorCharge ;
 }
 
 CLMS.model.SpectrumMatch.prototype.matchMass = function() {

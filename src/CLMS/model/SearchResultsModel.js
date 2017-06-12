@@ -36,6 +36,12 @@
         }
     };
 
+    CLMS.removeDomElement = function (child) {
+		if (child.parentNode) {
+		  child.parentNode.removeChild(child);
+		}		
+    };
+
     CLMS.model = CLMS.model || {};
 
     CLMS.model.SearchResultsModel = Backbone.Model.extend ({
@@ -650,10 +656,7 @@
                     }
                 }
                 self.trigger ("change:matches", self);
-
-                //todo: oh oh, the following isn't right
-                //~ CLMSUI.compositeModelInst.get("filterModel").set("unval",true);
-                alert("csv file loaded");
+                CLMSUI.compositeModelInst.get("filterModel").set("unval",true);
             };
 
             function addMatch (id,
