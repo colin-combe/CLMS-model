@@ -650,9 +650,7 @@
                     }
                 }
                 self.trigger ("change:matches", self);
-
                 CLMSUI.compositeModelInst.get("filterModel").set("unval",true);
-                alert("csv file loaded");
             };
 
             function addMatch (id,
