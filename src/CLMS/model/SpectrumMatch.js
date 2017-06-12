@@ -29,7 +29,7 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
     this.searchId = rawMatches[0].si.toString();
     this.is_decoy = (rawMatches[0].dc == 't')? true : false;
     if (this.is_decoy === true) {
-		this.containingModel.set("decoysPresent", true)
+		this.containingModel.set("decoysPresent", true);
 	}
     this.src = +rawMatches[0].src;
     this.scanNumber = +rawMatches[0].sn;
