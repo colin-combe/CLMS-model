@@ -36,6 +36,12 @@
         }
     };
 
+    CLMS.removeDomElement = function (child) {
+		if (child.parentNode) {
+		  child.parentNode.removeChild(child);
+		}		
+    };
+
     CLMS.model = CLMS.model || {};
 
     CLMS.model.SearchResultsModel = Backbone.Model.extend ({
