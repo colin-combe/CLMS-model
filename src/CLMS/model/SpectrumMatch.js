@@ -9,7 +9,7 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
 
     // single 'rawMatch'looks like {"id":25918012,"ty":1,"pi":8485630,"lp":0,
     // "sc":3.25918,"si":624, dc:"f", "av":"f", (optional v:"A", rj: "f" ),
-    // "r":"run","sn":6395,"pc":2},
+    // "si":"searchId", "src":"to look up runname", "sn":6395,"pc":2},
     //
     // it's a join of spectrum_match and matched_peptide tables in DB,
     //
@@ -18,7 +18,7 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
     // id = spectrumMatch id, ty = "match_type" (match_type != protduct_type)
     // pi = peptide_id, lp = link position, sc = score, si = search_id,
     // dc = is_decoy, av = autovalidated, v = validated, rj = rejected,
-    // r = run_name, sn = scan_number, pc_c = precursor charge
+    // sn = scan_number, pc_c = precursor charge, src = for run name look up
 
     this.containingModel = containingModel; //containing BB model
 
@@ -61,7 +61,7 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
 		this.containingModel.set("unvalidatedPresent", true);
 	}
     
-	if (peptides.size) {
+	if (peptides) {
 		this.matchedPeptides = [];
 		this.matchedPeptides[0] = peptides.get(rawMatches[0].pi);
 		// following will be inadequate for trimeric and higher order cross-links
@@ -266,6 +266,11 @@ CLMS.model.SpectrumMatch.prototype.isAmbig = function() {
 CLMS.model.SpectrumMatch.prototype.runName = function() {
 	var runName = this.containingModel.get("spectrumSources").get(this.src);
     return runName;
+}
+
+CLMS.model.SpectrumMatch.prototype.group = function() {
+	var group = this.containingModel.get("searches").get(this.searchId).group; 	
+    return group;
 }
 
 CLMS.model.SpectrumMatch.prototype.expMZ = function() {
