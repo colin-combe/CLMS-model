@@ -61,7 +61,7 @@
         commonRegexes: {
             uniprotAccession: /[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}/,
             notUpperCase: /[^A-Z]/g,
-            decoyNames: /(REV_)|(RAN_)|(DECOY_)/,
+            decoyNames: /(REV_)|(RAN_)|(DECOY_)|(reverse_)/,
         },
 
         //our SpectrumMatches are constructed from the rawMatches and peptides arrays in this json
@@ -391,7 +391,7 @@
 
             var countRows = rows.length;
             if (fasta){ //FASTA file provided
-                var line_array = fasta.split("\n");
+				var line_array = fasta.split("\n");
                 var tempIdentifier = null;
                 var tempDescription;
                 var tempSeq;
@@ -404,10 +404,21 @@
                         if(line.indexOf(">") === 0){
                             if (tempIdentifier !== null) {
                                 var name = nameFromIdentifier(tempIdentifier);
-                                //accession number is null
-                                var prot = new Protein(tempIdentifier, this, null, name);
-                                prot.setSequence(tempSeq.trim());
-                                this.proteins.set(tempIdentifier, prot);
+                                //~ //accession number is null
+                                //~ var prot = new Protein(tempIdentifier, this, null, name);
+                                //~ prot.setSequence(tempSeq.trim());
+                                //~ this.proteins.set(tempIdentifier, prot);
+
+                                var protein = {id:tempIdentifier, name:name, sequence: tempSeq};
+                                participants.set(tempIdentifier, protein);
+                                self.commonRegexes.decoyNames.lastIndex = 0;
+                                var regexMatch = self.commonRegexes.decoyNames.exec(protein.name);
+                                if (regexMatch) {
+                                    protein.is_decoy = true;
+                                } else {
+                                    protein.is_decoy = false;
+                                }
+                                self.initProtein(protein);
 
                                 tempSeq = "";
                             }
@@ -424,9 +435,20 @@
                 }
                 name = nameFromIdentifier(tempIdentifier);
                 //there will be one protein still to be added when we get to end
-                var prot = new Protein(tempIdentifier, this, null, name);
-                prot.setSequence(tempSeq.trim());
-                this.proteins.set(tempIdentifier, prot);
+                //~ var prot = new Protein(tempIdentifier, this, null, name);
+                //~ prot.setSequence(tempSeq.trim());
+                //~ this.proteins.set(tempIdentifier, prot);
+                
+				var protein = {id:tempIdentifier, name:name, sequence: tempSeq};
+				participants.set(tempIdentifier, protein);
+				self.commonRegexes.decoyNames.lastIndex = 0;
+				var regexMatch = self.commonRegexes.decoyNames.exec(protein.name);
+				if (regexMatch) {
+					protein.is_decoy = true;
+				} else {
+					protein.is_decoy = false;
+				}
+				self.initProtein(protein);
                 //read links
                 addCSVLinks();
             }
