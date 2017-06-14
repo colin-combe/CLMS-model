@@ -367,8 +367,8 @@
 			
             var iProt1 = getHeaderIndex('Protein 1', true);
             var iProt2 = getHeaderIndex('Protein 2', true);
-			var iLinkPosition1 = getHeaderIndex('SeqPos 1', true);
-            var iLinkPosition2 = getHeaderIndex('SeqPos 2', true);
+			var iLinkPosition1 = getHeaderIndex('SeqPos 1');
+            var iLinkPosition2 = getHeaderIndex('SeqPos 2');
             var iId = getHeaderIndex('LinkID');
             var iScore = getHeaderIndex('Score');
             if (iScore == -1) {
@@ -376,15 +376,18 @@
 			}
 			var iAutovalidated = getHeaderIndex('AutoValidated');
 			var iValidated = getHeaderIndex('Validated');
-
-            /*
-            var iLinkPosition1 = headers.indexOf('LinkPos1');
-            var iLinkPosition2 = headers.indexOf('LinkPos2');    
-            var iRes1 = headers.indexOf('PepPos1');
-            var iRes2 = headers.indexOf('PepPos2');
-            var iPepSeq1 = headers.indexOf('PepSeq1');
-            var iPepSeq2 = headers.indexOf('PepSeq2');
-			*/
+			//for csv of matches
+            var iLinkPos1 = getHeaderIndex('LinkPos 1');
+            var iLinkPos2 =getHeaderIndex('LinkPos 2');    
+            var iPepPos1 = getHeaderIndex('PepPos 1');
+            var iPepPos2 = getHeaderIndex('PepPos 2');
+            var iPepSeq1 = getHeaderIndex('PepSeq 1');
+            var iPepSeq2 = getHeaderIndex('PepSeq 2');         
+            var iCharge = getHeaderIndex('Charge');
+            var iPrecursorMZ = getHeaderIndex('Exp M/Z');
+            var iCalcMass = getHeaderIndex('MatchMass');
+            var iRunName = getHeaderIndex('RunName');
+            var iScanNo = getHeaderIndex('ScanNo');
 
             var countRows = rows.length;
             if (fasta){ //FASTA file provided
@@ -424,10 +427,8 @@
                 var prot = new Protein(tempIdentifier, this, null, name);
                 prot.setSequence(tempSeq.trim());
                 this.proteins.set(tempIdentifier, prot);
-
                 //read links
                 addCSVLinks();
-
             }
             else { // no FASTA file
                 //we may encounter proteins with
@@ -439,7 +440,10 @@
                 var protArray = CLMS.arrayFromMapValues(participants);
                 for (var p = 0; p < protCount; p++){
                     var prot = protArray[p];
-                    if (prot.is_decoy == false) {
+                    self.commonRegexes.uniprotAccession.lastIndex = 0;
+                    var regexMatch = self.commonRegexes.uniprotAccession.exec(p.accession);
+                    
+                    if (regexMatch && prot.is_decoy == false) {
                         var id = prot.id;
                         uniprotWebServiceFASTA(id, function(ident, seq){
                                 var prot = participants.get(ident);
@@ -474,7 +478,6 @@
                             if (id.indexOf('|') === -1) {
                                 acc = id;
                                 name = id;
-
                             }
                             else {
                                 var splitOnBar = accArray[i].split('|');
@@ -484,13 +487,15 @@
                             if (!participants.has(id)) {
                                 var protein = {id:id, name:name, accession:acc};
                                 participants.set(id, protein);
-                                if (name.indexOf("DECOY") == 0) {
+                                self.commonRegexes.decoyNames.lastIndex = 0;
+								var regexMatch = self.commonRegexes.decoyNames.exec(protein.name);
+                    
+                                if (regexMatch) {
                                     protein.is_decoy = true;
                                 } else {
                                     protein.is_decoy = false;
                                 }
                                 self.initProtein(protein);
-
                             }
                         }
                     }
@@ -498,7 +503,11 @@
             };
 
             function uniprotWebServiceFASTA(id, callback){
-                var accession = accessionFromId(id);
+				id = id + "";
+                var accession = id;
+                if (id.indexOf('|') !== -1){
+                    accession = id.split('|')[1];
+                }
                 var url = "http://www.uniprot.org/uniprot/" + accession + ".fasta";
                 d3.text(url, function (txt){
                     if (txt) {
@@ -510,22 +519,13 @@
                             line = lines[l];
                             sequence += line;
                         }
-                        //~ console.log(sequence);
                         sequence = sequence.replace(/[^A-Z]/g, '');
                         callback(id, sequence);
                     }
                 });
             };
-
-            function accessionFromId (id){
-                id = id + "";
-                if (id.indexOf('|') !== -1){
-                    return id.split('|')[1];
-                } else {
-                    return id;
-                }
-            };
-
+			
+			//for reading fasta files
             function nameFromIdentifier(ident){
                 var name = ident;
                 var iBar = ident.indexOf("|");
@@ -554,7 +554,6 @@
 						else {
 							id = ir;
 						}
-						var scanNo = "row" + ir;
 						if (iScore !== -1){
 							score = row[iScore];
 						}
@@ -564,9 +563,31 @@
 						if (iValidated !== -1){
 							val = row[iValidated].split()[0];
 						}
+						//for matches csv
+			//~ var iLinkPosition1 = getHeaderIndex('LinkPos 1');
+            //~ var iLinkPosition2 =getHeaderIndex('LinkPos 2');    
+            //~ var iRes1 = getHeaderIndex('PepPos 1');
+            //~ var iRes2 = getHeaderIndex('PepPos 2');
+            //~ var iPepSeq1 = getHeaderIndex('PepSeq 1');
+            //~ var iPepSeq2 = getHeaderIndex('PepSeq 2');         
+            //~ var iCharge = getHeaderIndex('Charge');
+            //~ var iPrecursorMZ = getHeaderIndex('Exp M/Z');
+            //~ var iCalcMass = getHeaderIndex('MatchMass');
+            //~ var iRunName = getHeaderIndex('RunName');
+            //~ var iScanNo = getHeaderIndex('ScanNo');
+						
+    //~ this.precursorCharge = +rawMatches[0].pc_c;
+    //~ if (this.precursorCharge == -1) {
+		//~ this.precursorCharge = undefined;
+	//~ }
+//~ 
+	//~ this.precursorMZ = +rawMatches[0].pc_mz;
+    //~ this.calc_mass = +rawMatches[0].cm;
+
 
 						var rawMatches = [];
-						
+						//~ var pep1, pep2;
+						//~ if 
 						var pep1 = {id:id,
 									si:fileName,
 									sc:score, 
