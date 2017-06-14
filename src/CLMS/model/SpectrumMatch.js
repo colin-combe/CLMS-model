@@ -9,7 +9,7 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
 
     // single 'rawMatch'looks like {"id":25918012,"ty":1,"pi":8485630,"lp":0,
     // "sc":3.25918,"si":624, dc:"f", "av":"f", (optional v:"A", rj: "f" ),
-    // "si":"searchId", "src":"to look up runname", "sn":6395,"pc":2},
+    // "si":"searchId", "src":"to look up runname", "sn":6395,"pc":2, cm:"calc_mass"},
     //
     // it's a join of spectrum_match and matched_peptide tables in DB,
     //
@@ -19,6 +19,7 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
     // pi = peptide_id, lp = link position, sc = score, si = search_id,
     // dc = is_decoy, av = autovalidated, v = validated, rj = rejected,
     // sn = scan_number, pc_c = precursor charge, src = for run name look up
+    // cm = calc-mass
 
     this.containingModel = containingModel; //containing BB model
 
@@ -31,8 +32,12 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
     if (this.is_decoy === true) {
         this.containingModel.set("decoysPresent", true);
     }
-    this.src = +rawMatches[0].src;
     this.scanNumber = +rawMatches[0].sn;
+    this.src = +rawMatches[0].src;//for looking up run name
+    //run name may have come from csv file
+    if (rawMatches[0].run_name) {
+        this.run_name = rawMatches[0].run_name;
+    }
 
     this.precursorCharge = +rawMatches[0].pc_c;
     if (this.precursorCharge == -1) {
@@ -61,14 +66,15 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
         this.containingModel.set("unvalidatedPresent", true);
     }
 
-    if (peptides) {
+    if (peptides) { //this is a bit tricky, see below*
         this.matchedPeptides = [];
         this.matchedPeptides[0] = peptides.get(rawMatches[0].pi);
         // following will be inadequate for trimeric and higher order cross-links
         if (rawMatches[1]) {
             this.matchedPeptides[1] = peptides.get(rawMatches[1].pi);
         }
-    } else {
+    } else { //*here - if its from a csv file use rawMatches as the matchedPep array,
+        //makes it easier to construct as parsing CSV
         this.matchedPeptides = rawMatches;
     }
 
@@ -264,6 +270,9 @@ CLMS.model.SpectrumMatch.prototype.isAmbig = function() {
 }
 
 CLMS.model.SpectrumMatch.prototype.runName = function() {
+    if (this.run_name) {
+        return this.run_name;
+    }
     var runName = this.containingModel.get("spectrumSources").get(this.src);
     return runName;
 }
