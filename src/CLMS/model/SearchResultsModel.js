@@ -404,10 +404,6 @@
                         if(line.indexOf(">") === 0){
                             if (tempIdentifier !== null) {
                                 var name = nameFromIdentifier(tempIdentifier);
-                                //~ //accession number is null
-                                //~ var prot = new Protein(tempIdentifier, this, null, name);
-                                //~ prot.setSequence(tempSeq.trim());
-                                //~ this.proteins.set(tempIdentifier, prot);
 
                                 var protein = {id:tempIdentifier, name:name, sequence: tempSeq};
                                 participants.set(tempIdentifier, protein);
@@ -434,11 +430,6 @@
                     }
                 }
                 name = nameFromIdentifier(tempIdentifier);
-                //there will be one protein still to be added when we get to end
-                //~ var prot = new Protein(tempIdentifier, this, null, name);
-                //~ prot.setSequence(tempSeq.trim());
-                //~ this.proteins.set(tempIdentifier, prot);
-                
 				var protein = {id:tempIdentifier, name:name, sequence: tempSeq};
 				participants.set(tempIdentifier, protein);
 				self.commonRegexes.decoyNames.lastIndex = 0;
@@ -483,7 +474,7 @@
                 }
             }
 
-            this.set("interactors", participants);
+            //this.set("interactors", participants);
             this.initDecoyLookup();
 
             function addProteins(columnIndex) {
@@ -573,13 +564,13 @@
                             id = ir;
                         }
                         if (iScore !== -1){
-                            score = row[iScore];
+                            score = +row[iScore];
                         }
                         if (iAutovalidated !== -1){
-                            autoval = row[iAutovalidated];
+                            autoval = row[iAutovalidated].trim();
                         }
                         if (iValidated !== -1){
-                            val = row[iValidated].split()[0];
+                            val = row[iValidated].split()[0].trim();
                         }
 
                         var rawMatches = [];
@@ -588,32 +579,36 @@
                         if (iPepPos1 != -1 && iLinkPos1 != -1 &&
                                 iPepPos2 != -1 && iLinkPos2 != -1) {
                             //its matches (with peptide info)
-                            var linkPos1 = row[iLinkPos1];
-                            var linkPos2 = row[iLinkPos2];
-                            var pepPos1 = row[iPepPos1];
-                            var pepPos2 = row[iPepPos2];
-                            var pepSeq1, pepSeq2, charge, precursorMZ,
+                            var linkPos1 = +row[iLinkPos1];
+                            var linkPos2 = +row[iLinkPos2];
+                            var pepPos1 = +row[iPepPos1];
+                            var pepPos2 = +row[iPepPos2];
+                            var pepSeq_mods1, pepSeq_mods2, pepSeq1, pepSeq2, charge, precursorMZ,
                                 calcMass, runName, scanNo;
                             if (iPepSeq1 !== -1){
-                                pepSeq1 = row[iPepSeq1];
-                            }
+                                pepSeq_mods1 = row[iPepSeq1].trim();
+                                self.commonRegexes.notUpperCase.lastIndex = 0;
+								pepSeq1 = pepSeq_mods1.replace(self.commonRegexes.notUpperCase, '').trim();
+							}
                             if (iPepSeq2 !== -1){
-                                pepSeq2 = row[iPepSeq2];
-                            }
+                                pepSeq_mods2 = row[iPepSeq2].trim();
+                                self.commonRegexes.notUpperCase.lastIndex = 0;
+								pepSeq2 = pepSeq_mods2.replace(self.commonRegexes.notUpperCase, '').trim();
+							}
                             if (iCharge !== -1){
-                                charge = row[iCharge];
+                                charge = +row[iCharge];
                             }
                             if (iPrecursorMZ !== -1){
-                                precursorMZ = row[iPrecursorMZ];
+                                precursorMZ = +row[iPrecursorMZ];
                             }
                             if (iCalcMass !== -1){
-                                calcMass = row[iCalcMass];
+                                calcMass = +row[iCalcMass];
                             }
                             if (iRunName !== -1){
-                                runName = row[iRunName];
+                                runName = row[iRunName].trim();
                             }
                             if (iScanNo !== -1){
-                                scanNo = row[iScanNo];
+                                scanNo = row[iScanNo].trim();
                             }
 
                             var pep1 = {id:id,
@@ -624,8 +619,8 @@
                                         pos: [row[iPepPos1]],
                                         lp: row[iLinkPos1],
                                         prt: [row[iProt1]],
-                                        seq_mods: row[iPepSeq1],
-                                        sequence: row[iPepSeq1],
+                                        seq_mods: pepSeq_mods1,
+                                        sequence: pepSeq1,
                                         //following only read from first matched peptide
                                         pc_c: charge,
                                         pc_mz: precursorMZ,
@@ -641,8 +636,8 @@
                                         pos: [row[iPepPos2]],
                                         lp: row[iLinkPos2],
                                         prt: [row[iProt2]],
-                                        seq_mods: row[iPepSeq2],
-                                        sequence: row[iPepSeq2],
+                                        seq_mods: pepSeq_mods2,
+                                        sequence: pepSeq2,
                                         };
 
                             rawMatches.push(pep1);
