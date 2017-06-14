@@ -357,37 +357,38 @@
                 headers[h] = headers[h].toLowerCase().trim();
             }
 
-            function getHeaderIndex(columnName, requiredColumn){
-                var iCol = headers.indexOf(columnName.toLowerCase().trim());
-                if (requiredColumn && iCol == -1) {
-                     alert("Failed to read required column '" + columnName + "' from CSV file");
-                }
+			//for historical reasons, theres sometimes a number of column headers names we'll accept
+            function getHeaderIndex(columnNames){
+				var iCol, ni = 0;
+                while (ni < columnNames.length &&
+						(iCol = headers.indexOf(columnNames[ni].toLowerCase().trim())) == -1) { 
+					ni++;
+			    }
+				console.log(columnNames[0] + ',ni:' + ni + ' ' + columnNames[ni] + " : " + iCol);
                 return iCol;
             }
 
-            var iProt1 = getHeaderIndex('Protein 1', true);
-            var iProt2 = getHeaderIndex('Protein 2', true);
-            var iLinkPosition1 = getHeaderIndex('SeqPos 1');
-            var iLinkPosition2 = getHeaderIndex('SeqPos 2');
-            var iId = getHeaderIndex('LinkID');
-            var iScore = getHeaderIndex('Score');
-            if (iScore == -1) {
-                iScore = getHeaderIndex('Highest Score');
-            }
-            var iAutovalidated = getHeaderIndex('AutoValidated');
-            var iValidated = getHeaderIndex('Validated');
+			console.log("CSV column headers:");
+            var iProt1 = getHeaderIndex(['Protein 1', 'Protein1']);
+            var iProt2 = getHeaderIndex(['Protein 2', 'Protein2']);
+            var iSeqPos1 = getHeaderIndex(['SeqPos 1', 'SeqPos1', 'fromSite', 'AbsPos1']);
+            var iSeqPos2 = getHeaderIndex(['SeqPos 2', 'SeqPos2', 'ToSite', 'AbsPos2']);
+            var iId = getHeaderIndex(['Id', 'LinkID']);
+            var iScore = getHeaderIndex(['Score', 'Highest Score', 'ld-Score']);
+            var iAutovalidated = getHeaderIndex(['AutoValidated']);
+            var iValidated = getHeaderIndex(['Validated']);
             //for csv of matches
-            var iLinkPos1 = getHeaderIndex('LinkPos 1');
-            var iLinkPos2 =getHeaderIndex('LinkPos 2');
-            var iPepPos1 = getHeaderIndex('PepPos 1');
-            var iPepPos2 = getHeaderIndex('PepPos 2');
-            var iPepSeq1 = getHeaderIndex('PepSeq 1');
-            var iPepSeq2 = getHeaderIndex('PepSeq 2');
-            var iCharge = getHeaderIndex('Charge');
-            var iPrecursorMZ = getHeaderIndex('Exp M/Z');
-            var iCalcMass = getHeaderIndex('MatchMass');
-            var iRunName = getHeaderIndex('RunName');
-            var iScanNo = getHeaderIndex('ScanNo');
+            var iLinkPos1 = getHeaderIndex(['LinkPos 1', 'LinkPos1']);
+            var iLinkPos2 =getHeaderIndex(['LinkPos 2', 'LinkPos2']);
+            var iPepPos1 = getHeaderIndex(['PepPos 1', 'PepPos1']);
+            var iPepPos2 = getHeaderIndex(['PepPos 2', 'PepPos2']);
+            var iPepSeq1 = getHeaderIndex(['PepSeq 1', 'PepSeq1']);
+            var iPepSeq2 = getHeaderIndex(['PepSeq 2', 'PepSeq2']);
+            var iCharge = getHeaderIndex(['Charge']);
+            var iPrecursorMZ = getHeaderIndex(['Exp M/Z']);
+            var iCalcMass = getHeaderIndex(['MatchMass']);
+            var iRunName = getHeaderIndex(['RunName']);
+            var iScanNo = getHeaderIndex(['ScanNo']);
 
             var countRows = rows.length;
             if (fasta){ //FASTA file provided
@@ -440,10 +441,7 @@
                 var protArray = CLMS.arrayFromMapValues(participants);
                 for (var p = 0; p < protCount; p++){
                     var prot = protArray[p];
-                    self.commonRegexes.uniprotAccession.lastIndex = 0;
-                    var regexMatch = self.commonRegexes.uniprotAccession.exec(p.accession);
-
-                    if (regexMatch && prot.is_decoy == false) {
+                    if (prot.is_decoy == false) {
                         var id = prot.id;
                         uniprotWebServiceFASTA(id, function(ident, seq){
                                 var prot = participants.get(ident);
@@ -562,57 +560,107 @@
                         if (iValidated !== -1){
                             val = row[iValidated].split()[0];
                         }
-                        //for matches csv
-            //~ var iLinkPosition1 = getHeaderIndex('LinkPos 1');
-            //~ var iLinkPosition2 =getHeaderIndex('LinkPos 2');
-            //~ var iRes1 = getHeaderIndex('PepPos 1');
-            //~ var iRes2 = getHeaderIndex('PepPos 2');
-            //~ var iPepSeq1 = getHeaderIndex('PepSeq 1');
-            //~ var iPepSeq2 = getHeaderIndex('PepSeq 2');
-            //~ var iCharge = getHeaderIndex('Charge');
-            //~ var iPrecursorMZ = getHeaderIndex('Exp M/Z');
-            //~ var iCalcMass = getHeaderIndex('MatchMass');
-            //~ var iRunName = getHeaderIndex('RunName');
-            //~ var iScanNo = getHeaderIndex('ScanNo');
-
-    //~ this.precursorCharge = +rawMatches[0].pc_c;
-    //~ if (this.precursorCharge == -1) {
-        //~ this.precursorCharge = undefined;
-    //~ }
-//~
-    //~ this.precursorMZ = +rawMatches[0].pc_mz;
-    //~ this.calc_mass = +rawMatches[0].cm;
-
-
+                        
                         var rawMatches = [];
-                        //~ var pep1, pep2;
-                        //~ if
-                        var pep1 = {id:id,
-                                    si:fileName,
-                                    sc:score,
-                                    av: autoval,
-                                    v:val,
-                                    pos: [0],
-                                    lp: row[iLinkPosition1],
-                                    prt: [row[iProt1]],
-                                    sequence: ""};
-                        var pep2 = {id:id,
-                                    si:fileName,
-                                    sc:score,
-                                    av: autoval,
-                                    v:val,
-                                    pos: [0],
-                                    lp: row[iLinkPosition2],
-                                    prt: [row[iProt2]],
-                                    sequence: ""};
+                        var match;
+						
+						if (iPepPos1 != -1 && iLinkPos1 != -1 &&
+								iPepPos2 != -1 && iLinkPos2 != -1) {
+							//its matches (with peptide info)
+							var linkPos1 = row[iLinkPos1];
+							var linkPos2 = row[iLinkPos2];
+							var pepPos1 = row[iPepPos1];
+							var pepPos2 = row[iPepPos2];
+							var pepSeq1, pepSeq2, charge, precursorMZ, 
+								calcMass, runName, scanNo;
+							if (iPepSeq1 !== -1){
+								pepSeq1 = row[iPepSeq1];
+							}
+							if (iPepSeq2 !== -1){
+								pepSeq2 = row[iPepSeq2];
+							}
+							if (iCharge !== -1){
+								charge = row[iCharge];
+							}
+							if (iPrecursorMZ !== -1){
+								precursorMZ = row[iPrecursorMZ];
+							}
+							if (iCalcMass !== -1){
+								calcMass = row[iCalcMass];
+							}
+							if (iRunName !== -1){
+								runName = row[iRunName];
+							}
+							if (iScanNo !== -1){
+								scanNo = row[iScanNo];
+							}
 
-                        rawMatches.push(pep1);
-                        rawMatches.push(pep2);
-                        var match = new CLMS.model.SpectrumMatch(self,
+
+							//~ this.precursorCharge = +rawMatches[0].pc_c;
+							//~ if (this.precursorCharge == -1) {
+								//~ this.precursorCharge = undefined;
+							//~ }
+							//~ this.precursorMZ = +rawMatches[0].pc_mz;		
+							
+							var pep1 = {id:id,
+										si:fileName,
+										sc:score,
+										av: autoval,
+										v:val,
+										pos: [row[iPepPos1]],
+										lp: row[iLinkPos1],
+										prt: [row[iProt1]],
+										sequence: ""};
+							var pep2 = {id:id,
+										si:fileName,
+										sc:score,
+										av: autoval,
+										v:val,
+										pos: [row[iPepPos2]],
+										lp: row[iLinkPos2],
+										prt: [row[iProt2]],
+										sequence: ""};
+
+							rawMatches.push(pep1);
+							rawMatches.push(pep2);
+							match = new CLMS.model.SpectrumMatch(self,
                                                             participants,
                                                             crossLinks,
-                                                            null,
-                                                            rawMatches);
+                                                            null, //no peptide info
+                                                            rawMatches);								
+							
+										
+						} else {
+							//its links (no peptide info)
+				
+							var pep1 = {id:id,
+										si:fileName,
+										sc:score,
+										av: autoval,
+										v:val,
+										pos: [0],
+										lp: row[iSeqPos1],
+										prt: [row[iProt1]],
+										sequence: ""};
+							var pep2 = {id:id,
+										si:fileName,
+										sc:score,
+										av: autoval,
+										v:val,
+										pos: [0],
+										lp: row[iSeqPos2],
+										prt: [row[iProt2]],
+										sequence: ""};
+
+							rawMatches.push(pep1);
+							rawMatches.push(pep2);
+							match = new CLMS.model.SpectrumMatch(self,
+                                                            participants,
+                                                            crossLinks,
+                                                            null, //no peptide info
+                                                            rawMatches);		
+                        }
+
                         self.get("matches").push(match);
                     }
                 }
