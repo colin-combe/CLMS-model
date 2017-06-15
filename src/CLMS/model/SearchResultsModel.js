@@ -542,10 +542,10 @@
                     var splitOnBar = ident.split("|");
                     if (splitOnBar.length === 3) {
                         name = splitOnBar[2];
-                        var iUnderscore = name.indexOf("_");
-                        if (iUnderscore !== -1) {
-                            name = name.substring(0, iUnderscore);
-                        }
+                        //~ var iUnderscore = name.indexOf("_");
+                        //~ if (iUnderscore !== -1) {
+                            //~ name = name.substring(0, iUnderscore);
+                        //~ }
                     }
                 }
                 return name;
@@ -567,10 +567,10 @@
                             score = +row[iScore];
                         }
                         if (iAutovalidated !== -1){
-                            autoval = row[iAutovalidated].trim();
+                            autoval = row[iAutovalidated].trim().toLowerCase()[0];
                         }
                         if (iValidated !== -1){
-                            val = row[iValidated].split()[0].trim();
+                            val = row[iValidated].split(',')[0].trim();
                         }
 
                         var rawMatches = [];
@@ -616,9 +616,9 @@
                                         sc:score,
                                         av: autoval,
                                         v:val,
-                                        pos: [row[iPepPos1]],
+                                        pos: row[iPepPos1].split(','),
                                         lp: row[iLinkPos1],
-                                        prt: [row[iProt1]],
+                                        prt: row[iProt1].split(','),
                                         seq_mods: pepSeq_mods1,
                                         sequence: pepSeq1,
                                         //following only read from first matched peptide
@@ -633,9 +633,9 @@
                                         sc:score,
                                         av: autoval,
                                         v:val,
-                                        pos: [row[iPepPos2]],
+                                        pos: row[iPepPos2].split(','),
                                         lp: row[iLinkPos2],
-                                        prt: [row[iProt2]],
+                                        prt: row[iProt2].split(','),
                                         seq_mods: pepSeq_mods2,
                                         sequence: pepSeq2,
                                         };
@@ -650,8 +650,7 @@
 
 
                         } else {
-                            //its links (no peptide info)
-
+                            //its links (no peptide info); also no proper ambiguity info                   
                             var pep1 = {id:id,
                                         si:fileName,
                                         sc:score,
