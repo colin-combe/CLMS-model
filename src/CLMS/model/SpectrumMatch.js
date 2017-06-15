@@ -28,7 +28,9 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
     this.id = rawMatches[0].id;
     this.spectrumId = rawMatches[0].spec;
     this.searchId = rawMatches[0].si.toString();
-    this.is_decoy = (rawMatches[0].dc == 't')? true : false;
+    if (rawMatches[0].dc) {
+		this.is_decoy = (rawMatches[0].dc == 't')? true : false;
+	}
     if (this.is_decoy === true) {
         this.containingModel.set("decoysPresent", true);
     }
@@ -267,6 +269,16 @@ CLMS.model.SpectrumMatch.prototype.isAmbig = function() {
         return true;
     }
     return false;
+}
+
+CLMS.model.SpectrumMatch.prototype.isDecoy = function() {
+    if (this.is_decoy) {
+        return this.is_decoy;
+    }
+    else {
+		//its from csv not database, fro simplicity lets just look at first crosslink //todo - look at again
+		return this.crossLinks[0].isDecoyLink();
+	}
 }
 
 CLMS.model.SpectrumMatch.prototype.runName = function() {

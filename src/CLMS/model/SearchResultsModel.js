@@ -61,7 +61,7 @@
         commonRegexes: {
             uniprotAccession: /[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}/,
             notUpperCase: /[^A-Z]/g,
-            decoyNames: /(REV_)|(RAN_)|(DECOY_)|(reverse_)/,
+            decoyNames: /(REV_)|(RAN_)|(DECOY_)|(DECOY:)|(reverse_)/,
         },
 
         //our SpectrumMatches are constructed from the rawMatches and peptides arrays in this json
@@ -511,7 +511,7 @@
                 var protein = {id:id, name:name, sequence: tempSeq, description: desc};
                 participants.set(id, protein);
                 self.commonRegexes.decoyNames.lastIndex = 0;
-                var regexMatch = self.commonRegexes.decoyNames.exec(protein.name);
+                var regexMatch = self.commonRegexes.decoyNames.exec(protein.id);
                 if (regexMatch) {
                     protein.is_decoy = true;
                 } else {
@@ -697,7 +697,7 @@
 
         initDecoyLookup: function (prefixes) {
             // Make map of reverse/random decoy proteins to real proteins
-            prefixes = prefixes || ["REV_", "RAN_", "DECOY_", "DECOY:"];
+            prefixes = prefixes || ["REV_", "RAN_", "DECOY_", "DECOY:", "reverse_"];
             var prots = CLMS.arrayFromMapValues(this.get("participants"));
             var nameMap = d3.map ();
             var accessionMap = d3.map ();
@@ -710,10 +710,14 @@
             decoys.forEach (function (decoyProt) {
                 prefixes.forEach (function (pre) {
                     var realProtIDByName = nameMap.get (decoyProt.name.substring(pre.length));
-                    var realProtIDByAccession = accessionMap.get (decoyProt.accession.substring(pre.length));
-                    if (realProtIDByName && realProtIDByAccession) {
-                        decoyToRealMap.set (decoyProt.id, realProtIDByName);
-                    }
+                    if (decoyProt.accession) {
+						var realProtIDByAccession = accessionMap.get (decoyProt.accession.substring(pre.length));
+						if (realProtIDByName && realProtIDByAccession) {
+							decoyToRealMap.set (decoyProt.id, realProtIDByName);
+						}
+					} else if (realProtIDByName){
+						decoyToRealMap.set (decoyProt.id, realProtIDByName);
+					}
                 });
             });
 
@@ -747,11 +751,6 @@
 
         isIntraLink: function (crossLink) {
                 return (crossLink.toProtein && this.isMatchingProteinPair (crossLink.toProtein, crossLink.fromProtein));
-        },
-
-        isDecoyLink: function (crossLink) {
-               return (crossLink.fromProtein.is_decoy == true
-                    || (crossLink.toProtein && crossLink.toProtein.is_decoy == true));
         },
 
         getSearchRandomId : function (match) {
