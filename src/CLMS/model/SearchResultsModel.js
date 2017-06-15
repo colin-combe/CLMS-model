@@ -474,7 +474,7 @@
             function addProteins(columnIndex) {
                 for (var row = 1; row < countRows; row++) {
                     var prots = rows[row][columnIndex].replace(/(['"])/g, '');
-                    var accArray = prots.split(/[;,]/);
+                    var accArray = split(prots);
                     for (var i = 0; i < accArray.length; i++) {
                         var id = accArray[i].trim();
                         if (id.trim() !== '-' && id.trim() !== 'n/a'){
@@ -504,7 +504,16 @@
                     }
                 }
             };
-
+			
+			
+			function split(str){
+				var arr = str.split(/[;,]/);
+				for (var i = 0; i < arr.length; i++){
+					arr[i] = arr[i].trim();
+				}
+				return arr;
+			}
+			
             //for reading fasta files
             function makeProtein(id, sequence, desc){
                 var name = nameFromIdentifier(id);
@@ -625,9 +634,9 @@
                                         av: autoval,
                                         v:val,
                                         //todo : need to remove spaces from split data
-                                        pos: row[iPepPos1].split(/[;,]/),
+                                        pos: split(row[iPepPos1]),
                                         lp: row[iLinkPos1],
-                                        prt: row[iProt1].split(/[;,]/),
+                                        prt: split(row[iProt1]),
                                         seq_mods: pepSeq_mods1,
                                         sequence: pepSeq1,
                                         //following only read from first matched peptide
@@ -642,9 +651,9 @@
                                         sc:score,
                                         av: autoval,
                                         v:val,
-                                        pos: row[iPepPos2].split(/[;,]/),
+                                        pos: split(row[iPepPos2]),
                                         lp: row[iLinkPos2],
-                                        prt: row[iProt2].split(/[;,]/),
+                                        prt: split(row[iProt2]),
                                         seq_mods: pepSeq_mods2,
                                         sequence: pepSeq2,
                                         };
@@ -665,18 +674,18 @@
                                         sc:score,
                                         av: autoval,
                                         v:val,
-                                        pos: row[iSeqPos1].split(/[;,]/),
+                                        pos: split(row[iSeqPos1]),
                                         lp: 1,
-                                        prt: row[iProt1].split(/[;,]/),
+                                        prt: split(row[iProt1]),
                                         sequence: ""};
                             var pep2 = {id:id,
                                         si:fileName,
                                         sc:score,
                                         av: autoval,
                                         v:val,
-                                        pos: row[iSeqPos2].split(/[;,]/),
+                                        pos: split(row[iSeqPos2]),
                                         lp: 1,
-                                        prt: row[iProt2].split(/[;,]/),
+                                        prt: split(row[iProt2]),
                                         sequence: ""};
 
                             rawMatches.push(pep1);

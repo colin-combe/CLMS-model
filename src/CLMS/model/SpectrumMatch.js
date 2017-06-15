@@ -116,10 +116,19 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
                 this.containingModel.set("ambiguousPresent", true);
             }
 
-			//todo : some files are not puting in duplicate protein ids are ambig links
-            p1ID = this.matchedPeptides[0].prt[i];
-            p2ID = this.matchedPeptides[1].prt[j];
-
+			//some files are not puting in duplicate protein ids are ambig links
+			//in this case use last one
+			if (i < this.matchedPeptides[0].prt.length) {
+				p1ID = this.matchedPeptides[0].prt[i];
+			} else {
+				p1ID = this.matchedPeptides[0].prt[this.matchedPeptides[0].prt.length - 1];
+			}
+            if (j < this.matchedPeptides[1].prt.length) {
+				p2ID = this.matchedPeptides[1].prt[j];
+			} else {	
+				p2ID = this.matchedPeptides[1].prt[this.matchedPeptides[1].prt.length - 1];
+			}
+            
             // * residue numbering starts at 1 *
             if (this.matchedPeptides[0].pos[i] > 0) {
                 res1 = this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
@@ -183,10 +192,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (proteins, cross
     //following puts lower protein_ID first in link_ID
     var fromProt, toProt;
 
-    //~ var proteins = this.containingModel.get("participants");
-    //~ var crossLinks = this.containingModel.get("crossLinks");
-
-    if (!p2ID) { //its  a linear peptide (no crosslinker of any product type))
+    if (!p2ID || p2ID == '-' || p2ID == 'n/a') { //its  a linear peptide (no crosslinker of any product type))
         this.containingModel.set("linearsPresent", true);
         fromProt = proteins.get(p1ID);
     }
@@ -202,7 +208,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (proteins, cross
     // again, order id string by prot id or by residue if self-link
     var endsReversedInResLinkId = false;
     var crossLinkID;
-    if (!p2ID) {
+    if (!p2ID || p2ID == '-' || p2ID == 'n/a') {
             crossLinkID = p1ID + "_linears";
     }
     else if (p1ID === p2ID || p2ID === null) {
