@@ -702,8 +702,8 @@
                 }
                 self.trigger ("change:matches");
                 //following isn't very tidy
-                CLMSUI.compositeModelInst.get("filterModel").trigger("change");
                 CLMSUI.compositeModelInst.get("filterModel").set("unval",true);
+                CLMSUI.compositeModelInst.get("filterModel").trigger("change");
             };
         },
 
