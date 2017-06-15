@@ -700,7 +700,9 @@
                         self.get("matches").push(match);
                     }
                 }
-                self.trigger ("change:matches", self);
+                self.trigger ("change:matches");
+                //following isn't very tidy
+                CLMSUI.compositeModelInst.get("filterModel").trigger("change");
                 CLMSUI.compositeModelInst.get("filterModel").set("unval",true);
             };
         },
