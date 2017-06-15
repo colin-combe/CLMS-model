@@ -355,15 +355,19 @@
             for (var h = 0; h < headers.length; h++) {
                 headers[h] = headers[h].toLowerCase().trim();
             }
-
+            var itsXquest = false;
             //for historical reasons, theres sometimes a number of column headers names we'll accept
             function getHeaderIndex(columnNames){
-                var iCol, ni = 0;
-                while (ni < columnNames.length &&
-                        (iCol = headers.indexOf(columnNames[ni].toLowerCase().trim())) == -1) {
+                var iCol = -1, ni = 0;
+                while (ni < columnNames.length && iCol == -1) {
+					iCol = headers.indexOf(columnNames[ni].toLowerCase().trim());
+					console.log(columnNames[ni]);
                     ni++;
                 }
-                console.log(columnNames[0] + ',ni:' + ni + ' ' + columnNames[ni] + " : " + iCol);
+                if (iCol != -1) {
+                    //~ console.log(columnNames[ni - 1]);
+                    if (columnNames[ni - 1] == "AbsPos1") {itsXquest = true;}
+                }
                 return iCol;
             }
 
@@ -391,7 +395,7 @@
 
             var countRows = rows.length;
             if (fasta){ //FASTA file provided
-				var line_array = fasta.split("\n");
+                var line_array = fasta.split("\n");
                 var tempIdentifier = null;
                 var tempDescription;
                 var tempSeq;
@@ -403,19 +407,13 @@
                         // greater-than indicates description line
                         if(line.indexOf(">") === 0){
                             if (tempIdentifier !== null) {
-                                var name = nameFromIdentifier(tempIdentifier);
-
-                                var protein = {id:tempIdentifier, name:name, sequence: tempSeq};
-                                participants.set(tempIdentifier, protein);
-                                self.commonRegexes.decoyNames.lastIndex = 0;
-                                var regexMatch = self.commonRegexes.decoyNames.exec(protein.name);
-                                if (regexMatch) {
-                                    protein.is_decoy = true;
-                                } else {
-                                    protein.is_decoy = false;
+                                makeProtein(tempIdentifier, tempSeq, tempDescription);
+                                if (itsXquest) {
+                                    //Also add xQuest reversed & decoys to participants
+                                    var reversedSeq = tempSeq.trim().split("").reverse().join("");
+                                    makeProtein("decoy_reverse_" + tempIdentifier, reversedSeq, "DECOY");
+                                    makeProtein("reverse_" + tempIdentifier, reversedSeq, "DECOY");
                                 }
-                                self.initProtein(protein);
-
                                 tempSeq = "";
                             }
                             iFirstSpace = line.indexOf(" ");
@@ -429,17 +427,13 @@
                         }
                     }
                 }
-                name = nameFromIdentifier(tempIdentifier);
-				var protein = {id:tempIdentifier, name:name, sequence: tempSeq};
-				participants.set(tempIdentifier, protein);
-				self.commonRegexes.decoyNames.lastIndex = 0;
-				var regexMatch = self.commonRegexes.decoyNames.exec(protein.name);
-				if (regexMatch) {
-					protein.is_decoy = true;
-				} else {
-					protein.is_decoy = false;
-				}
-				self.initProtein(protein);
+                makeProtein(tempIdentifier, tempSeq, tempDescription);
+                if (itsXquest) {
+                    //Also add xQuest reversed & decoys to participants
+                    var reversedSeq = tempSeq.trim().split("").reverse().join("");
+                    makeProtein("decoy_reverse_" + tempIdentifier, reversedSeq, "DECOY");
+                    makeProtein("reverse_" + tempIdentifier, reversedSeq, "DECOY");
+                }
                 //read links
                 addCSVLinks();
             }
@@ -511,6 +505,38 @@
                 }
             };
 
+            //for reading fasta files
+            function makeProtein(id, sequence, desc){
+                var name = nameFromIdentifier(id);
+                var protein = {id:id, name:name, sequence: tempSeq, description: desc};
+                participants.set(id, protein);
+                self.commonRegexes.decoyNames.lastIndex = 0;
+                var regexMatch = self.commonRegexes.decoyNames.exec(protein.name);
+                if (regexMatch) {
+                    protein.is_decoy = true;
+                } else {
+                    protein.is_decoy = false;
+                }
+                self.initProtein(protein);
+            };
+
+            //for reading fasta files
+            function nameFromIdentifier(ident){
+                var name = ident;
+                var iBar = ident.indexOf("|");
+                if (iBar !== -1) {
+                    var splitOnBar = ident.split("|");
+                    if (splitOnBar.length === 3) {
+                        name = splitOnBar[2];
+                        //~ var iUnderscore = name.indexOf("_");
+                        //~ if (iUnderscore !== -1) {
+                            //~ name = name.substring(0, iUnderscore);
+                        //~ }
+                    }
+                }
+                return name;
+            };
+
             function uniprotWebServiceFASTA(id, callback){
                 id = id + "";
                 var accession = id;
@@ -532,23 +558,6 @@
                         callback(id, sequence);
                     }
                 });
-            };
-
-            //for reading fasta files
-            function nameFromIdentifier(ident){
-                var name = ident;
-                var iBar = ident.indexOf("|");
-                if (iBar !== -1) {
-                    var splitOnBar = ident.split("|");
-                    if (splitOnBar.length === 3) {
-                        name = splitOnBar[2];
-                        //~ var iUnderscore = name.indexOf("_");
-                        //~ if (iUnderscore !== -1) {
-                            //~ name = name.substring(0, iUnderscore);
-                        //~ }
-                    }
-                }
-                return name;
             };
 
             function addCSVLinks() {
@@ -575,7 +584,6 @@
 
                         var rawMatches = [];
                         var match;
-                        //todo - make work with ambiguous
                         if (iPepPos1 != -1 && iLinkPos1 != -1 &&
                                 iPepPos2 != -1 && iLinkPos2 != -1) {
                             //its matches (with peptide info)
@@ -588,13 +596,13 @@
                             if (iPepSeq1 !== -1){
                                 pepSeq_mods1 = row[iPepSeq1].trim();
                                 self.commonRegexes.notUpperCase.lastIndex = 0;
-								pepSeq1 = pepSeq_mods1.replace(self.commonRegexes.notUpperCase, '').trim();
-							}
+                                pepSeq1 = pepSeq_mods1.replace(self.commonRegexes.notUpperCase, '').trim();
+                            }
                             if (iPepSeq2 !== -1){
                                 pepSeq_mods2 = row[iPepSeq2].trim();
                                 self.commonRegexes.notUpperCase.lastIndex = 0;
-								pepSeq2 = pepSeq_mods2.replace(self.commonRegexes.notUpperCase, '').trim();
-							}
+                                pepSeq2 = pepSeq_mods2.replace(self.commonRegexes.notUpperCase, '').trim();
+                            }
                             if (iCharge !== -1){
                                 charge = +row[iCharge];
                             }
@@ -650,7 +658,7 @@
 
 
                         } else {
-                            //its links (no peptide info); also no proper ambiguity info                   
+                            //its links (no peptide info); also no proper ambiguity info
                             var pep1 = {id:id,
                                         si:fileName,
                                         sc:score,
