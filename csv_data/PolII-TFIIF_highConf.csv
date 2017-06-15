@@ -1,4 +1,4 @@
-NaryGroup,Protein1,LinkPos1,Protein2,LinkPos2,Confidence
+NaryGroup,Protein1,SeqPos1,Protein2,SeqPos2,Confidence
 Pol II,sp|P04050|Rpb1,34,sp|P04050|Rpb1,49,High
 Pol II,sp|P04050|Rpb1,101,sp|P04050|Rpb1,143,High
 Pol II,sp|P04050|Rpb1,101,sp|P04050|Rpb1,176,High

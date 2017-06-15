@@ -116,6 +116,7 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
                 this.containingModel.set("ambiguousPresent", true);
             }
 
+			//todo : some files are not puting in duplicate protein ids are ambig links
             p1ID = this.matchedPeptides[0].prt[i];
             p2ID = this.matchedPeptides[1].prt[j];
 

@@ -361,11 +361,11 @@
                 var iCol = -1, ni = 0;
                 while (ni < columnNames.length && iCol == -1) {
 					iCol = headers.indexOf(columnNames[ni].toLowerCase().trim());
-					console.log(columnNames[ni]);
+					//console.log(columnNames[ni]);
                     ni++;
                 }
                 if (iCol != -1) {
-                    //~ console.log(columnNames[ni - 1]);
+                    console.log(columnNames[ni - 1]);
                     if (columnNames[ni - 1] == "AbsPos1") {itsXquest = true;}
                 }
                 return iCol;
@@ -624,9 +624,10 @@
                                         sc:score,
                                         av: autoval,
                                         v:val,
-                                        pos: row[iPepPos1].split(','),
+                                        //todo : need to remove spaces from split data
+                                        pos: row[iPepPos1].split(/[;,]/),
                                         lp: row[iLinkPos1],
-                                        prt: row[iProt1].split(','),
+                                        prt: row[iProt1].split(/[;,]/),
                                         seq_mods: pepSeq_mods1,
                                         sequence: pepSeq1,
                                         //following only read from first matched peptide
@@ -641,9 +642,9 @@
                                         sc:score,
                                         av: autoval,
                                         v:val,
-                                        pos: row[iPepPos2].split(','),
+                                        pos: row[iPepPos2].split(/[;,]/),
                                         lp: row[iLinkPos2],
-                                        prt: row[iProt2].split(','),
+                                        prt: row[iProt2].split(/[;,]/),
                                         seq_mods: pepSeq_mods2,
                                         sequence: pepSeq2,
                                         };
@@ -664,18 +665,18 @@
                                         sc:score,
                                         av: autoval,
                                         v:val,
-                                        pos: [0],
-                                        lp: row[iSeqPos1],
-                                        prt: [row[iProt1]],
+                                        pos: row[iSeqPos1].split(/[;,]/),
+                                        lp: 1,
+                                        prt: row[iProt1].split(/[;,]/),
                                         sequence: ""};
                             var pep2 = {id:id,
                                         si:fileName,
                                         sc:score,
                                         av: autoval,
                                         v:val,
-                                        pos: [0],
-                                        lp: row[iSeqPos2],
-                                        prt: [row[iProt2]],
+                                        pos: row[iSeqPos2].split(/[;,]/),
+                                        lp: 1,
+                                        prt: row[iProt2].split(/[;,]/),
                                         sequence: ""};
 
                             rawMatches.push(pep1);
