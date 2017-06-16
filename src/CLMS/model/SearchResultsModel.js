@@ -360,8 +360,8 @@
             function getHeaderIndex(columnNames){
                 var iCol = -1, ni = 0;
                 while (ni < columnNames.length && iCol == -1) {
-					iCol = headers.indexOf(columnNames[ni].toLowerCase().trim());
-					//console.log(columnNames[ni]);
+                    iCol = headers.indexOf(columnNames[ni].toLowerCase().trim());
+                    //console.log(columnNames[ni]);
                     ni++;
                 }
                 if (iCol != -1) {
@@ -504,16 +504,16 @@
                     }
                 }
             };
-			
-			
-			function split(str){
-				var arr = str.split(/[;,]/);
-				for (var i = 0; i < arr.length; i++){
-					arr[i] = arr[i].trim();
-				}
-				return arr;
-			}
-			
+
+
+            function split(str){
+                var arr = str.split(/[;,]/);
+                for (var i = 0; i < arr.length; i++){
+                    arr[i] = arr[i].trim();
+                }
+                return arr;
+            }
+
             //for reading fasta files
             function makeProtein(id, sequence, desc){
                 var name = nameFromIdentifier(id);
@@ -553,6 +553,7 @@
                     accession = id.split('|')[1];
                 }
                 var url = "http://www.uniprot.org/uniprot/" + accession + ".fasta";
+                //todo: give fail message
                 d3.text(url, function (txt){
                     if (txt) {
                         var sequence = "";
@@ -593,6 +594,9 @@
 
                         var rawMatches = [];
                         var match;
+
+                        //if itsXquest... theres more we could do to get pep info, code(regex) is in v1 of xiNET
+
                         if (iPepPos1 != -1 && iLinkPos1 != -1 &&
                                 iPepPos2 != -1 && iLinkPos2 != -1) {
                             //its matches (with peptide info)
@@ -701,7 +705,8 @@
                     }
                 }
                 self.trigger ("change:matches");
-                //following isn't very tidy
+                // following isn't very tidy -
+                // todo: filterModel should maybe be part of CLMS-model?
                 CLMSUI.compositeModelInst.get("filterModel").set("unval",true);
                 CLMSUI.compositeModelInst.get("filterModel").trigger("change");
             };
@@ -723,13 +728,13 @@
                 prefixes.forEach (function (pre) {
                     var realProtIDByName = nameMap.get (decoyProt.name.substring(pre.length));
                     if (decoyProt.accession) {
-						var realProtIDByAccession = accessionMap.get (decoyProt.accession.substring(pre.length));
-						if (realProtIDByName && realProtIDByAccession) {
-							decoyToRealMap.set (decoyProt.id, realProtIDByName);
-						}
-					} else if (realProtIDByName){
-						decoyToRealMap.set (decoyProt.id, realProtIDByName);
-					}
+                        var realProtIDByAccession = accessionMap.get (decoyProt.accession.substring(pre.length));
+                        if (realProtIDByName && realProtIDByAccession) {
+                            decoyToRealMap.set (decoyProt.id, realProtIDByName);
+                        }
+                    } else if (realProtIDByName){
+                        decoyToRealMap.set (decoyProt.id, realProtIDByName);
+                    }
                 });
             });
 

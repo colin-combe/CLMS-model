@@ -154,8 +154,8 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
 
                 var pep1length = this.matchedPeptides[0].sequence.length;
                 var pep2length = this.matchedPeptides[1].sequence.length;
-                var pep1_start = this.matchedPeptides[0].pos[0];
-                var pep2_start = this.matchedPeptides[1].pos[0];
+                var pep1_start = +this.matchedPeptides[0].pos[0];
+                var pep2_start = +this.matchedPeptides[1].pos[0];
                 var pep1_end = pep1_start  + (pep1length - 1);
                 var pep2_end = pep2_start + (pep2length - 1);
                 if (pep1_start >= pep2_start && pep1_start <= pep2_end){
