@@ -277,7 +277,9 @@
                 protObj.sequence = protObj.seq_mods.replace(this.commonRegexes.notUpperCase, '');
             }
             if (protObj.sequence) protObj.size = protObj.sequence.length;
-            protObj.crossLinks = [];
+            if (!protObj.crossLinks) {
+				protObj.crossLinks = [];
+			}
             protObj.hidden = false;//?
         },
 
@@ -566,7 +568,9 @@
                         }
                         sequence = sequence.replace(/[^A-Z]/g, '');
                         callback(id, sequence);
-                    }
+                    } else {
+						alert("FAILURE: could not retrieve sequence for accession " + accession);
+					}
                 });
             };
 
