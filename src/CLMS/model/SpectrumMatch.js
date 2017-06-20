@@ -9,7 +9,7 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
 
     // single 'rawMatch'looks like {"id":25918012,"ty":1,"pi":8485630,"lp":0,
     // "sc":3.25918,"si":624, dc:"f", "av":"f", (optional v:"A", rj: "f" ),
-    // "r":"run","sn":6395,"pc":2},
+    // "si":"searchId", "src":"to look up runname", "sn":6395,"pc":2, cm:"calc_mass"},
     //
     // it's a join of spectrum_match and matched_peptide tables in DB,
     //
@@ -18,7 +18,8 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
     // id = spectrumMatch id, ty = "match_type" (match_type != protduct_type)
     // pi = peptide_id, lp = link position, sc = score, si = search_id,
     // dc = is_decoy, av = autovalidated, v = validated, rj = rejected,
-    // r = run_name, sn = scan_number, pc_c = precursor charge
+    // sn = scan_number, pc_c = precursor charge, src = for run name look up
+    // cm = calc-mass
 
     this.containingModel = containingModel; //containing BB model
 
@@ -27,19 +28,25 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
     this.id = rawMatches[0].id;
     this.spectrumId = rawMatches[0].spec;
     this.searchId = rawMatches[0].si.toString();
-    this.is_decoy = (rawMatches[0].dc == 't')? true : false;
-    if (this.is_decoy === true) {
-		this.containingModel.set("decoysPresent", true)
+    if (rawMatches[0].dc) {
+		this.is_decoy = (rawMatches[0].dc == 't')? true : false;
 	}
-    this.src = +rawMatches[0].src;
+    if (this.is_decoy === true) {
+        this.containingModel.set("decoysPresent", true);
+    }
     this.scanNumber = +rawMatches[0].sn;
+    this.src = +rawMatches[0].src;//for looking up run name
+    //run name may have come from csv file
+    if (rawMatches[0].run_name) {
+        this.run_name = rawMatches[0].run_name;
+    }
 
     this.precursorCharge = +rawMatches[0].pc_c;
     if (this.precursorCharge == -1) {
-		this.precursorCharge = undefined;
-	}
+        this.precursorCharge = undefined;
+    }
 
-	this.precursorMZ = +rawMatches[0].pc_mz;
+    this.precursorMZ = +rawMatches[0].pc_mz;
     this.calc_mass = +rawMatches[0].cm;
     this.score = +rawMatches[0].sc;
     //autovalidated - another attribute
@@ -56,39 +63,40 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
         this.validated = rawMatches[0].v;
          this.containingModel.set("manualValidatedPresent", true);
     }
-    
+
     if (!this.autovalidated && !this.validated) {
-		this.containingModel.set("unvalidatedPresent", true);
-	}
-    
-	if (peptides.size) {
-		this.matchedPeptides = [];
-		this.matchedPeptides[0] = peptides.get(rawMatches[0].pi);
-		// following will be inadequate for trimeric and higher order cross-links
-		if (rawMatches[1]) {
-			this.matchedPeptides[1] = peptides.get(rawMatches[1].pi);
-		}
-	} else {
-		this.matchedPeptides = rawMatches;
-	}
-	
+        this.containingModel.set("unvalidatedPresent", true);
+    }
+
+    if (peptides) { //this is a bit tricky, see below*
+        this.matchedPeptides = [];
+        this.matchedPeptides[0] = peptides.get(rawMatches[0].pi);
+        // following will be inadequate for trimeric and higher order cross-links
+        if (rawMatches[1]) {
+            this.matchedPeptides[1] = peptides.get(rawMatches[1].pi);
+        }
+    } else { //*here - if its from a csv file use rawMatches as the matchedPep array,
+        //makes it easier to construct as parsing CSV
+        this.matchedPeptides = rawMatches;
+    }
+
     //if the match is ambiguous it will relate to many crossLinks
     this.crossLinks = [];
     this.linkPos1 = +rawMatches[0].lp;
     if (rawMatches[1]) {
         this.linkPos2 = +rawMatches[1].lp;
-	}
+    }
 
     if (this.linkPos1 == 0) { //would have been -1 in DB but 1 was added to it during query
         //its a linear
         for (var i = 0; i < this.matchedPeptides[0].pos.length; i++) {
-            
-			p1ID = this.matchedPeptides[0].prt[i];
-		
-			res1 = this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
-		
-			this.associateWithLink(participants, crossLinks, p1ID, p2ID, 
-			res1, res2, this.matchedPeptides[0].pos[i] - 0, this.matchedPeptides[0].sequence.length);}
+
+            p1ID = this.matchedPeptides[0].prt[i];
+
+            res1 = this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
+
+            this.associateWithLink(participants, crossLinks, p1ID, p2ID,
+            res1, res2, this.matchedPeptides[0].pos[i] - 0, this.matchedPeptides[0].sequence.length);}
         return;
     }
 
@@ -104,24 +112,34 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
     for (var i = 0; i < this.matchedPeptides[0].pos.length; i++) {
         for (var j = 0; j < this.matchedPeptides[1].pos.length; j++) {
 
-			if (i > 0 || j > 0) {
-				this.containingModel.set("ambiguousPresent", true);
+            if (i > 0 || j > 0) {
+                this.containingModel.set("ambiguousPresent", true);
+            }
+
+			//some files are not puting in duplicate protein ids are ambig links
+			//in this case use last one
+			if (i < this.matchedPeptides[0].prt.length) {
+				p1ID = this.matchedPeptides[0].prt[i];
+			} else {
+				p1ID = this.matchedPeptides[0].prt[this.matchedPeptides[0].prt.length - 1];
 			}
-
-            p1ID = this.matchedPeptides[0].prt[i];
-            p2ID = this.matchedPeptides[1].prt[j];
-
+            if (j < this.matchedPeptides[1].prt.length) {
+				p2ID = this.matchedPeptides[1].prt[j];
+			} else {	
+				p2ID = this.matchedPeptides[1].prt[this.matchedPeptides[1].prt.length - 1];
+			}
+            
             // * residue numbering starts at 1 *
             if (this.matchedPeptides[0].pos[i] > 0) {
-				res1 = this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
-			} else {
-				res1 = this.linkPos1;
-			} 
-			if (this.matchedPeptides[1].pos[j] > 0) {
-				res2 = this.matchedPeptides[1].pos[j] - 1 + this.linkPos2;
-			} else {
-				res2 = this.linkPos2;
-			}
+                res1 = this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
+            } else {
+                res1 = this.linkPos1;
+            }
+            if (this.matchedPeptides[1].pos[j] > 0) {
+                res2 = this.matchedPeptides[1].pos[j] - 1 + this.linkPos2;
+            } else {
+                res2 = this.linkPos2;
+            }
 
             this.associateWithLink(participants, crossLinks, p1ID, p2ID, res1, res2, this.matchedPeptides[0].pos[i] - 0, this.matchedPeptides[0].sequence.length, this.matchedPeptides[1].pos[j], this.matchedPeptides[1].sequence.length);
         }
@@ -131,13 +149,13 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
     this.confirmedHomomultimer = false;
     this.overlap = [];
     if (p1ID === p2ID) {
-		
+
             if (this.matchedPeptides[0].sequence && this.matchedPeptides[1].sequence) {
 
                 var pep1length = this.matchedPeptides[0].sequence.length;
                 var pep2length = this.matchedPeptides[1].sequence.length;
-                var pep1_start = this.matchedPeptides[0].pos[0];
-                var pep2_start = this.matchedPeptides[1].pos[0];
+                var pep1_start = +this.matchedPeptides[0].pos[0];
+                var pep2_start = +this.matchedPeptides[1].pos[0];
                 var pep1_end = pep1_start  + (pep1length - 1);
                 var pep2_end = pep2_start + (pep2length - 1);
                 if (pep1_start >= pep2_start && pep1_start <= pep2_end){
@@ -169,33 +187,46 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
 
 CLMS.model.SpectrumMatch.prototype.associateWithLink = function (proteins, crossLinks, p1ID, p2ID, res1, res2, //following params may be null :-
             pep1_start, pep1_length, pep2_start, pep2_length){
-				
+
     // we don't want two different ID's, e.g. one thats "33-66" and one thats "66-33"
     //following puts lower protein_ID first in link_ID
     var fromProt, toProt;
 
-    //~ var proteins = this.containingModel.get("participants");
-    //~ var crossLinks = this.containingModel.get("crossLinks");
-
-    if (!p2ID) { //its  a linear peptide (no crosslinker of any product type))
-		this.containingModel.set("linearsPresent", true);
+    if (!p2ID || p2ID == '-' || p2ID == 'n/a') { //its  a linear peptide (no crosslinker of any product type))
+        this.containingModel.set("linearsPresent", true);
         fromProt = proteins.get(p1ID);
+        if (!fromProt) {
+			alert("FAIL: not protein with ID " + p1ID);
+		}
+        
     }
     else if (p1ID <= p2ID) {
         fromProt = proteins.get(p1ID);
         toProt = proteins.get(p2ID);
+        if (!fromProt) {
+			alert("FAIL: not protein with ID " + p1ID);
+		}
+        if (!toProt) {
+			alert("FAIL: not protein with ID " + p2ID);
+		}
     }
     else {
         fromProt = proteins.get(p2ID);
         toProt = proteins.get(p1ID);
+        if (!fromProt) {
+			alert("FAIL: not protein with ID " + p2ID);
+		}
+        if (!toProt) {
+			alert("FAIL: not protein with ID " + p1ID);
+		}
     }
 
     // again, order id string by prot id or by residue if self-link
     var endsReversedInResLinkId = false;
     var crossLinkID;
-	if (!p2ID) {
-		    crossLinkID = p1ID + "_linears";
-	}
+    if (!p2ID || p2ID == '-' || p2ID == 'n/a') {
+            crossLinkID = p1ID + "_linears";
+    }
     else if (p1ID === p2ID || p2ID === null) {
         if ((res1 - 0) < (res2 - 0) || res2 === null) {
             crossLinkID = p1ID + "_" + res1 + "-" + p2ID + "_" + res2;
@@ -218,9 +249,9 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (proteins, cross
     if (typeof resLink == 'undefined') {
         //WATCH OUT - residues need to be in correct order
         if (!p2ID) {
-			resLink = new CLMS.model.CrossLink(crossLinkID, fromProt,
-				null, null, null, this.containingModel);
-		}
+            resLink = new CLMS.model.CrossLink(crossLinkID, fromProt,
+                null, null, null, this.containingModel);
+        }
         else if (p1ID === p2ID) {
             if ((res1 - 0) < (res2 - 0)) {
                 resLink = new CLMS.model.CrossLink(crossLinkID, fromProt, res1, toProt, res2, this.containingModel);
@@ -244,14 +275,14 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (proteins, cross
         }
     }
 
-	var peptidePositions = [];
+    var peptidePositions = [];
     if (endsReversedInResLinkId === false) {
-		peptidePositions.push({start: pep1_start, length: pep1_length});
-		peptidePositions.push({start: pep2_start, length: pep2_length});
-	} else {
-    	peptidePositions.push({start: pep2_start, length: pep2_length});
-		peptidePositions.push({start: pep1_start, length: pep1_length});
-	}
+        peptidePositions.push({start: pep1_start, length: pep1_length});
+        peptidePositions.push({start: pep2_start, length: pep2_length});
+    } else {
+        peptidePositions.push({start: pep2_start, length: pep2_length});
+        peptidePositions.push({start: pep1_start, length: pep1_length});
+    }
     resLink.matches_pp.push({match: this, pepPos: peptidePositions});
     this.crossLinks.push(resLink);
 }
@@ -263,29 +294,47 @@ CLMS.model.SpectrumMatch.prototype.isAmbig = function() {
     return false;
 }
 
+CLMS.model.SpectrumMatch.prototype.isDecoy = function() {
+    if (this.is_decoy) {
+        return this.is_decoy;
+    }
+    else {
+		//its from csv not database, fro simplicity lets just look at first crosslink //todo - look at again
+		return this.crossLinks[0].isDecoyLink();
+	}
+}
+
 CLMS.model.SpectrumMatch.prototype.runName = function() {
-	var runName = this.containingModel.get("spectrumSources").get(this.src);
+    if (this.run_name) {
+        return this.run_name;
+    }
+    var runName = this.containingModel.get("spectrumSources").get(this.src);
     return runName;
 }
 
+CLMS.model.SpectrumMatch.prototype.group = function() {
+    var group = this.containingModel.get("searches").get(this.searchId).group;
+    return group;
+}
+
 CLMS.model.SpectrumMatch.prototype.expMZ = function() {
-	return this.precursorMZ;
+    return this.precursorMZ;
 }
 
 CLMS.model.SpectrumMatch.protonMass = 1.007276466879;
 
 CLMS.model.SpectrumMatch.prototype.expMass = function() {
-	return this.precursorMZ * this.precursorCharge - (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass);
+    return this.precursorMZ * this.precursorCharge - (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass);
 }
 
 CLMS.model.SpectrumMatch.prototype.matchMZ = function() {
-	return (this.calc_mass + (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass))/ this.precursorCharge ;
+    return (this.calc_mass + (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass))/ this.precursorCharge ;
 }
 
 CLMS.model.SpectrumMatch.prototype.matchMass = function() {
-	return this.calc_mass;
+    return this.calc_mass;
 }
 
 CLMS.model.SpectrumMatch.prototype.massError = function() {
-	return ((this.expMass() - this.matchMass()) / this.matchMass()) * 1000000;
+    return ((this.expMass() - this.matchMass()) / this.matchMass()) * 1000000;
 }

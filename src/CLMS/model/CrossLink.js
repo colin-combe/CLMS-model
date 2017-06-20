@@ -15,20 +15,13 @@ CLMS.model.CrossLink = function (id, fromProtein, fromResidue, toProtein, toResi
     this.fromResidue = fromResidue;
     this.toProtein = toProtein;
     this.toResidue = toResidue;
-}
+};
+
+CLMS.model.CrossLink.prototype.isDecoyLink = function () {
+               return (this.fromProtein.is_decoy == true
+                    || (this.toProtein && this.toProtein.is_decoy == true));
+};
 
 CLMS.model.CrossLink.prototype.isSelfLink = function() {
     return (this.fromProtein === this.toProtein);
-}
-
-/*
-CLMS.model.CrossLink.prototype.hasConfirmedHomomultimer = function() {
-    return this.confirmedHomomultimer;
-}
-*/
-//used when filter changed
-/*CLMS.model.CrossLink.prototype.check = function(filter) {
-    if (this.filteredMatches_pp.length > 0) {return true;}
-    else { return false;}
-};*/
-
+};

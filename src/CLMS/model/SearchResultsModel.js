@@ -37,9 +37,9 @@
     };
 
     CLMS.removeDomElement = function (child) {
-		if (child.parentNode) {
-		  child.parentNode.removeChild(child);
-		}		
+        if (child.parentNode) {
+          child.parentNode.removeChild(child);
+        }
     };
 
     CLMS.model = CLMS.model || {};
@@ -61,7 +61,7 @@
         commonRegexes: {
             uniprotAccession: /[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}/,
             notUpperCase: /[^A-Z]/g,
-            decoyNames: /(REV_)|(RAN_)|(DECOY_)/,
+            decoyNames: /(REV_)|(RAN_)|(DECOY_)|(DECOY:)|(reverse_)/,
         },
 
         //our SpectrumMatches are constructed from the rawMatches and peptides arrays in this json
@@ -277,9 +277,10 @@
                 protObj.sequence = protObj.seq_mods.replace(this.commonRegexes.notUpperCase, '');
             }
             if (protObj.sequence) protObj.size = protObj.sequence.length;
-            protObj.crossLinks = [];
+            if (!protObj.crossLinks) {
+				protObj.crossLinks = [];
+			}
             protObj.hidden = false;//?
-
         },
 
         getDigestibleResiduesAsFeatures: function (participant){
@@ -347,72 +348,52 @@
             this.get("searches").set(fileInfo.name, fileInfo);
             fileInfo.group = fileInfo.name;
             var fileName = fileInfo.name;
+
+            //used later in addProtein
             var participants = this.get("participants");
 
             var rows = d3.csv.parseRows(csv);
             var headers = rows[0];
             for (var h = 0; h < headers.length; h++) {
-                headers[h] = headers[h].trim();
+                headers[h] = headers[h].toLowerCase().trim();
             }
-
-            var iProt1 = headers.indexOf('Protein1');
-            var iProt2 = headers.indexOf('Protein2');
-            //missing Protein column?
-            if (iProt1 === -1){
-                alert("Failed to read column 'Protein1' from CSV file");
-                return;
-            }
-            if (iProt2 === -1){
-                alert("Failed to read column 'Protein2' from CSV file");
-                return;
-            }
-
-            if (headers.indexOf('fromSite')) {
-                fileInfo.type = "probably Francis / xiFDR";
-
-                var iLinkPosition1 = headers.indexOf('fromSite');
-                var iLinkPosition2 = headers.indexOf('ToSite');
-                var iId = headers.indexOf('LinkID');
-                var iScore = headers.indexOf('Score');
-
-            }
-
-            var iType = headers.indexOf('Type');//for xQuest looplinks and monolinks
-             var iRes1 = headers.indexOf('PepPos1');
-            var iRes2 = headers.indexOf('PepPos2');
-            var iPepSeq1 = headers.indexOf('PepSeq1');
-            var iPepSeq2 = headers.indexOf('PepSeq2');
-
-            /*
-            //console.log(headers.toString());
-           var iScore = headers.indexOf('Score');
-            var iId = headers.indexOf('Id');
-            var iLinkPosition1 = headers.indexOf('LinkPos1');
-            var iLinkPosition2 = headers.indexOf('LinkPos2');
-            var iType = headers.indexOf('Type');//for xQuest looplinks and monolinks
-
-            //missing Residue column(s)
-            if (iLinkPosition1 === -1){
-                // we could try a different sometimes used column name
-                iLinkPosition1 = headers.indexOf('AbsPos1');
-                if (iLinkPosition1 === -1){
-                    alert("Failed to read column 'LinkPos1' from CSV file");
-                    return;
+            var itsXquest = false;
+            //for historical reasons, theres sometimes a number of column headers names we'll accept
+            function getHeaderIndex(columnNames){
+                var iCol = -1, ni = 0;
+                while (ni < columnNames.length && iCol == -1) {
+                    iCol = headers.indexOf(columnNames[ni].toLowerCase().trim());
+                    //console.log(columnNames[ni]);
+                    ni++;
                 }
-            }
-            if (iLinkPosition2 === -1){
-                // we could try a different sometimes used column name
-                iLinkPosition2 = headers.indexOf('AbsPos2');
-                if (iLinkPosition2 === -1){
-                    alert("Failed to read column 'LinkPos2' from CSV file");
-                    return;
+                if (iCol != -1) {
+                    console.log(columnNames[ni - 1]);
+                    if (columnNames[ni - 1] == "AbsPos1") {itsXquest = true;}
                 }
+                return iCol;
             }
-            // no score? no problem, we can still proceed
-            if (iScore === -1){
-                // we could try a different sometimes used column name
-                iScore = headers.indexOf('ld-Score');
-            }*/
+
+            console.log("CSV column headers:");
+            var iProt1 = getHeaderIndex(['Protein 1', 'Protein1']);
+            var iProt2 = getHeaderIndex(['Protein 2', 'Protein2']);
+            var iSeqPos1 = getHeaderIndex(['SeqPos 1', 'SeqPos1', 'fromSite', 'AbsPos1']);
+            var iSeqPos2 = getHeaderIndex(['SeqPos 2', 'SeqPos2', 'ToSite', 'AbsPos2']);
+            var iId = getHeaderIndex(['Id', 'LinkID']);
+            var iScore = getHeaderIndex(['Score', 'Highest Score', 'ld-Score']);
+            var iAutovalidated = getHeaderIndex(['AutoValidated']);
+            var iValidated = getHeaderIndex(['Validated']);
+            //for csv of matches
+            var iLinkPos1 = getHeaderIndex(['LinkPos 1', 'LinkPos1']);
+            var iLinkPos2 =getHeaderIndex(['LinkPos 2', 'LinkPos2']);
+            var iPepPos1 = getHeaderIndex(['PepPos 1', 'PepPos1']);
+            var iPepPos2 = getHeaderIndex(['PepPos 2', 'PepPos2']);
+            var iPepSeq1 = getHeaderIndex(['PepSeq 1', 'PepSeq1']);
+            var iPepSeq2 = getHeaderIndex(['PepSeq 2', 'PepSeq2']);
+            var iCharge = getHeaderIndex(['Charge']);
+            var iPrecursorMZ = getHeaderIndex(['Exp M/Z']);
+            var iCalcMass = getHeaderIndex(['MatchMass']);
+            var iRunName = getHeaderIndex(['RunName']);
+            var iScanNo = getHeaderIndex(['ScanNumber']);
 
             var countRows = rows.length;
             if (fasta){ //FASTA file provided
@@ -428,22 +409,13 @@
                         // greater-than indicates description line
                         if(line.indexOf(">") === 0){
                             if (tempIdentifier !== null) {
-                                var name = nameFromIdentifier(tempIdentifier);
-                                //accession number is null
-                                var prot = new Protein(tempIdentifier, this, null, name);
-                                prot.setSequence(tempSeq.trim());
-                                this.proteins.set(tempIdentifier, prot);
-
-                                //Also adds xQuest reversed & decoys
-                                var decRevProt = new Protein("decoy_reverse_" + tempIdentifier,
-                                    this, null, "DECOY_" + name);
-                                decRevProt.setSequence(tempSeq.trim().split("").reverse().join(""));
-                                this.proteins.set("decoy_reverse_" + tempIdentifier, decRevProt);
-                                var revProt = new Protein("reverse_" + tempIdentifier,
-                                    this, null, "DECOY_" + name);
-                                revProt.setSequence(tempSeq.trim().split("").reverse().join(""));
-                                this.proteins.set("reverse_" + tempIdentifier, revProt);
-
+                                makeProtein(tempIdentifier, tempSeq, tempDescription);
+                                if (itsXquest) {
+                                    //Also add xQuest reversed & decoys to participants
+                                    var reversedSeq = tempSeq.trim().split("").reverse().join("");
+                                    makeProtein("decoy_reverse_" + tempIdentifier, reversedSeq, "DECOY");
+                                    makeProtein("reverse_" + tempIdentifier, reversedSeq, "DECOY");
+                                }
                                 tempSeq = "";
                             }
                             iFirstSpace = line.indexOf(" ");
@@ -457,24 +429,15 @@
                         }
                     }
                 }
-                name = nameFromIdentifier(tempIdentifier);
-                //there will be one protein still to be added when we get to end
-                var prot = new Protein(tempIdentifier, this, null, name);
-                prot.setSequence(tempSeq.trim());
-                this.proteins.set(tempIdentifier, prot);
-                //same for xQuest decoys
-                var decRevProt = new Protein("decoy_reverse_" + tempIdentifier,
-                    this, null, "DECOY_" + name);
-                decRevProt.setSequence(tempSeq.trim().split("").reverse().join(""));
-                this.proteins.set("decoy_reverse_" + tempIdentifier, decRevProt);
-                var revProt = new Protein("reverse_" + tempIdentifier,
-                    this, null, "DECOY_" + name);
-                revProt.setSequence(tempSeq.trim().split("").reverse().join(""));
-                this.proteins.set("reverse_" + tempIdentifier, revProt);
-
+                makeProtein(tempIdentifier, tempSeq, tempDescription);
+                if (itsXquest) {
+                    //Also add xQuest reversed & decoys to participants
+                    var reversedSeq = tempSeq.trim().split("").reverse().join("");
+                    makeProtein("decoy_reverse_" + tempIdentifier, reversedSeq, "DECOY");
+                    makeProtein("reverse_" + tempIdentifier, reversedSeq, "DECOY");
+                }
                 //read links
                 addCSVLinks();
-
             }
             else { // no FASTA file
                 //we may encounter proteins with
@@ -507,13 +470,13 @@
                 }
             }
 
-            this.set("interactors", participants);
+            //this.set("interactors", participants);
             this.initDecoyLookup();
 
             function addProteins(columnIndex) {
                 for (var row = 1; row < countRows; row++) {
                     var prots = rows[row][columnIndex].replace(/(['"])/g, '');
-                    var accArray = prots.split(/[;,]/);
+                    var accArray = split(prots);
                     for (var i = 0; i < accArray.length; i++) {
                         var id = accArray[i].trim();
                         if (id.trim() !== '-' && id.trim() !== 'n/a'){
@@ -521,7 +484,6 @@
                             if (id.indexOf('|') === -1) {
                                 acc = id;
                                 name = id;
-
                             }
                             else {
                                 var splitOnBar = accArray[i].split('|');
@@ -531,22 +493,69 @@
                             if (!participants.has(id)) {
                                 var protein = {id:id, name:name, accession:acc};
                                 participants.set(id, protein);
-                                if (name.indexOf("DECOY") == 0) {
+                                self.commonRegexes.decoyNames.lastIndex = 0;
+                                var regexMatch = self.commonRegexes.decoyNames.exec(protein.name);
+                                if (regexMatch) {
                                     protein.is_decoy = true;
                                 } else {
                                     protein.is_decoy = false;
                                 }
                                 self.initProtein(protein);
-
                             }
                         }
                     }
                 }
             };
 
+
+            function split(str){
+                var arr = str.split(/[;,]/);
+                for (var i = 0; i < arr.length; i++){
+                    arr[i] = arr[i].trim();
+                }
+                return arr;
+            }
+
+            //for reading fasta files
+            function makeProtein(id, sequence, desc){
+                var name = nameFromIdentifier(id);
+                var protein = {id:id, name:name, sequence: tempSeq, description: desc};
+                participants.set(id, protein);
+                self.commonRegexes.decoyNames.lastIndex = 0;
+                var regexMatch = self.commonRegexes.decoyNames.exec(protein.id);
+                if (regexMatch) {
+                    protein.is_decoy = true;
+                } else {
+                    protein.is_decoy = false;
+                }
+                self.initProtein(protein);
+            };
+
+            //for reading fasta files
+            function nameFromIdentifier(ident){
+                var name = ident;
+                var iBar = ident.indexOf("|");
+                if (iBar !== -1) {
+                    var splitOnBar = ident.split("|");
+                    if (splitOnBar.length === 3) {
+                        name = splitOnBar[2];
+                        //~ var iUnderscore = name.indexOf("_");
+                        //~ if (iUnderscore !== -1) {
+                            //~ name = name.substring(0, iUnderscore);
+                        //~ }
+                    }
+                }
+                return name;
+            };
+
             function uniprotWebServiceFASTA(id, callback){
-                var accession = accessionFromId(id);
+                id = id + "";
+                var accession = id;
+                if (id.indexOf('|') !== -1){
+                    accession = id.split('|')[1];
+                }
                 var url = "http://www.uniprot.org/uniprot/" + accession + ".fasta";
+                //todo: give fail message
                 d3.text(url, function (txt){
                     if (txt) {
                         var sequence = "";
@@ -557,141 +566,159 @@
                             line = lines[l];
                             sequence += line;
                         }
-                        //~ console.log(sequence);
                         sequence = sequence.replace(/[^A-Z]/g, '');
                         callback(id, sequence);
-                    }
+                    } else {
+						alert("FAILURE: could not retrieve sequence for accession " + accession);
+					}
                 });
             };
 
-            function accessionFromId (id){
-                id = id + "";
-                if (id.indexOf('|') !== -1){
-                    return id.split('|')[1];
-                } else {
-                    return id;
-                }
-            };
-
-            function nameFromIdentifier(ident){
-                var name = ident;
-                var iBar = ident.indexOf("|");
-                if (iBar !== -1) {
-                    var splitOnBar = ident.split("|");
-                    if (splitOnBar.length === 3) {
-                        name = splitOnBar[2];
-                        var iUnderscore = name.indexOf("_");
-                        if (iUnderscore !== -1) {
-                            name = name.substring(0, iUnderscore);
-                        }
-                    }
-                }
-                return name;
-            };
-
             function addCSVLinks() {
-                var prot1, prot2, id, score;
-                for (var row = 1; row < countRows; row++) {
-                    prot1 = rows[row][iProt1];
-                    prot2 = rows[row][iProt2];
-                    if (iId !== -1){
-                        id = rows[row][iId];
-                    }
-                    else {
-                        id = row;
-                    }
-                    //~ console.log(id);
-                    if (iScore !== -1){
-                        score = rows[row][iScore];
-                    }
-                    var xQuestCrosslinkIdRegex = /(.*)-(.*)-a(\d*)-b(\d*)/; //only appiles to type 2 products (i.e. cross-linked peptides)
-                    var xQuestOtherIdRegex = /(.*)-(.*)-(.*)/;
-                    var m = xQuestCrosslinkIdRegex.exec(id);
-                    var m2 = xQuestOtherIdRegex.exec(id);
-                    if (m !== null){
-                        var pep1_seq = m[1], pep2_seq = m[2],
-                            linkPos1 = m[3] - 0, linkPos2 = m[4] - 0;
-                        var peptidePositions1 = rows[row][iLinkPosition1].toString().split(/[;,]/);
-                        for (var pp = 0; pp < peptidePositions1.length; pp++){
-                            peptidePositions1[pp] = parseInt(peptidePositions1[pp]) - linkPos1 + 1;
+                var crossLinks = self.get("crossLinks");
+                var id, score, autoval, val;
+                for (var ir = 1; ir < countRows; ir++) {
+                    var row = rows[ir];
+                    if (row.length > 3) {
+                        if (iId !== -1){
+                            id = row[iId];
                         }
-                        var peptidePositions2 = rows[row][iLinkPosition2].toString().split(/[;,]/);
-                        for (pp = 0; pp < peptidePositions2.length; pp++){
-                            peptidePositions2[pp] = parseInt(peptidePositions2[pp]) - linkPos2 + 1;
+                        else {
+                            id = ir;
                         }
-                        addMatch(id,
-                                    prot1, peptidePositions1.join(';'), pep1_seq, linkPos1,
-                                    prot2, peptidePositions2.join(';'), pep2_seq, linkPos2,
-                                    score);
-                    } else if (iType !== -1 && m2 !== null && (rows[row][iType] === "intralink" || rows[row][iType] === "monolink")) {
-                        var pep1_seq = m2[1];
-                        var linkPos1 = parseInt(m2[2].substring(1));
-                        var peptidePositions1 = rows[row][iLinkPosition1].toString().split(/[;,]/);
-                        for (var pp = 0; pp < peptidePositions1.length; pp++){
-                            peptidePositions1[pp] = parseInt(peptidePositions1[pp]) - linkPos1 + 1;
+                        if (iScore !== -1){
+                            score = +row[iScore];
                         }
-                        if (rows[row][iType] === "intralink") {//its an internally linked peptide
-                            var linkPos2 = parseInt(m2[3].substring(1));
-                            addMatch(id,
-                                    prot1,  peptidePositions1.join(';'), pep1_seq, linkPos1,
-                                    null, null, null, linkPos2,
-                                    score);
-                        } else { //its a linker modified peptide
-                            addMatch(id,
-                                    prot1,  peptidePositions1.join(';'), pep1_seq, linkPos1,
-                                    null, null, null, null,
-                                    score);
+                        if (iAutovalidated !== -1){
+                            autoval = row[iAutovalidated].trim().toLowerCase()[0];
                         }
-                    }
-                    else {
-                        var m = rows[row];
-                        /*id,
-                        pep1_protIDs, pep1_positions, pep1_seq, linkPos1,
-                        pep2_protIDs, pep2_positions, pep2_seq, linkPos2,
-                        score, dataSetId, autovalidated, validated*/
-                        addMatch(id,
-                                    prot1, m[iRes1], m[iPepSeq1], m[iLinkPosition1],
-                                    prot2, m[iRes2], m[iPepSeq2], m[iLinkPosition2],
-                                    score);
+                        if (iValidated !== -1){
+                            val = row[iValidated].split(',')[0].trim();
+                        }
+
+                        var rawMatches = [];
+                        var match;
+
+                        //if itsXquest... theres more we could do to get pep info, code(regex) is in v1 of xiNET
+
+                        if (iPepPos1 != -1 && iLinkPos1 != -1 &&
+                                iPepPos2 != -1 && iLinkPos2 != -1) {
+                            //its matches (with peptide info)
+                            var linkPos1 = +row[iLinkPos1];
+                            var linkPos2 = +row[iLinkPos2];
+                            var pepPos1 = +row[iPepPos1];
+                            var pepPos2 = +row[iPepPos2];
+                            var pepSeq_mods1, pepSeq_mods2, pepSeq1, pepSeq2, charge, precursorMZ,
+                                calcMass, runName, scanNo;
+                            if (iPepSeq1 !== -1){
+                                pepSeq_mods1 = row[iPepSeq1].trim();
+                                self.commonRegexes.notUpperCase.lastIndex = 0;
+                                pepSeq1 = pepSeq_mods1.replace(self.commonRegexes.notUpperCase, '').trim();
+                            }
+                            if (iPepSeq2 !== -1){
+                                pepSeq_mods2 = row[iPepSeq2].trim();
+                                self.commonRegexes.notUpperCase.lastIndex = 0;
+                                pepSeq2 = pepSeq_mods2.replace(self.commonRegexes.notUpperCase, '').trim();
+                            }
+                            if (iCharge !== -1){
+                                charge = +row[iCharge];
+                            }
+                            if (iPrecursorMZ !== -1){
+                                precursorMZ = +row[iPrecursorMZ];
+                            }
+                            if (iCalcMass !== -1){
+                                calcMass = +row[iCalcMass];
+                            }
+                            if (iRunName !== -1){
+                                runName = row[iRunName].trim();
+                            }
+                            if (iScanNo !== -1){
+                                scanNo = row[iScanNo].trim();
+                            }
+
+                            var pep1 = {id:id,
+                                        si:fileName,
+                                        sc:score,
+                                        av: autoval,
+                                        v:val,
+                                        //todo : need to remove spaces from split data
+                                        pos: split(row[iPepPos1]),
+                                        lp: row[iLinkPos1],
+                                        prt: split(row[iProt1]),
+                                        seq_mods: pepSeq_mods1,
+                                        sequence: pepSeq1,
+                                        //following only read from first matched peptide
+                                        pc_c: charge,
+                                        pc_mz: precursorMZ,
+                                        cm: calcMass,
+                                        run_name: runName,
+                                        sn: scanNo,
+                                        };
+                            var pep2 = {id:id,
+                                        si:fileName,
+                                        sc:score,
+                                        av: autoval,
+                                        v:val,
+                                        pos: split(row[iPepPos2]),
+                                        lp: row[iLinkPos2],
+                                        prt: split(row[iProt2]),
+                                        seq_mods: pepSeq_mods2,
+                                        sequence: pepSeq2,
+                                        };
+
+                            rawMatches.push(pep1);
+                            rawMatches.push(pep2);
+                            match = new CLMS.model.SpectrumMatch(self,
+                                                            participants,
+                                                            crossLinks,
+                                                            null, //no peptide info
+                                                            rawMatches);
+
+
+                        } else {
+                            //its links (no peptide info); also no proper ambiguity info
+                            var pep1 = {id:id,
+                                        si:fileName,
+                                        sc:score,
+                                        av: autoval,
+                                        v:val,
+                                        pos: split(row[iSeqPos1]),
+                                        lp: 1,
+                                        prt: split(row[iProt1]),
+                                        sequence: ""};
+                            var pep2 = {id:id,
+                                        si:fileName,
+                                        sc:score,
+                                        av: autoval,
+                                        v:val,
+                                        pos: split(row[iSeqPos2]),
+                                        lp: 1,
+                                        prt: split(row[iProt2]),
+                                        sequence: ""};
+
+                            rawMatches.push(pep1);
+                            rawMatches.push(pep2);
+                            match = new CLMS.model.SpectrumMatch(self,
+                                                            participants,
+                                                            crossLinks,
+                                                            null, //no peptide info
+                                                            rawMatches);
+                        }
+
+                        self.get("matches").push(match);
                     }
                 }
-                self.trigger ("change:matches", self);
+                self.trigger ("change:matches");
+                // following isn't very tidy -
+                // todo: filterModel should maybe be part of CLMS-model?
                 CLMSUI.compositeModelInst.get("filterModel").set("unval",true);
+                CLMSUI.compositeModelInst.get("filterModel").trigger("change");
             };
-
-            function addMatch (id,
-                pep1_protIDs, pep1_positions, pep1_seq, linkPos1,
-                pep2_protIDs, pep2_positions, pep2_seq, linkPos2,
-                score, dataSetId, autovalidated, validated, run_name, scan_number) {
-
-                //~ var match = new CLMS.model.SpectrumMatch(self, id,
-                    //~ pep1_protIDs, pep1_positions, pep1_seq, linkPos1,
-                    //~ pep2_protIDs, pep2_positions, pep2_seq, linkPos2,
-                    //~ score, dataSetId, autovalidated, validated, run_name, scan_number);
-                    //~ return match;
-
-                var participants = self.get("participants");
-                var crossLinks = self.get("crossLinks");
-                var rawMatches = [];
-                var pep1 = {id:id, si:"CSV file", pos: [0], lp: linkPos1, prt: [pep1_protIDs], sequence: ""};
-                var pep2 = {id:id, si:"CSV file", pos: [0], lp: linkPos2, prt: [pep2_protIDs], sequence: ""};
-                rawMatches.push(pep1);
-                rawMatches.push(pep2);
-                var match = new CLMS.model.SpectrumMatch(self,
-                                                    participants,
-                                                    crossLinks,
-                                                    new Map (),
-                                                    rawMatches);
-                self.get("matches").push(match);
-
-            };
-
         },
-
 
         initDecoyLookup: function (prefixes) {
             // Make map of reverse/random decoy proteins to real proteins
-            prefixes = prefixes || ["REV_", "RAN_", "DECOY_", "DECOY:"];
+            prefixes = prefixes || ["REV_", "RAN_", "DECOY_", "DECOY:", "reverse_"];
             var prots = CLMS.arrayFromMapValues(this.get("participants"));
             var nameMap = d3.map ();
             var accessionMap = d3.map ();
@@ -704,8 +731,12 @@
             decoys.forEach (function (decoyProt) {
                 prefixes.forEach (function (pre) {
                     var realProtIDByName = nameMap.get (decoyProt.name.substring(pre.length));
-                    var realProtIDByAccession = accessionMap.get (decoyProt.accession.substring(pre.length));
-                    if (realProtIDByName && realProtIDByAccession) {
+                    if (decoyProt.accession) {
+                        var realProtIDByAccession = accessionMap.get (decoyProt.accession.substring(pre.length));
+                        if (realProtIDByName && realProtIDByAccession) {
+                            decoyToRealMap.set (decoyProt.id, realProtIDByName);
+                        }
+                    } else if (realProtIDByName){
                         decoyToRealMap.set (decoyProt.id, realProtIDByName);
                     }
                 });
@@ -741,11 +772,6 @@
 
         isIntraLink: function (crossLink) {
                 return (crossLink.toProtein && this.isMatchingProteinPair (crossLink.toProtein, crossLink.fromProtein));
-        },
-
-        isDecoyLink: function (crossLink) {
-               return (crossLink.fromProtein.is_decoy == true
-                    || (crossLink.toProtein && crossLink.toProtein.is_decoy == true));
         },
 
         getSearchRandomId : function (match) {
