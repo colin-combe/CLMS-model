@@ -195,14 +195,30 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (proteins, cross
     if (!p2ID || p2ID == '-' || p2ID == 'n/a') { //its  a linear peptide (no crosslinker of any product type))
         this.containingModel.set("linearsPresent", true);
         fromProt = proteins.get(p1ID);
+        if (!fromProt) {
+			alert("FAIL: not protein with ID " + p1ID);
+		}
+        
     }
     else if (p1ID <= p2ID) {
         fromProt = proteins.get(p1ID);
         toProt = proteins.get(p2ID);
+        if (!fromProt) {
+			alert("FAIL: not protein with ID " + p1ID);
+		}
+        if (!toProt) {
+			alert("FAIL: not protein with ID " + p2ID);
+		}
     }
     else {
         fromProt = proteins.get(p2ID);
         toProt = proteins.get(p1ID);
+        if (!fromProt) {
+			alert("FAIL: not protein with ID " + p2ID);
+		}
+        if (!toProt) {
+			alert("FAIL: not protein with ID " + p1ID);
+		}
     }
 
     // again, order id string by prot id or by residue if self-link
