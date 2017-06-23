@@ -387,8 +387,8 @@
             console.log("CSV column headers:");
             var iProt1 = getHeaderIndex(['Protein 1', 'Protein1']);
             var iProt2 = getHeaderIndex(['Protein 2', 'Protein2']);
-            var iSeqPos1 = getHeaderIndex(['SeqPos 1', 'SeqPos1', 'fromSite', 'AbsPos1']);
-            var iSeqPos2 = getHeaderIndex(['SeqPos 2', 'SeqPos2', 'ToSite', 'AbsPos2']);
+            var iSeqPos1 = getHeaderIndex(['SeqPos 1', 'SeqPos1', 'fromSite', 'AbsPos1', 'LinkPos1']);
+            var iSeqPos2 = getHeaderIndex(['SeqPos 2', 'SeqPos2', 'ToSite', 'AbsPos2', 'LinkPos2']);
             var iId = getHeaderIndex(['Id', 'LinkID']);
             var iScore = getHeaderIndex(['Score', 'Highest Score', 'ld-Score']);
             var iAutovalidated = getHeaderIndex(['AutoValidated']);
