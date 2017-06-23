@@ -453,32 +453,38 @@
             else { // no FASTA file
                 //we may encounter proteins with
                 //different ids/names but the same accession number.
+                var needsSequence = []
                 addProteins(iProt1);
                 addProteins(iProt2);
-                var protCount = participants.size;
+                var protCount = needsSequence.length;
                 var countSequences = 0;
-                var protArray = CLMS.arrayFromMapValues(participants);
-                for (var p = 0; p < protCount; p++){
-                    var prot = protArray[p];
-                    if (prot.is_decoy == false) {
-                        var id = prot.id;
-                        uniprotWebServiceFASTA(id, function(ident, seq){
-                                var prot = participants.get(ident);
-                                prot.sequence = seq;
-                                self.initProtein(prot);
-                                countSequences++;
-                                if (countSequences === protCount){
-                                    addCSVLinks();
-                                }
-                            }
-                        );
-                    } else {
-                        countSequences++;
-                        if (countSequences === protCount){
-                            addCSVLinks();
-                        }
-                    }
-                }
+                var protArray = needsSequence;//CLMS.arrayFromMapValues(participants);
+                if (protCount > 1) {
+					for (var p = 0; p < protCount; p++){
+						var prot = protArray[p];
+						if (prot.is_decoy == false) {
+							var id = prot.id;
+							uniprotWebServiceFASTA(id, function(ident, seq){
+									var prot = participants.get(ident);
+									prot.sequence = seq;
+									self.initProtein(prot);
+									countSequences++;
+									if (countSequences === protCount){
+										addCSVLinks();
+									}
+								}
+							);
+						} else {
+							countSequences++;
+							if (countSequences === protCount){
+								addCSVLinks();
+							}
+						}
+					}
+				}
+				else {
+					addCSVLinks();
+				}
             }
 
             //this.set("interactors", participants);
@@ -490,7 +496,7 @@
                     var accArray = split(prots);
                     for (var i = 0; i < accArray.length; i++) {
                         var id = accArray[i].trim();
-                        if (id.trim() !== '-' && id.trim() !== 'n/a'){
+                        if (id && id.trim() !== '-' && id.trim() !== 'n/a'){
                             var acc, name;
                             if (id.indexOf('|') === -1) {
                                 acc = id;
@@ -511,7 +517,8 @@
                                 } else {
                                     protein.is_decoy = false;
                                 }
-                                self.initProtein(protein);
+                                //~ self.initProtein(protein);
+                                needsSequence.push(protein);
                             }
                         }
                     }
@@ -529,17 +536,17 @@
 
             //for reading fasta files
             function makeProtein(id, sequence, desc){
-                var name = nameFromIdentifier(id);
-                var protein = {id:id, name:name, sequence: tempSeq, description: desc};
-                participants.set(id, protein);
-                self.commonRegexes.decoyNames.lastIndex = 0;
-                var regexMatch = self.commonRegexes.decoyNames.exec(protein.id);
-                if (regexMatch) {
-                    protein.is_decoy = true;
-                } else {
-                    protein.is_decoy = false;
-                }
-                self.initProtein(protein);
+				var name = nameFromIdentifier(id);
+				var protein = {id:id, name:name, sequence: tempSeq, description: desc};
+				participants.set(id, protein);
+				self.commonRegexes.decoyNames.lastIndex = 0;
+				var regexMatch = self.commonRegexes.decoyNames.exec(protein.id);
+				if (regexMatch) {
+					protein.is_decoy = true;
+				} else {
+					protein.is_decoy = false;
+				}
+				self.initProtein(protein);
             };
 
             //for reading fasta files
@@ -567,8 +574,11 @@
                 }
                 var url = "http://www.uniprot.org/uniprot/" + accession + ".fasta";
                 //todo: give fail message
-                d3.text(url, function (txt){
-                    if (txt) {
+                d3.text(url, function (error, txt){
+					if (error) {
+						alert("FAILURE: could not retrieve sequence for accession " + accession);
+					}
+                    else {
                         var sequence = "";
                         var lines = txt.split('\n');
                         var lineCount = lines.length;
@@ -579,9 +589,7 @@
                         }
                         sequence = sequence.replace(/[^A-Z]/g, '');
                         callback(id, sequence);
-                    } else {
-						alert("FAILURE: could not retrieve sequence for accession " + accession);
-					}
+                    }
                 });
             };
 
