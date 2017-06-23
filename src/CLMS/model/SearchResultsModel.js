@@ -100,9 +100,19 @@
                     var enzymeCount = enzymes.length;
                     for (var e = 0; e < enzymeCount ; e++) {
                         var enzymeDescription = enzymes[e].description;
-                        var postAARegex = /DIGESTED:(.*?);/g;
+                        
+                        var postAARegex = /PostAAConstrainedDigestion:DIGESTED:(.*?);ConstrainingAminoAcids:(.*?);/g;
                         var postAAMatch = postAARegex.exec(enzymeDescription);
                         getResiduesFromEnzymeDescription (postAAMatch, postAaSet);
+                        //~ if (postAAMatch) {
+							//~ if (regexMatch && regexMatch.length > 1) {
+								//~ var resArray = regexMatch[1].split(',');
+								//~ var resCount = resArray.length;
+								//~ for (var r = 0; r < resCount; r++){
+									//~ residueSet.add(resArray[r]);
+								//~ }
+							//~ }
+						//~ }
 
                         var cTermRegex = /CTERMDIGEST:(.*?);/g;
                         var ctMatch = cTermRegex.exec(enzymeDescription);
@@ -111,6 +121,7 @@
                         var nTermRegex = /NTERMDIGEST:(.*?);/g;
                         var ntMatch = nTermRegex.exec(enzymeDescription);
                         getResiduesFromEnzymeDescription (ntMatch, aaConstrainedNTermSet);
+                        
                     }
                 }
 
