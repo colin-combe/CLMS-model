@@ -37,7 +37,7 @@
     };
 
     CLMS.removeDomElement = function (child) {
-        if (child.parentNode) {
+		if (child && child.parentNode) {
           child.parentNode.removeChild(child);
         }
     };
