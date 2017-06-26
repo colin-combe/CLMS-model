@@ -411,7 +411,7 @@
                 var line_array = fasta.split("\n");
                 var tempIdentifier = null;
                 var tempDescription;
-                var tempSeq;
+                var tempSeq = "";
                 var iFirstSpace;
                 for(var i = 0;i < line_array.length;i++){
                     var line = "" + line_array[i];
