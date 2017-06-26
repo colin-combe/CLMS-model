@@ -192,7 +192,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (proteins, cross
     //following puts lower protein_ID first in link_ID
     var fromProt, toProt;
 
-    if (!p2ID || p2ID == '-' || p2ID == 'n/a') { //its  a linear peptide (no crosslinker of any product type))
+    if (p2ID == "" || p2ID == '-' || p2ID == 'n/a') { //its  a linear peptide (no crosslinker of any product type))
         this.containingModel.set("linearsPresent", true);
         fromProt = proteins.get(p1ID);
         if (!fromProt) {
@@ -224,7 +224,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (proteins, cross
     // again, order id string by prot id or by residue if self-link
     var endsReversedInResLinkId = false;
     var crossLinkID;
-    if (!p2ID || p2ID == '-' || p2ID == 'n/a') {
+    if (p2ID == "" || p2ID == '-' || p2ID == 'n/a') {
             crossLinkID = p1ID + "_linears";
     }
     else if (p1ID === p2ID || p2ID === null) {

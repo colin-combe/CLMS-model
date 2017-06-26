@@ -368,7 +368,7 @@
             for (var h = 0; h < headers.length; h++) {
                 headers[h] = headers[h].toLowerCase().trim();
             }
-            var itsXquest = false;
+            var itsXquest = false, itsXiFDR = false;
             //for historical reasons, theres sometimes a number of column headers names we'll accept
             function getHeaderIndex(columnNames){
                 var iCol = -1, ni = 0;
@@ -378,9 +378,10 @@
                     ni++;
                 }
                 if (iCol != -1) {
-                    console.log(columnNames[ni - 1]);
+                    //console.log(columnNames[ni - 1]);
                     if (columnNames[ni - 1] == "AbsPos1") {itsXquest = true;}
-                }
+                	else if (columnNames[ni - 1] == "fromSite") {itsXiFDR = true;}
+				} 
                 return iCol;
             }
 
@@ -427,6 +428,11 @@
                                     makeProtein("decoy_reverse_" + tempIdentifier, reversedSeq, "DECOY");
                                     makeProtein("reverse_" + tempIdentifier, reversedSeq, "DECOY");
                                 }
+                                if (itsXiFDR) {
+                                    //Also add xiFDR decoy to participants
+                                    var reversedSeq = tempSeq.trim().split("").reverse().join("");
+                                    makeProtein("DECOY:" + tempIdentifier, reversedSeq, "DECOY");
+                                }
                                 tempSeq = "";
                             }
                             iFirstSpace = line.indexOf(" ");
@@ -447,6 +453,12 @@
                     makeProtein("decoy_reverse_" + tempIdentifier, reversedSeq, "DECOY");
                     makeProtein("reverse_" + tempIdentifier, reversedSeq, "DECOY");
                 }
+                if (itsXiFDR) {
+					//Also add xiFDR decoy to participants
+					var reversedSeq = tempSeq.trim().split("").reverse().join("");
+					makeProtein("DECOY:" + tempIdentifier, reversedSeq, "DECOY");
+				}
+                                
                 //read links
                 addCSVLinks();
             }
