@@ -368,7 +368,7 @@
             for (var h = 0; h < headers.length; h++) {
                 headers[h] = headers[h].toLowerCase().trim();
             }
-            var itsXquest = false, itsXiFDR = false;
+            var itsXquest = false, itsXiFDR = false, itsProxl = false;
             //for historical reasons, theres sometimes a number of column headers names we'll accept
             function getHeaderIndex(columnNames){
                 var iCol = -1, ni = 0;
@@ -381,31 +381,32 @@
                     //console.log(columnNames[ni - 1]);
                     if (columnNames[ni - 1] == "AbsPos1") {itsXquest = true;}
                 	else if (columnNames[ni - 1] == "fromSite") {itsXiFDR = true;}
+					else if (columnNames[ni - 1] == "q-value") {itsProxl = true;}
 				} 
                 return iCol;
             }
 
             console.log("CSV column headers:");
-            var iProt1 = getHeaderIndex(['Protein 1', 'Protein1']);
-            var iProt2 = getHeaderIndex(['Protein 2', 'Protein2']);
+            var iProt1 = getHeaderIndex(['Protein 1', 'Protein1', 'Proteins 1']);
+            var iProt2 = getHeaderIndex(['Protein 2', 'Protein2', 'Proteins 2']);
             var iSeqPos1 = getHeaderIndex(['SeqPos 1', 'SeqPos1', 'fromSite', 'AbsPos1', 'LinkPos1']);
             var iSeqPos2 = getHeaderIndex(['SeqPos 2', 'SeqPos2', 'ToSite', 'AbsPos2', 'LinkPos2']);
             var iId = getHeaderIndex(['Id', 'LinkID']);
-            var iScore = getHeaderIndex(['Score', 'Highest Score', 'ld-Score']);
+            var iScore = getHeaderIndex(['Score', 'Highest Score', 'ld-Score', 'q-value']);
             var iAutovalidated = getHeaderIndex(['AutoValidated']);
             var iValidated = getHeaderIndex(['Validated']);
             //for csv of matches
-            var iLinkPos1 = getHeaderIndex(['LinkPos 1', 'LinkPos1']);
-            var iLinkPos2 =getHeaderIndex(['LinkPos 2', 'LinkPos2']);
+            var iLinkPos1 = getHeaderIndex(['LinkPos 1', 'LinkPos1', 'Position 1']);
+            var iLinkPos2 =getHeaderIndex(['LinkPos 2', 'LinkPos2', 'Position 2']);
             var iPepPos1 = getHeaderIndex(['PepPos 1', 'PepPos1']);
             var iPepPos2 = getHeaderIndex(['PepPos 2', 'PepPos2']);
-            var iPepSeq1 = getHeaderIndex(['PepSeq 1', 'PepSeq1']);
-            var iPepSeq2 = getHeaderIndex(['PepSeq 2', 'PepSeq2']);
+            var iPepSeq1 = getHeaderIndex(['PepSeq 1', 'PepSeq1', 'Peptide 1']);
+            var iPepSeq2 = getHeaderIndex(['PepSeq 2', 'PepSeq2', 'Peptide 2']);
             var iCharge = getHeaderIndex(['Charge']);
-            var iPrecursorMZ = getHeaderIndex(['Exp M/Z']);
+            var iPrecursorMZ = getHeaderIndex(['Exp M/Z']);//, 'OBSERVED M/Z']); //?
             var iCalcMass = getHeaderIndex(['MatchMass']);
-            var iRunName = getHeaderIndex(['RunName']);
-            var iScanNo = getHeaderIndex(['ScanNumber']);
+            var iRunName = getHeaderIndex(['RunName', 'SCAN FILENAME']);
+            var iScanNo = getHeaderIndex(['ScanNumber', 'SCAN NUMBER']);
 
             var countRows = rows.length;
             if (fasta){ //FASTA file provided
@@ -462,7 +463,7 @@
                 //read links
                 addCSVLinks();
             }
-            else { // no FASTA file
+            else if (!itsProxl) { // no FASTA file
                 //we may encounter proteins with
                 //different ids/names but the same accession number.
                 var needsSequence = []
@@ -497,7 +498,9 @@
 				else {
 					addCSVLinks();
 				}
-            }
+            } else {
+				addCSVLinks();
+			}
 
             //this.set("interactors", participants);
             this.initDecoyLookup();
@@ -606,6 +609,8 @@
             };
 
             function addCSVLinks() {
+				var proxlRegex = /(.*?)\((\d*)\)/; //for parsing proxl downloads
+
                 var crossLinks = self.get("crossLinks");
                 var id, score, autoval, val;
                 for (var ir = 1; ir < countRows; ir++) {
@@ -632,13 +637,30 @@
 
                         //if itsXquest... theres more we could do to get pep info, code(regex) is in v1 of xiNET
 
-                        if (iPepPos1 != -1 && iLinkPos1 != -1 &&
-                                iPepPos2 != -1 && iLinkPos2 != -1) {
+                        if ((iPepPos1 != -1 && iLinkPos1 != -1 &&
+                                iPepPos2 != -1 && iLinkPos2 != -1) || itsProxl) {
                             //its matches (with peptide info)
                             var linkPos1 = +row[iLinkPos1];
                             var linkPos2 = +row[iLinkPos2];
-                            var pepPos1 = +row[iPepPos1];
-                            var pepPos2 = +row[iPepPos2];
+                            var prot1, prot2, pepPos1, pepPos2;
+                            if (!itsProxl) {
+								prot1 =	split(row[iProt1]);
+								prot2 =	split(row[iProt2]);
+								pepPos1 = split(row[iPepPos1]);
+								pepPos2 = split(row[iPepPos2]);
+							} else {
+								proxlRegex.lastIndex = 0;
+								var result1 = proxlRegex.exec(row[iProt1]);
+
+								var goingIn = row[iProt1];
+								prot1 =	[result1[1].trim()];
+								pepPos1 = [+result1[2] - (linkPos1 -1)];
+								
+								proxlRegex.lastIndex = 0;
+								var result2 = proxlRegex.exec(row[iProt2]);
+								prot2 =	[result2[1].trim()];
+								pepPos2 = [+result2[2] - (linkPos2 - 1)];
+							}
                             var pepSeq_mods1, pepSeq_mods2, pepSeq1, pepSeq2, charge, precursorMZ,
                                 calcMass, runName, scanNo;
                             if (iPepSeq1 !== -1){
@@ -673,9 +695,9 @@
                                         av: autoval,
                                         v:val,
                                         //todo : need to remove spaces from split data
-                                        pos: split(row[iPepPos1]),
-                                        lp: row[iLinkPos1],
-                                        prt: split(row[iProt1]),
+                                        pos: pepPos1,
+                                        lp: +row[iLinkPos1],
+                                        prt: prot1,
                                         seq_mods: pepSeq_mods1,
                                         sequence: pepSeq1,
                                         //following only read from first matched peptide
@@ -690,9 +712,9 @@
                                         sc:score,
                                         av: autoval,
                                         v:val,
-                                        pos: split(row[iPepPos2]),
-                                        lp: row[iLinkPos2],
-                                        prt: split(row[iProt2]),
+                                        pos: pepPos2,
+                                        lp: +row[iLinkPos2],
+                                        prt: prot2,
                                         seq_mods: pepSeq_mods2,
                                         sequence: pepSeq2,
                                         };
