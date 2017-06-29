@@ -378,7 +378,7 @@
                     ni++;
                 }
                 if (iCol != -1) {
-                    //console.log(columnNames[ni - 1]);
+                    console.log(columnNames[ni - 1]);
                     if (columnNames[ni - 1] == "AbsPos1") {itsXquest = true;}
                 	else if (columnNames[ni - 1] == "fromSite") {itsXiFDR = true;}
 					else if (columnNames[ni - 1] == "q-value") {itsProxl = true;}
@@ -761,10 +761,20 @@
                         self.get("matches").push(match);
                     }
                 }
+                
+                //~ var matches = self.get("matches");
+                //~ for (var m = 0; m < matches.length; m++) {
+					//~ var match = matches[m];
+					//~ if (CLMS.model.dupScans.get(match.run_name + " " + match.scanNumber) > 1) {
+						//~ match.validated = "?";
+					//~ }
+				//~ }
+                
                 self.trigger ("change:matches");
+                
                 // following isn't very tidy -
                 // todo: filterModel should maybe be part of CLMS-model?
-                CLMSUI.compositeModelInst.get("filterModel").set("unval",true);
+                //CLMSUI.compositeModelInst.get("filterModel").set("unval",true);
                 CLMSUI.compositeModelInst.get("filterModel").trigger("change");
             };
         },
