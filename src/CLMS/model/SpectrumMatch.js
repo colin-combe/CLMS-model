@@ -5,6 +5,10 @@
 //
 //      CLMS.model.SpectrumMatch.js
 
+//temp
+CLMS.model.dupScans = new Map();
+CLMS.model.dupCount = 0;
+
 CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, peptides, rawMatches){
 
     // single 'rawMatch'looks like {"id":25918012,"ty":1,"pi":8485630,"lp":0,
@@ -35,11 +39,26 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
         this.containingModel.set("decoysPresent", true);
     }
     this.scanNumber = +rawMatches[0].sn;
+    
     this.src = +rawMatches[0].src;//for looking up run name
     //run name may have come from csv file
     if (rawMatches[0].run_name) {
         this.run_name = rawMatches[0].run_name;
     }
+
+
+	//temp
+	//~ var dupKey = this.run_name +"_"+ this.scanNumber;
+	//~ var scanCount = CLMS.model.dupScans.get(this.run_name +" "+this.scanNumber);
+	//~ if (scanCount) {
+		//~ CLMS.model.dupScans.set(this.run_name +" "+this.scanNumber, scanCount + 1);
+		//~ CLMS.model.dupCount++;
+		//~ console.log("Dup scan:" + this.run_name +" "+this.scanNumber);
+		//~ //return;
+	//~ }
+	//~ else {
+		//~ CLMS.model.dupScans.set(this.run_name +" "+this.scanNumber, 1);
+	//~ }
 
     this.precursorCharge = +rawMatches[0].pc_c;
     if (this.precursorCharge == -1) {
@@ -93,7 +112,7 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
 
             p1ID = this.matchedPeptides[0].prt[i];
 
-            res1 = this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
+            res1 = +this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
 
             this.associateWithLink(participants, crossLinks, p1ID, p2ID,
             res1, res2, this.matchedPeptides[0].pos[i] - 0, this.matchedPeptides[0].sequence.length);}
@@ -130,17 +149,9 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
 			}
             
             // * residue numbering starts at 1 *
-            if (this.matchedPeptides[0].pos[i] > 0) {
-                res1 = this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
-            } else {
-                res1 = this.linkPos1;
-            }
-            if (this.matchedPeptides[1].pos[j] > 0) {
-                res2 = this.matchedPeptides[1].pos[j] - 1 + this.linkPos2;
-            } else {
-                res2 = this.linkPos2;
-            }
-
+            res1 = +this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
+            res2 = +this.matchedPeptides[1].pos[j] - 1 + this.linkPos2;
+            
             this.associateWithLink(participants, crossLinks, p1ID, p2ID, res1, res2, this.matchedPeptides[0].pos[i] - 0, this.matchedPeptides[0].sequence.length, this.matchedPeptides[1].pos[j], this.matchedPeptides[1].sequence.length);
         }
     }
@@ -190,9 +201,12 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (proteins, cross
 
     // we don't want two different ID's, e.g. one thats "33-66" and one thats "66-33"
     //following puts lower protein_ID first in link_ID
+
+	//todo: this end swapping thing, its a possible source of confusion
+    
     var fromProt, toProt;
 
-    if (!p2ID || p2ID == '-' || p2ID == 'n/a') { //its  a linear peptide (no crosslinker of any product type))
+    if (p2ID == "" || p2ID == '-' || p2ID == 'n/a') { //its  a linear peptide (no crosslinker of any product type))
         this.containingModel.set("linearsPresent", true);
         fromProt = proteins.get(p1ID);
         if (!fromProt) {
@@ -224,7 +238,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (proteins, cross
     // again, order id string by prot id or by residue if self-link
     var endsReversedInResLinkId = false;
     var crossLinkID;
-    if (!p2ID || p2ID == '-' || p2ID == 'n/a') {
+    if (p2ID == "" || p2ID == '-' || p2ID == 'n/a') {
             crossLinkID = p1ID + "_linears";
     }
     else if (p1ID === p2ID || p2ID === null) {
@@ -247,6 +261,8 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (proteins, cross
     //get or create residue link
     var resLink = crossLinks.get(crossLinkID);
     if (typeof resLink == 'undefined') {
+		//to and from proteins were already swapped over above
+		
         //WATCH OUT - residues need to be in correct order
         if (!p2ID) {
             resLink = new CLMS.model.CrossLink(crossLinkID, fromProt,
