@@ -46,20 +46,6 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
         this.run_name = rawMatches[0].run_name;
     }
 
-
-	//temp
-	//~ var dupKey = this.run_name +"_"+ this.scanNumber;
-	//~ var scanCount = CLMS.model.dupScans.get(this.run_name +" "+this.scanNumber);
-	//~ if (scanCount) {
-		//~ CLMS.model.dupScans.set(this.run_name +" "+this.scanNumber, scanCount + 1);
-		//~ CLMS.model.dupCount++;
-		//~ console.log("Dup scan:" + this.run_name +" "+this.scanNumber);
-		//~ //return;
-	//~ }
-	//~ else {
-		//~ CLMS.model.dupScans.set(this.run_name +" "+this.scanNumber, 1);
-	//~ }
-
     this.precursorCharge = +rawMatches[0].pc_c;
     if (this.precursorCharge == -1) {
         this.precursorCharge = undefined;
