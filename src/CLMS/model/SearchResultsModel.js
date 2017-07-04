@@ -83,7 +83,7 @@
                         var resArray = regexMatch[1].split(',');
                         var resCount = resArray.length;
                         for (var r = 0; r < resCount; r++){
-                            residueSet.add(resArray[r]);
+                            residueSet.add({aa:resArray[r], postConstraint: regexMatch[2]? regexMatch[2].split(',') : null});
                         }
                     }
                 };
@@ -104,16 +104,7 @@
                         var postAARegex = /PostAAConstrainedDigestion:DIGESTED:(.*?);ConstrainingAminoAcids:(.*?);/g;
                         var postAAMatch = postAARegex.exec(enzymeDescription);
                         getResiduesFromEnzymeDescription (postAAMatch, postAaSet);
-                        //~ if (postAAMatch) {
-							//~ if (regexMatch && regexMatch.length > 1) {
-								//~ var resArray = regexMatch[1].split(',');
-								//~ var resCount = resArray.length;
-								//~ for (var r = 0; r < resCount; r++){
-									//~ residueSet.add(resArray[r]);
-								//~ }
-							//~ }
-						//~ }
-
+                        
                         var cTermRegex = /CTERMDIGEST:(.*?);/g;
                         var ctMatch = cTermRegex.exec(enzymeDescription);
                         getResiduesFromEnzymeDescription (ctMatch, aaConstrainedCTermSet);
@@ -130,15 +121,15 @@
                     var resCount = resArray.length;
                     for (var r = 0; r < resCount; r++) {
                         enzymeSpecificity.push(
-                            {aa: resArray[r] , type: type}
+                            {aa: resArray[r].aa , type: type, postConstraint:  resArray[r].postConstraint}
                         );
                     }
                 };
 
                 var enzymeSpecificity = [];
-                addEnzymeSpecificityResidues(postAaSet, "Post AA constrained");
-                addEnzymeSpecificityResidues(aaConstrainedCTermSet, "AA constrained c-term");
-                addEnzymeSpecificityResidues(aaConstrainedNTermSet, "AA constrained n-term");
+                addEnzymeSpecificityResidues(postAaSet, "DIGESTIBLE");//"Post AA constrained");
+                addEnzymeSpecificityResidues(aaConstrainedCTermSet, "DIGESTIBLE");// "AA constrained c-term");
+                addEnzymeSpecificityResidues(aaConstrainedNTermSet, "DIGESTIBLE");// "AA constrained n-term");
                 this.set("enzymeSpecificity", enzymeSpecificity);
 
                 //crosslink specificity
@@ -306,22 +297,36 @@
                 var spec = specificity[i];
                 for (var s = 0; s < seqLength; s++) {
                     if (sequence[s] == spec.aa) {
-                        digestibleResiduesAsFeatures.push(
-                            {
-                                begin: s + 1,
-                                end: s + 1,
-                                name: spec.type,
-                                protID: participant.id,
-                                id: participant.id+" "+spec.type+(s+1),
-                                category: "Digestible residue",
-                                type: spec.type
-                            }
-                        );
+						if (!spec.postConstraint || !sequence[s+1] || spec.postConstraint.indexOf(sequence[s+1]) == -1) {
+							digestibleResiduesAsFeatures.push(
+								{
+									begin: s + 1,
+									end: s + 1,
+									name: "DIGESTIBLE",
+									protID: participant.id,
+									id: participant.id+" "+spec.type+(s+1),
+									category: "DIGESTIBLE",
+									type: "DIGESTIBLE"
+								}
+							);
+						}
                     }
                 }
             }
             //console.log("sp:", specificity, "df:", digestibleResiduesAsFeatures);
             return digestibleResiduesAsFeatures;
+            							//~ var resArray = regexMatch[1].split(',');
+							//~ var resCount = resArray.length;
+							//~ 
+							//~ var postAaConstraintsArray = regexMatch[1].split(',');
+							//~ var postConstraintCount = resArray.length;
+							//~ 
+							//~ for (var r = 0; r < resCount; r++){
+								//~ var constrained = false;
+								//~ for (var pc = 0; pc < postConstraintCount; pc++){
+									//~ residueSet.add(resArray[r]);
+								//~ }
+							//~ }
         },
 
         getCrosslinkableResiduesAsFeatures: function(participant){
@@ -340,11 +345,11 @@
                             {
                                 begin: s + 1,
                                 end: s + 1,
-                                name: "Crosslinkable residue",
+                                name: "CROSS-LINKABLE",
                                 protID: participant.id,
-                                id: participant.id+" Crosslinkable residue"+(s+1),
-                                category: "Crosslinkable residue",
-                                type: spec.type
+                                id: participant.id+" Cross-linkable residue"+(s+1),
+                                category: "Cross-linkable residue",
+                                type: "CROSS-LINKABLE"
                             }
                         );
                     }
@@ -761,20 +766,12 @@
                         self.get("matches").push(match);
                     }
                 }
-                
-                //~ var matches = self.get("matches");
-                //~ for (var m = 0; m < matches.length; m++) {
-					//~ var match = matches[m];
-					//~ if (CLMS.model.dupScans.get(match.run_name + " " + match.scanNumber) > 1) {
-						//~ match.validated = "?";
-					//~ }
-				//~ }
-                
+                                
                 self.trigger ("change:matches");
                 
                 // following isn't very tidy -
                 // todo: filterModel should maybe be part of CLMS-model?
-                //CLMSUI.compositeModelInst.get("filterModel").set("unval",true);
+                CLMSUI.compositeModelInst.get("filterModel").set("unval",true);
                 CLMSUI.compositeModelInst.get("filterModel").trigger("change");
             };
         },
