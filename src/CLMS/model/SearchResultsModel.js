@@ -305,7 +305,7 @@
 									name: "DIGESTIBLE",
 									protID: participant.id,
 									id: participant.id+" "+spec.type+(s+1),
-									category: "DIGESTIBLE",
+									category: "Digestible residue",
 									type: "DIGESTIBLE"
 								}
 							);
@@ -315,18 +315,6 @@
             }
             //console.log("sp:", specificity, "df:", digestibleResiduesAsFeatures);
             return digestibleResiduesAsFeatures;
-            							//~ var resArray = regexMatch[1].split(',');
-							//~ var resCount = resArray.length;
-							//~ 
-							//~ var postAaConstraintsArray = regexMatch[1].split(',');
-							//~ var postConstraintCount = resArray.length;
-							//~ 
-							//~ for (var r = 0; r < resCount; r++){
-								//~ var constrained = false;
-								//~ for (var pc = 0; pc < postConstraintCount; pc++){
-									//~ residueSet.add(resArray[r]);
-								//~ }
-							//~ }
         },
 
         getCrosslinkableResiduesAsFeatures: function(participant){
