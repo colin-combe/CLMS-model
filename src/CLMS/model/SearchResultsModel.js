@@ -136,7 +136,7 @@
                 var linkableResSet = new Set();
                 for (var s = 0; s < searchCount; s++) {
                     var search = searchArray[s];
-                    var crosslinkers = search.crosslinkers;
+                    var crosslinkers = search.crosslinkers || [];
                     var crosslinkerCount = crosslinkers.length;
                     for (var cl = 0; cl < crosslinkerCount ; cl++) {
                         var crosslinkerDescription = crosslinkers[cl].description;
