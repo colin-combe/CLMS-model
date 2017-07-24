@@ -305,7 +305,7 @@
 									name: "DIGESTIBLE",
 									protID: participant.id,
 									id: participant.id+" "+spec.type+(s+1),
-									category: "Digestible residue",
+									category: "AA",
 									type: "DIGESTIBLE"
 								}
 							);
@@ -336,7 +336,7 @@
                                 name: "CROSS-LINKABLE",
                                 protID: participant.id,
                                 id: participant.id+" Cross-linkable residue"+(s+1),
-                                category: "Cross-linkable residue",
+                                category: "AA",
                                 type: "CROSS-LINKABLE"
                             }
                         );
