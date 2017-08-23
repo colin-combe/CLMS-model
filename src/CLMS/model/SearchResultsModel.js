@@ -803,12 +803,14 @@
         isMatchingProteinPair: function (prot1, prot2) {
                 if (prot1.id === prot2.id) { return true; }
                 var p1decoy = prot1.is_decoy;
-                if (p1decoy === prot2.is_decoy) {   // won't be matching real+decoy pair if both are real or both are decoys
+                var p2decoy = prot2.is_decoy;
+                if (!p1decoy && !p2decoy) {   // won't be matching pair if both are real with different ids
                     return false;
                 }
-                var decoy = p1decoy ? prot1 : prot2;
-                var real = p1decoy ? prot2 : prot1;
-                return this.getRealProteinID(decoy.id) === real.id;
+                // can have multiple different decoys for the same real protein though
+                var realID1 = p1decoy ? this.getRealProteinID(prot1.id) : prot1.id;
+                var realID2 = p2decoy ? this.getRealProteinID(prot2.id) : prot2.id;
+                return realID1 === realID2;
             },
 
         isMatchingProteinPairFromIDs: function (prot1ID, prot2ID) {
