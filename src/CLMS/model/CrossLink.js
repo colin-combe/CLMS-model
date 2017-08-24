@@ -25,3 +25,7 @@ CLMS.model.CrossLink.prototype.isDecoyLink = function () {
 CLMS.model.CrossLink.prototype.isSelfLink = function() {
     return (this.fromProtein === this.toProtein);
 };
+
+CLMS.model.CrossLink.prototype.isLinearLink = function() {
+    return !this.toProtein;
+};
