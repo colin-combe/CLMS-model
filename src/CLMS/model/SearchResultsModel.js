@@ -230,7 +230,10 @@
                 this.set("minScore", minScore);
                 this.set("maxScore", maxScore);
 
-                var participantCount = participants.size;
+                var participantArray = CLMS.arrayFromMapValues(participants);
+                // only count real participants towards participant count (which is used as cut-off further on)
+                var realParticipantArray = participantArray.filter (function (p) { return !p.is_decoy; });
+                var participantCount = realParticipantArray.length;
 
                 function processUniProtTxt(p, json){
                     p.uniprot = json;
@@ -258,10 +261,10 @@
                 }
 
                 if (participantCount < 101 && participantCount > 0) {
-                    var participantArray = CLMS.arrayFromMapValues(participants);
+                    //var participantArray = CLMS.arrayFromMapValues(realParticipants);
                     var invariantCount = participantCount;
                     for (var p = 0; p < invariantCount; p++ ){
-                        uniProtTxt(participantArray[p]);
+                        uniProtTxt(realParticipantArray[p]);
                     }
                 }
                 else {
