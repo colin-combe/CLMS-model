@@ -22,8 +22,8 @@ CLMS.model.CrossLink.prototype.isDecoyLink = function () {
                     || (this.toProtein && this.toProtein.is_decoy == true));
 };
 
-CLMS.model.CrossLink.prototype.isSelfLink = function() {
-    return (this.fromProtein === this.toProtein);
+CLMS.model.CrossLink.prototype.isSelfLink = function () {
+    return this.fromProtein && this.toProtein && this.fromProtein.realProteinID === this.toProtein.realProteinID;   // mjg
 };
 
 CLMS.model.CrossLink.prototype.isLinearLink = function() {

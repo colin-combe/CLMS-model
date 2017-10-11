@@ -776,6 +776,7 @@
             prots.forEach (function (prot) {
                 nameMap.set (prot.name, prot.id);
                 accessionMap.set (prot.accession, prot.id);
+                prot.realProteinID = prot.id;   // this gets overwritten for decoys in next bit, mjg
             });
             var decoyToRealMap = d3.map ();
             var decoys = prots.filter(function (p) { return p.is_decoy; });
@@ -785,46 +786,31 @@
                     if (decoyProt.accession) {
                         var realProtIDByAccession = accessionMap.get (decoyProt.accession.substring(pre.length));
                         if (realProtIDByName && realProtIDByAccession) {
-                            decoyToRealMap.set (decoyProt.id, realProtIDByName);
+                            decoyProt.realProteinID = realProtIDByName; // mjg
                         }
                     } else if (realProtIDByName){
-                        decoyToRealMap.set (decoyProt.id, realProtIDByName);
+                        decoyProt.realProteinID = realProtIDByName; // mjg
                     }
                 });
             });
 
-            this.decoyToRealProteinMap = decoyToRealMap;
-
             this.realProteinCount = prots.length - decoys.length;
-
-        },
-
-        getRealProteinID: function (decoyProteinID) {
-            return this.decoyToRealProteinMap.get (decoyProteinID);
         },
 
         isMatchingProteinPair: function (prot1, prot2) {
-                if (prot1.id === prot2.id) { return true; }
-                var p1decoy = prot1.is_decoy;
-                var p2decoy = prot2.is_decoy;
-                if (!p1decoy && !p2decoy) {   // won't be matching pair if both are real with different ids
-                    return false;
-                }
-                // can have multiple different decoys for the same real protein though
-                var realID1 = p1decoy ? this.getRealProteinID(prot1.id) : prot1.id;
-                var realID2 = p2decoy ? this.getRealProteinID(prot2.id) : prot2.id;
-                return realID1 === realID2;
-            },
+            return prot1 && prot2 && prot1.realProteinID === prot2.realProteinID;
+        },
 
         isMatchingProteinPairFromIDs: function (prot1ID, prot2ID) {
-                if (prot1ID === prot2ID) { return true; }
-                var prot1 = this.get("participants").get(prot1ID);
-                var prot2 = this.get("participants").get(prot2ID);
-                return this.isMatchingProteinPair (prot1, prot2);
+            if (prot1ID === prot2ID) { return true; }
+            var participants = this.get("participants");
+            var prot1 = participants.get(prot1ID);
+            var prot2 = participants.get(prot2ID);
+            return this.isMatchingProteinPair (prot1, prot2);
          },
 
-        isIntraLink: function (crossLink) {
-                return (crossLink.toProtein && this.isMatchingProteinPair (crossLink.toProtein, crossLink.fromProtein));
+        isSelfLink: function (crossLink) {
+            return crossLink.isSelfLink();
         },
 
         getSearchRandomId : function (match) {
