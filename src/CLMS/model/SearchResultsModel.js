@@ -63,7 +63,7 @@
             notUpperCase: /[^A-Z]/g,
             decoyNames: /(REV_)|(RAN_)|(DECOY_)|(DECOY:)|(reverse_)/,
         },
-
+        
         //our SpectrumMatches are constructed from the rawMatches and peptides arrays in this json
         parseJSON: function (json) {
             if (json) {
@@ -230,11 +230,21 @@
                 this.set("minScore", minScore);
                 this.set("maxScore", maxScore);
 
-                var participantArray = CLMS.arrayFromMapValues(participants);
+                var participantArray = CLMS.arrayFromMapValues(participants);                
                 // only count real participants towards participant count (which is used as cut-off further on)
                 var realParticipantArray = participantArray.filter (function (p) { return !p.is_decoy; });
                 var participantCount = realParticipantArray.length;
-
+                
+                for (var p = 0; p < participantCount; p++) {
+					var participant = realParticipantArray[p];
+					var uniprot = json.interactors[participant.accession];
+					participant.uniprot = uniprot;
+				}
+  
+  				CLMSUI.vent.trigger("uniprotDataParsed", self);
+          
+                
+/*
                 function processUniProtTxt(p, json){
                     p.uniprot = json;
                     participantCount--;
@@ -260,7 +270,7 @@
                     }
                 }
 
-                if (participantCount < 101 && participantCount > 0) {
+                if (true){//participantCount < 101 && participantCount > 0) {
                     //var participantArray = CLMS.arrayFromMapValues(realParticipants);
                     var invariantCount = participantCount;
                     for (var p = 0; p < invariantCount; p++ ){
@@ -268,9 +278,9 @@
                     }
                 }
                 else {
-                    CLMSUI.vent.trigger("uniprotDataParsed", self);
-                }
-
+					CLMSUI.vent.trigger("uniprotDataParsed", self);
+                }*/
+               
             }
 
         },
