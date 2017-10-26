@@ -27,7 +27,7 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
 
     this.containingModel = containingModel; //containing BB model
 
-    //following are duplicated in each raw_match (are from spectrum _match table)
+    //following are duplicated in each raw_match (they are from spectrum _match table)
     // take values from rawMatches[0]
     this.id = rawMatches[0].id;
     this.spectrumId = rawMatches[0].spec;
@@ -39,6 +39,10 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
         this.containingModel.set("decoysPresent", true);
     }
     this.scanNumber = +rawMatches[0].sn;
+    this.precursor_intensity = +rawMatches[0].precursor_intensity;
+    this.elution_time_start = +rawMatches[0].e_s;
+    this.elution_time_end = +rawMatches[0].e_e;
+    
     
     this.src = +rawMatches[0].src;//for looking up run name
     //run name may have come from csv file
