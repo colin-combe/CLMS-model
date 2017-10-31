@@ -237,7 +237,7 @@
                 
                 for (var p = 0; p < participantCount; p++) {
 					var participant = realParticipantArray[p];
-					var uniprot = json.interactors[participant.accession];
+					var uniprot = json.interactors ? json.interactors[participant.accession] : null;
 					participant.uniprot = uniprot;
 				}
   
