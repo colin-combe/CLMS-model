@@ -508,9 +508,6 @@
 				addCSVLinks();
 			}
 
-            //this.set("interactors", participants);
-            this.initDecoyLookup();
-
             function addProteins(columnIndex) {
                 for (var row = 1; row < countRows; row++) {
                     var prots = rows[row][columnIndex].replace(/(['"])/g, '');
@@ -615,6 +612,10 @@
             };
 
             function addCSVLinks() {
+				
+				self.initDecoyLookup();
+
+				
 				var proxlRegex = /(.*?)\((\d*)\)/; //for parsing proxl downloads
 
                 var crossLinks = self.get("crossLinks");

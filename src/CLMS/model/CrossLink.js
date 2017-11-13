@@ -23,7 +23,12 @@ CLMS.model.CrossLink.prototype.isDecoyLink = function () {
 };
 
 CLMS.model.CrossLink.prototype.isSelfLink = function () {
+    //~ console.log(">> " + this.id, this.fromProtein, this.toProtein, this.fromProtein.realProteinID, this.toProtein.realProteinID);
     return this.fromProtein && this.toProtein && this.fromProtein.realProteinID === this.toProtein.realProteinID;   // mjg
+    //~ console.log(">> " + this.id, this.fromProtein, this.toProtein, this.fromProtein.realProteinID, this.toProtein.realProteinID);
+    //~ console.log(this.fromProtein == this.toProtein);
+    //~ console.log(this.fromProtein && this.toProtein && this.fromProtein.realProteinID === this.toProtein.realProteinID);
+    return this.fromProtein == this.toProtein;
 };
 
 CLMS.model.CrossLink.prototype.isLinearLink = function() {
