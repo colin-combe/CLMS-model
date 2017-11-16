@@ -10,16 +10,18 @@
 
     //For IE, which doesn't yet support values(). entries(), or keys() on ECMA6 Map
     CLMS.arrayFromMapValues = function (map) {
-        if (map.values) {return Array.from(map.values());}
+        if (map.values && Array.from) {return Array.from(map.values());}
         else {
             var array = [];
-            map.forEach(function (value, key, map) {array.push(value)});
+            map.forEach (function (value, key, map) {
+                array.push(value);
+            });
             return array;
         }
     };
 
     CLMS.arrayFromMapEntries = function (map) {
-        if (map.entries) {return Array.from(map.entries());}
+        if (map.entries && Array.from) {return Array.from(map.entries());}
         else {
             var array = [];
             map.forEach(function (value, key, map) {array.push([key, value])});
@@ -28,7 +30,7 @@
     };
 
     CLMS.arrayFromMapKeys = function (map) {
-        if (map.keys) {return Array.from(map.keys());}
+        if (map.keys && Array.from) {return Array.from(map.keys());}
         else {
             var array = [];
             map.forEach(function (value, key, map) {array.push(key)});
@@ -156,7 +158,7 @@
                     }
                 }
 
-                this.set("crosslinkerSpecificity", Array.from(linkableResSet));
+                this.set("crosslinkerSpecificity", /*Array.from(linkableResSet)*/ CLMS.arrayFromMapValues (linkableResSet));
 
                 //saved config should end up including filter settings not just xiNET layout
                 this.set("xiNETLayout", json.xiNETLayout);
