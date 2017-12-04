@@ -39,7 +39,7 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
         this.containingModel.set("decoysPresent", true);
     }
     this.scanNumber = +rawMatches[0].sn;
-    this.precursor_intensity = +rawMatches[0].precursor_intensity;
+    this.precursor_intensity = +rawMatches[0].pc_i;
     this.elution_time_start = +rawMatches[0].e_s;
     this.elution_time_end = +rawMatches[0].e_e;
     
