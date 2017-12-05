@@ -57,6 +57,7 @@
                 searches: new Map(),
                 decoysPresent: false,
                 ambiguousPresent: false,
+                manualValidatedPresent: false,
             };
         },
 
