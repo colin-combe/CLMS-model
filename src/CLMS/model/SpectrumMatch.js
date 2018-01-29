@@ -108,6 +108,10 @@ CLMS.model.SpectrumMatch = function (containingModel, participants, crossLinks, 
             res1, null, this.matchedPeptides[0].pos[i] - 0, this.matchedPeptides[0].sequence.length);}
         return;
     }
+    
+    this.couldBelongToBetweenLink = false;
+    this.couldBelongToSelfLink = false;
+    
 
     var self = this;
 
@@ -223,6 +227,12 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function (proteins, cross
         if (!toProt) {
 			alert("FAIL: not protein with ID " + p1ID);
 		}
+    }
+
+    if (this.containingModel.isMatchingProteinPair(fromProt, toProt)) {
+        this.couldBelongToSelfLink = true;
+    } else {
+        this.couldBelongToBetweenLink = true;
     }
 
     // again, order id string by prot id or by residue if self-link
