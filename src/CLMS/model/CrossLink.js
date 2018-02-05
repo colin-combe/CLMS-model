@@ -32,5 +32,5 @@ CLMS.model.CrossLink.prototype.isSelfLink = function () {
 };
 
 CLMS.model.CrossLink.prototype.isLinearLink = function() {
-    return !this.toProtein;
+    return this.matches_pp[0].match.linkPos1 === 0;
 };
