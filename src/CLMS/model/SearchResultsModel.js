@@ -203,10 +203,10 @@
                 var crossLinks = this.get("crossLinks");
 
                 var rawMatches = json.rawMatches;
+				var minScore = undefined;
+                var maxScore = undefined;
                 if (rawMatches) {
                     var matches = this.get("matches");
-                    var minScore = Number.MIN_VALUE;
-                    var maxScore = Number.MAX_VALUE;
 
                     var l = rawMatches.length, match;
                     for (var i = 0; i < l; i++) {
@@ -221,11 +221,11 @@
 
                         matches.push(match);
 
-                        if (match.score > maxScore) {
+                        if (maxScore === undefined || match.score > maxScore) {
                             maxScore = match.score;
                         }
-                        else if (match.score < minScore) {
-                            minScore = this.score;
+                        else if (minScore === undefined || match.score < minScore) {
+                            minScore = match.score;
                         }
                     }
                 }
