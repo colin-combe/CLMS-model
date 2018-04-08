@@ -76,17 +76,18 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
         this.containingModel.set("unvalidatedPresent", true);
     }
 
-    if (peptides) { //this is a bit tricky, see below*
-        this.matchedPeptides = [];
-        this.matchedPeptides[0] = peptides.get(rawMatches[0].pi);
-        // following will be inadequate for trimeric and higher order cross-links
-        if (rawMatches[1]) {
-            this.matchedPeptides[1] = peptides.get(rawMatches[1].pi);
-        }
-    } else { //*here - if its from a csv file use rawMatches as the matchedPep array,
-        //makes it easier to construct as parsing CSV
-        this.matchedPeptides = rawMatches;
+    // if (peptides) { //this is a bit tricky, see below*
+    this.matchedPeptides = [];
+    this.matchedPeptides[0] = peptides.get("" + rawMatches[0].pi1);
+    // following will be inadequate for trimeric and higher order cross-links
+    if (rawMatches[0].pi2) {
+        this.matchedPeptides[1] = peptides.get(rawMatches[0].pi2);
     }
+    // }
+    // else { //*here - if its from a csv file use rawMatches as the matchedPep array,
+    //     //makes it easier to construct as parsing CSV
+    //     this.matchedPeptides = rawMatches;
+    // }
 
     //if the match is ambiguous it will relate to many crossLinks
     this.crossLinks = [];
@@ -95,7 +96,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
         this.linkPos2 = +rawMatches[1].lp;
     }
 
-    if (this.linkPos1 == 0) { //would have been -1 in DB but 1 was added to it during query
+    if (this.linkPos1 == -1) { //would have been -1 in DB but 1 was added to it during query
         //its a linear
         this.containingModel.set("linearsPresent", true);
         for (var i = 0; i < this.matchedPeptides[0].prt.length; i++) {
@@ -154,7 +155,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     //identify homodimers: if peptides overlap its a homodimer
     this.confirmedHomomultimer = false;
     this.overlap = [];
-    if (p1ID === p2ID) { //todo: fix potential problem here regarding ambiguous homo-multimer link 
+    if (p1ID === p2ID) { //todo: fix potential problem here regarding ambiguous homo-multimer link
 
         if (this.matchedPeptides[0].sequence && this.matchedPeptides[1].sequence) {
 
@@ -311,7 +312,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function(proteins, crossL
 }
 
 CLMS.model.SpectrumMatch.prototype.isAmbig = function() {
-    if (this.matchedPeptides[0].pos.length > 1 
+    if (this.matchedPeptides[0].pos.length > 1
         || (this.matchedPeptides[1] && this.matchedPeptides[1].pos.length > 1)) {
         return true;
     }

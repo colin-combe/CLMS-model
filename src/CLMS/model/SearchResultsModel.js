@@ -66,7 +66,7 @@
             notUpperCase: /[^A-Z]/g,
             decoyNames: /(REV_)|(RAN_)|(DECOY_)|(DECOY:)|(reverse_)/,
         },
-        
+
         //our SpectrumMatches are constructed from the rawMatches and peptides arrays in this json
         parseJSON: function (json) {
             if (json) {
@@ -103,11 +103,11 @@
                     var enzymeCount = enzymes.length;
                     for (var e = 0; e < enzymeCount ; e++) {
                         var enzymeDescription = enzymes[e].description;
-                        
+
                         var postAARegex = /PostAAConstrainedDigestion:DIGESTED:(.*?);ConstrainingAminoAcids:(.*?);/g;
                         var postAAMatch = postAARegex.exec(enzymeDescription);
                         getResiduesFromEnzymeDescription (postAAMatch, postAaSet);
-                        
+
                         var cTermRegex = /CTERMDIGEST:(.*?);/g;
                         var ctMatch = cTermRegex.exec(enzymeDescription);
                         getResiduesFromEnzymeDescription (ctMatch, aaConstrainedCTermSet);
@@ -115,7 +115,7 @@
                         var nTermRegex = /NTERMDIGEST:(.*?);/g;
                         var ntMatch = nTermRegex.exec(enzymeDescription);
                         getResiduesFromEnzymeDescription (ntMatch, aaConstrainedNTermSet);
-                        
+
                     }
                 }
 
@@ -233,20 +233,20 @@
                 this.set("minScore", minScore);
                 this.set("maxScore", maxScore);
 
-                var participantArray = CLMS.arrayFromMapValues(participants);                
+                var participantArray = CLMS.arrayFromMapValues(participants);
                 // only count real participants towards participant count (which is used as cut-off further on)
                 var realParticipantArray = participantArray.filter (function (p) { return !p.is_decoy; });
                 var participantCount = realParticipantArray.length;
-                
+
                 for (var p = 0; p < participantCount; p++) {
 					var participant = realParticipantArray[p];
 					var uniprot = json.interactors ? json.interactors[participant.accession] : null;
 					participant.uniprot = uniprot;
 				}
-  
+
   				CLMSUI.vent.trigger("uniprotDataParsed", self);
-          
-                
+
+
 /*
                 function processUniProtTxt(p, json){
                     p.uniprot = json;
@@ -283,7 +283,7 @@
                 else {
 					CLMSUI.vent.trigger("uniprotDataParsed", self);
                 }*/
-               
+
             }
 
         },
@@ -391,7 +391,7 @@
                     if (columnNames[ni - 1] == "AbsPos1") {itsXquest = true;}
                 	else if (columnNames[ni - 1] == "fromSite") {itsXiFDR = true;}
 					else if (columnNames[ni - 1] == "q-value") {itsProxl = true;}
-				} 
+				}
                 return iCol;
             }
 
@@ -468,7 +468,7 @@
 					var reversedSeq = tempSeq.trim().split("").reverse().join("");
 					makeProtein("DECOY:" + tempIdentifier, reversedSeq, "DECOY");
 				}
-                                
+
                 //read links
                 addCSVLinks();
             }
@@ -615,10 +615,10 @@
             };
 
             function addCSVLinks() {
-				
+
 				self.initDecoyLookup();
 
-				
+
 				var proxlRegex = /(.*?)\((\d*)\)/; //for parsing proxl downloads
 
                 var crossLinks = self.get("crossLinks");
@@ -665,7 +665,7 @@
 								var goingIn = row[iProt1];
 								prot1 =	[result1[1].trim()];
 								pepPos1 = [+result1[2] - (linkPos1 -1)];
-								
+
 								proxlRegex.lastIndex = 0;
 								var result2 = proxlRegex.exec(row[iProt2]);
 								prot2 =	[result2[1].trim()];
@@ -771,9 +771,9 @@
                         self.get("matches").push(match);
                     }
                 }
-                                
+
                 self.trigger ("change:matches");
-                
+
                 // following isn't very tidy -
                 // todo: filterModel should maybe be part of CLMS-model?
                 CLMSUI.compositeModelInst.get("filterModel").set("unval",true);
