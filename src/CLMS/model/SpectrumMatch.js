@@ -96,7 +96,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
         this.linkPos2 = +rawMatches[1].lp;
     }
 
-    if (this.linkPos1 == -1) { //would have been -1 in DB but 1 was added to it during query
+    // if (this.linkPos1 == -1) { //would have been -1 in DB but 1 was added to it during query
         //its a linear
         this.containingModel.set("linearsPresent", true);
         for (var i = 0; i < this.matchedPeptides[0].prt.length; i++) {
@@ -110,8 +110,8 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
             }
         }
         return;
-    }
-
+    // }
+/*
     this.couldBelongToBetweenLink = false;
     this.couldBelongToSelfLink = false;
 
@@ -187,7 +187,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
             this.overlap[0] = res1 - 1;
             this.overlap[1] = res2;
         }
-    }
+    }*/
 }
 
 CLMS.model.SpectrumMatch.prototype.associateWithLink = function(proteins, crossLinks, p1ID, p2ID, res1, res2, //following params may be null :-
@@ -341,8 +341,9 @@ CLMS.model.SpectrumMatch.prototype.runName = function() {
 }
 
 CLMS.model.SpectrumMatch.prototype.group = function() {
-    var group = this.containingModel.get("searches").get(this.searchId).group;
-    return group;
+    // cc - hack
+    // var group = this.containingModel.get("searches").get(this.searchId).group;
+    return 0;// group;
 }
 
 CLMS.model.SpectrumMatch.prototype.expMZ = function() {
