@@ -167,9 +167,10 @@
                 //spectrum sources
                 var spectrumSources = new Map();
                 var specSource;
-                for (var propertyName in json.spectrumSources) {
-                    specSource = json.spectrumSources[propertyName];
-                    spectrumSources.set(+specSource.id, specSource.name);
+                var specCount = json.spectra.length;
+                for (var sp = 0; sp < specCount; sp++) {
+                    specSource = json.spectra[sp];
+                    spectrumSources.set(+specSource.id, specSource);
                 }
                 this.set("spectrumSources", spectrumSources);
 

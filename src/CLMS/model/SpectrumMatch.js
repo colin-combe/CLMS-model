@@ -38,43 +38,48 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     if (this.is_decoy === true) {
         this.containingModel.set("decoysPresent", true);
     }
-    this.scanNumber = +rawMatches[0].sn;
-    this.precursor_intensity = +rawMatches[0].pc_i;
-    this.elution_time_start = +rawMatches[0].e_s;
-    this.elution_time_end = +rawMatches[0].e_e;
+    // this.scanNumber = +rawMatches[0].sn;
+    // this.precursor_intensity = +rawMatches[0].pc_i;
+    // this.elution_time_start = +rawMatches[0].e_s;
+    // this.elution_time_end = +rawMatches[0].e_e;
+    this.ions = rawMatches[0].ions;
 
-    this.src = +rawMatches[0].src; //for looking up run name
+    this.spectrum = this.containingModel.get("spectrumSources").get(this.spectrumId); 
+
+    // this.runName = this.spectrum.file;
+    this.scanNumber = this.spectrum.sn;
+    // this.fragmentTolerance = this.spectrum.ft;
     //run name may have come from csv file
-    if (rawMatches[0].run_name) {
-        this.run_name = rawMatches[0].run_name;
-    }
+    // if (rawMatches[0].run_name) {
+    //     this.run_name = rawMatches[0].run_name;
+    // }
 
     this.precursorCharge = +rawMatches[0].pc_c;
     if (this.precursorCharge == -1) {
         this.precursorCharge = undefined;
     }
 
-    this.precursorMZ = +rawMatches[0].pc_mz;
-    this.calc_mass = +rawMatches[0].cm;
+    this.expMZ = +rawMatches[0].e_mz;
+    this.calcMZ = +rawMatches[0].c_mz;
     this.score = +rawMatches[0].sc;
     //autovalidated - another attribute
-    if (rawMatches[0].av) {
-        if (rawMatches[0].av == "t") {
-            this.autovalidated = true;
-        } else {
-            this.autovalidated = false;
-        }
-        this.containingModel.set("autoValidatedPresent", true);
-    }
-    // used in Rappsilber Lab to record manual validation status
-    if (rawMatches[0].v) {
-        this.validated = rawMatches[0].v;
-        this.containingModel.set("manualValidatedPresent", true);
-    }
-
-    if (!this.autovalidated && !this.validated) {
-        this.containingModel.set("unvalidatedPresent", true);
-    }
+    // if (rawMatches[0].av) {
+    //     if (rawMatches[0].av == "t") {
+    //         this.autovalidated = true;
+    //     } else {
+    //         this.autovalidated = false;
+    //     }
+    //     this.containingModel.set("autoValidatedPresent", true);
+    // }
+    // // used in Rappsilber Lab to record manual validation status
+    // if (rawMatches[0].v) {
+    //     this.validated = rawMatches[0].v;
+    //     this.containingModel.set("manualValidatedPresent", true);
+    // }
+    // 
+    // if (!this.autovalidated && !this.validated) {
+    //     this.containingModel.set("unvalidatedPresent", true);
+    // }
 
     // if (peptides) { //this is a bit tricky, see below*
     this.matchedPeptides = [];
@@ -91,9 +96,9 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
 
     //if the match is ambiguous it will relate to many crossLinks
     this.crossLinks = [];
-    this.linkPos1 = +rawMatches[0].lp;
-    if (rawMatches[1]) {
-        this.linkPos2 = +rawMatches[1].lp;
+    this.linkPos1 = +this.matchedPeptides[0].linkSite;
+    if (this.matchedPeptides[1]) {
+        this.linkPos2 = this.matchedPeptides[1].linkSite;
     }
 
     // if (this.linkPos1 == -1) { //would have been -1 in DB but 1 was added to it during query
@@ -333,11 +338,7 @@ CLMS.model.SpectrumMatch.prototype.isLinear = function() {
 }
 
 CLMS.model.SpectrumMatch.prototype.runName = function() {
-    if (this.run_name) {
-        return this.run_name;
-    }
-    var runName = this.containingModel.get("spectrumSources").get(this.src);
-    return runName;
+    return this.spectrum.file;
 }
 
 CLMS.model.SpectrumMatch.prototype.group = function() {
@@ -346,24 +347,28 @@ CLMS.model.SpectrumMatch.prototype.group = function() {
     return 0;// group;
 }
 
+/*
 CLMS.model.SpectrumMatch.prototype.expMZ = function() {
-    return this.precursorMZ;
+    return this.expMZ;
 }
+*/
 
 CLMS.model.SpectrumMatch.protonMass = 1.007276466879;
 
 CLMS.model.SpectrumMatch.prototype.expMass = function() {
-    return this.precursorMZ * this.precursorCharge - (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass);
+    return this.expMZ * this.precursorCharge - (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass);
 }
 
+/*
 CLMS.model.SpectrumMatch.prototype.matchMZ = function() {
     return (this.calc_mass + (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass)) / this.precursorCharge;
 }
+*/
 
-CLMS.model.SpectrumMatch.prototype.matchMass = function() {
-    return this.calc_mass;
+CLMS.model.SpectrumMatch.prototype.calcMass = function() {
+    return (this.precursorCharge * this.calcMZ) - (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass) //this.calc_mass;
 }
 
 CLMS.model.SpectrumMatch.prototype.massError = function() {
-    return ((this.expMass() - this.matchMass()) / this.matchMass()) * 1000000;
+    return ((this.expMass() - this.calcMass()) / this.calcMass()) * 1000000;
 }
