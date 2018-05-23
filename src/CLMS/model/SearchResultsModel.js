@@ -73,6 +73,15 @@
                 var self = this;
                 this.set("sid", json.sid);
 
+                //modifications
+                var modifications = [];
+                var modCount = json.modifications.length;
+                for(var m = 0; m < modCount; m++) {
+                    var mod = json.modifications[m];
+                    modifications.push({aminoAcids: mod.residues.split(''), id: mod.mod_name, mass: mod.mass});
+                }
+                this.set("modifications", modifications);
+
                 //search meta data
                 var searches = new Map();
                 for(var propertyName in json.searches) {
