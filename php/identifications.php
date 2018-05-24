@@ -92,12 +92,12 @@ if (count($_GET) > 0) {
 */
 
 
-    $query = "SELECT * FROM uploads WHERE id = ".$uploadId.";";
-    $res = pg_query($query) or die('Query failed: ' . pg_last_error());
-    $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-    echo "\"searches\":".json_encode($line). ",\n";
-    // Free resultset
-    pg_free_result($res);
+    // $query = "SELECT * FROM uploads WHERE id = ".$uploadId.";";
+    // $res = pg_query($query) or die('Query failed: ' . pg_last_error());
+    // $line = pg_fetch_array($res, null, PGSQL_ASSOC);
+    // echo "\"searches\":".json_encode($line). ",\n";
+    // // Free resultset
+    // pg_free_result($res);
 
 
 
@@ -227,11 +227,19 @@ if (count($_GET) > 0) {
      //~ echo '/*db time: '.($endTime - $startTime)."ms\n";
      //~ echo '/*rows:'.pg_num_rows($res)."\n";
      $startTime = microtime(true);
+     $proteinIds = [];
      echo "\"peptides\":[\n";
      $line = pg_fetch_array($res, null, PGSQL_ASSOC);
      while ($line){// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
              $proteins = str_replace('"', '',  $line["proteins"]);
              $proteinsArray = explode(",",substr($proteins, 1, strlen($proteins) - 2));
+
+             //get protein ids, in case db_seq missing
+             $pCount = count($proteinsArray);
+             for ($p = 0; $p < $pCount; $p++) {
+                 $proteinIds[$proteinsArray[$p]] = 1;
+             }
+
              $positions = $line['positions'];
              echo "{"
                  . '"id":"' . $line["id"] . '",'
@@ -299,25 +307,44 @@ if (count($_GET) > 0) {
     $interactorAccs = [];
     echo "\"proteins\":[\n";
     $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-    while ($line){// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
-            // $isDecoy = ($line["is_decoy"] == "t")? 'true' : 'false';
-            $pId = $line["id"];
-            //~ echo '"' . $pId . '":{'
+    if (!$line){
+        //get from uniprot table
+        $pCount = count($proteinIds);
+        $pKeys = array_keys($proteinIds);
+        for ($p = 0; $p < $pCount; $p++){
             echo '{'
-                . '"id":"' . $pId . '",'
+                . '"id":"' . $pKeys[$p] . '",'
                 // . '"real_id":"' . $line["real_id"] . '",'
-                . '"name":"' . $line["protein_name"] . '",'
-                . '"description":' . $line["description"] . ','
-                . '"accession":"' .$line["accession"]  . '",'
-                . '"seq_mods":"' .$line["sequence"] . '"'
+                . '"name":"' . $pKeys[$p] . '",'
+                . '"description":"' . $pKeys[$p] . '",'
+                . '"accession":"' .$pKeys[$p]  . '",'
+                . '"seq_mods":"'  .'ABCDEFG' . '"'
                 // . '"is_decoy":' .$isDecoy
                 . "}";
-
-            $interactorAccs[$line["accession"]] = 1;
-
-            $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-            if ($line) {echo ",\n";}
+            if ($p < ($pCount - 1)) {echo ",\n";}
         }
+    }
+    else {
+        while ($line){
+                // $isDecoy = ($line["is_decoy"] == "t")? 'true' : 'false';
+                $pId = $line["id"];
+                //~ echo '"' . $pId . '":{'
+                echo '{'
+                    . '"id":"' . $pId . '",'
+                    // . '"real_id":"' . $line["real_id"] . '",'
+                    . '"name":"' . $line["protein_name"] . '",'
+                    //. '"description":"' . $line["description"] . '",'
+                    . '"accession":"' .$line["accession"]  . '",'
+                    . '"seq_mods":"' .$line["sequence"] . '"'
+                    // . '"is_decoy":' .$isDecoy
+                    . "}";
+
+                $interactorAccs[$line["accession"]] = 1;
+
+                $line = pg_fetch_array($res, null, PGSQL_ASSOC);
+                if ($line) {echo ",\n";}
+        }
+    }
     echo "\n]";
     // Free resultset
     pg_free_result($res);
