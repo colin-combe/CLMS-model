@@ -32,7 +32,5 @@ CLMS.model.CrossLink.prototype.isSelfLink = function () {
 };
 
 CLMS.model.CrossLink.prototype.isLinearLink = function() {
-    // cc - temp hack
-    return true;
-    //return this.matches_pp[0].match.linkPos1 === 0;
+    return this.matches_pp[0].match.linkPos1 === -1;
 };

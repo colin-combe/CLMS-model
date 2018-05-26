@@ -319,7 +319,14 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         if (!protObj.crossLinks) {
             protObj.crossLinks = [];
         }
-        protObj.hidden = false; //?
+        //protObj.hidden = false;
+        // TODO deal with devoys better
+        if (protObj.name.indexOf("DECOY") != -1){
+            protObj.is_decoy = true;
+        }
+        else {
+            protObj.is_decoy = false;
+        }
     },
 
     //TODO

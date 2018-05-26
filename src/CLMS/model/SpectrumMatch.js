@@ -5,10 +5,6 @@
 //
 //      CLMS.model.SpectrumMatch.js
 
-//temp
-CLMS.model.dupScans = new Map();
-CLMS.model.dupCount = 0;
-
 CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, peptides, identification) {
 
     this.containingModel = containingModel; //containing BB model
@@ -19,12 +15,6 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     this.expMZ = +identification.e_mz;
     this.calcMZ = +identification.c_mz;
     this.score = +identification.sc;
-    if (identification.dc) {
-        this.is_decoy = (identification.dc == 't') ? true : false;
-    }
-    if (this.is_decoy === true) {
-        this.containingModel.set("decoysPresent", true);
-    }
 
     this.ions = identification.ions;
     this.spectrum = this.containingModel.get("spectrumSources").get(this.spectrumId);
