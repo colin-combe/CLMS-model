@@ -244,7 +244,7 @@ if (count($_GET) > 0) {
              echo "{"
                  . '"id":"' . $line["id"] . '",'
                  . '"seq_mods":"' . $line["seq_mods"] . '",'
-                 . '"linkSite":"' . $line["link_site"]. '",'
+                 . '"linkSite":' . $line["link_site"]. ','
                  . '"clModMass":"' . $line["crosslinker_modmass"]. '",'
                  . '"prt":["' . implode($proteinsArray, '","') . '"],'
                  . '"pos":[' . substr($positions, 1, strlen($positions) - 2) . ']'
