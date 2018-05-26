@@ -34,7 +34,7 @@ if (count($_GET) > 0) {
     }
     //SQL injection defense
     $pattern = '/[^0-9,\-]/';
-    if (preg_match($pattern, $uid) || preg_match($pattern, $sid)){
+    if (preg_match($pattern, $upload) || preg_match($pattern, $spectrumId)){
         exit;
     }
 
@@ -146,8 +146,8 @@ if (count($_GET) > 0) {
                 echo '"pi2":' . $line["pep2_id"] . ',';
             }
             //     . '"lp":'. $line["link_position"]. ','
-            echo '"spec":' . $line["spectrum_id"] . ','
-            //     . '"sc":' . round($line["score"], 2) . ','
+            echo '"sp":' . $line["spectrum_id"] . ','
+                . '"sc":' . json_decode($line["scores"], true)["score"] . ','
                 . '"si":' . $line["upload_id"] . ','
                 . '"r":' . $line["rank"] . ','
             //     . '"dc":"' . $line["is_decoy"] . '",';

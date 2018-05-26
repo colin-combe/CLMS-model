@@ -230,22 +230,14 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
 
             var crossLinks = this.get("crossLinks");
 
-            var rawMatches = json.identifications;
             var minScore = undefined;
             var maxScore = undefined;
-            if (rawMatches) {
+            if (json.identifications) {
                 var matches = this.get("matches");
 
-                var l = rawMatches.length,
-                    match;
+                var l = json.identifications.length;
                 for (var i = 0; i < l; i++) {
-                    //this would need updated for trimeric or higher order crosslinks
-                    if ((i < (l - 1)) && rawMatches[i].id == rawMatches[i + 1].id) {
-                        match = new CLMS.model.SpectrumMatch(this, participants, crossLinks, peptides, [rawMatches[i], rawMatches[i + 1]]);
-                        i++;
-                    } else {
-                        match = new CLMS.model.SpectrumMatch(this, participants, crossLinks, peptides, [rawMatches[i]]);
-                    }
+                    var match = new CLMS.model.SpectrumMatch(this, participants, crossLinks, peptides, json.identifications[i]);
 
                     matches.push(match);
 

@@ -9,90 +9,38 @@
 CLMS.model.dupScans = new Map();
 CLMS.model.dupCount = 0;
 
-CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, peptides, rawMatches) {
-
-    // single 'rawMatch'looks like {"id":25918012,"ty":1,"pi":8485630,"lp":0,
-    // "sc":3.25918,"si":624, dc:"f", "av":"f", (optional v:"A", rj: "f" ),
-    // "si":"searchId", "src":"to look up runname", "sn":6395,"pc":2, cm:"calc_mass"},
-    //
-    // it's a join of spectrum_match and matched_peptide tables in DB,
-    //
-    // may seem convoluted but its to reduce amount of data need to transfer
-    //
-    // id = spectrumMatch id, ty = "match_type" (match_type != protduct_type)
-    // pi = peptide_id, lp = link position, sc = score, si = search_id,
-    // dc = is_decoy, av = autovalidated, v = validated, rj = rejected,
-    // sn = scan_number, pc_c = precursor charge, src = for run name look up
-    // cm = calc-mass
+CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, peptides, identification) {
 
     this.containingModel = containingModel; //containing BB model
 
-    //following are duplicated in each raw_match (they are from spectrum _match table)
-    // take values from rawMatches[0]
-    this.id = rawMatches[0].id;
-    this.spectrumId = rawMatches[0].spec;
-    this.searchId = rawMatches[0].si.toString();
-    if (rawMatches[0].dc) {
-        this.is_decoy = (rawMatches[0].dc == 't') ? true : false;
+    this.id = identification.id;
+    this.spectrumId = identification.sp;
+    this.searchId = identification.si.toString();
+    this.expMZ = +identification.e_mz;
+    this.calcMZ = +identification.c_mz;
+    this.score = +identification.sc;
+    if (identification.dc) {
+        this.is_decoy = (identification.dc == 't') ? true : false;
     }
     if (this.is_decoy === true) {
         this.containingModel.set("decoysPresent", true);
     }
-    // this.scanNumber = +rawMatches[0].sn;
-    // this.precursor_intensity = +rawMatches[0].pc_i;
-    // this.elution_time_start = +rawMatches[0].e_s;
-    // this.elution_time_end = +rawMatches[0].e_e;
-    this.ions = rawMatches[0].ions;
 
-    this.spectrum = this.containingModel.get("spectrumSources").get(this.spectrumId); 
-
-    // this.runName = this.spectrum.file;
+    this.ions = identification.ions;
+    this.spectrum = this.containingModel.get("spectrumSources").get(this.spectrumId);
     this.scanNumber = this.spectrum.sn;
-    // this.fragmentTolerance = this.spectrum.ft;
-    //run name may have come from csv file
-    // if (rawMatches[0].run_name) {
-    //     this.run_name = rawMatches[0].run_name;
-    // }
 
-    this.precursorCharge = +rawMatches[0].pc_c;
+    this.precursorCharge = +identification.pc_c;
     if (this.precursorCharge == -1) {
         this.precursorCharge = undefined;
     }
 
-    this.expMZ = +rawMatches[0].e_mz;
-    this.calcMZ = +rawMatches[0].c_mz;
-    this.score = +rawMatches[0].sc;
-    //autovalidated - another attribute
-    // if (rawMatches[0].av) {
-    //     if (rawMatches[0].av == "t") {
-    //         this.autovalidated = true;
-    //     } else {
-    //         this.autovalidated = false;
-    //     }
-    //     this.containingModel.set("autoValidatedPresent", true);
-    // }
-    // // used in Rappsilber Lab to record manual validation status
-    // if (rawMatches[0].v) {
-    //     this.validated = rawMatches[0].v;
-    //     this.containingModel.set("manualValidatedPresent", true);
-    // }
-    // 
-    // if (!this.autovalidated && !this.validated) {
-    //     this.containingModel.set("unvalidatedPresent", true);
-    // }
-
-    // if (peptides) { //this is a bit tricky, see below*
     this.matchedPeptides = [];
-    this.matchedPeptides[0] = peptides.get("" + rawMatches[0].pi1);
+    this.matchedPeptides[0] = peptides.get("" + identification.pi1);
     // following will be inadequate for trimeric and higher order cross-links
-    if (rawMatches[0].pi2) {
-        this.matchedPeptides[1] = peptides.get(rawMatches[0].pi2);
+    if (identification.pi2) {
+        this.matchedPeptides[1] = peptides.get("" + identification.pi2);
     }
-    // }
-    // else { //*here - if its from a csv file use rawMatches as the matchedPep array,
-    //     //makes it easier to construct as parsing CSV
-    //     this.matchedPeptides = rawMatches;
-    // }
 
     //if the match is ambiguous it will relate to many crossLinks
     this.crossLinks = [];
@@ -101,7 +49,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
         this.linkPos2 = this.matchedPeptides[1].linkSite;
     }
 
-    // if (this.linkPos1 == -1) { //would have been -1 in DB but 1 was added to it during query
+     if (this.linkPos1 == -1) {
         //its a linear
         this.containingModel.set("linearsPresent", true);
         for (var i = 0; i < this.matchedPeptides[0].prt.length; i++) {
@@ -115,8 +63,8 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
             }
         }
         return;
-    // }
-/*
+    }
+
     this.couldBelongToBetweenLink = false;
     this.couldBelongToSelfLink = false;
 
@@ -192,7 +140,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
             this.overlap[0] = res1 - 1;
             this.overlap[1] = res2;
         }
-    }*/
+    }
 }
 
 CLMS.model.SpectrumMatch.prototype.associateWithLink = function(proteins, crossLinks, p1ID, p2ID, res1, res2, //following params may be null :-
