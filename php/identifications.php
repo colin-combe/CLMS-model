@@ -35,15 +35,10 @@ if (count($_GET) > 0) {
     //SQL injection defense
     $pattern = '/[^0-9,\-]/';
     if (preg_match($pattern, $upload) || preg_match($pattern, $spectrumId)){
-        exit;
+        exit();
     }
 
-
-    //keep the long identifier for this combination of searches
-    echo '{"sid":"'.$uploadId.'",';
-
-    // TODO - aggreated uploads
-    /*$id_rands = explode("," , $sid);
+    $id_rands = explode("," , $uploadId);
     $searchId_metaData = [];
     $searchId_randomId = [];
     for ($i = 0; $i < count($id_rands); $i++) {
@@ -52,13 +47,7 @@ if (count($_GET) > 0) {
         $randId = implode('-' , array_slice($dashSeperated, 1 , 4));
         $id = $dashSeperated[0];
 
-        $searchDataQuery = "SELECT s.id AS id, s.name, s.private,
-			s.submit_date, s.notes, s.random_id, paramset_id,
-			ps.enzyme_chosen AS enzyme_chosen, ps.customsettings
-			FROM search s
-			INNER JOIN parameter_set ps ON s.paramset_id = ps.id
-			INNER JOIN users u ON s.uploadedby = u.id
-			WHERE s.id = '".$id."';";
+        $searchDataQuery = "SELECT * FROM uploads WHERE id = '".$id."';";
 
         $res = pg_query($searchDataQuery)
                     or die('Query failed: ' . pg_last_error());
@@ -69,39 +58,44 @@ if (count($_GET) > 0) {
         } else {
             $line["group"] = "'NA'";
         }
-        $line["random_id"] = $randId;
-
+        if ($line["random_id"] != $randId){
+            //echo "no";
+            exit();
+        }
 
         $searchId_metaData[$id] = $line;
         $searchId_randomId[$id] = $randId;
     }
 
-    echo "\"searches\":".json_encode($searchId_metaData). ",\n";
-*/
+    //keep the long identifier for this combination of searches
+    echo '{"sid":"'.$uploadId.'",';//"searches":'.json_encode($searchId_metaData).'",';
+
+    //load data -
+    $WHERE_uploadClause = ' (';
+    $i = 0;
+    foreach ($searchId_randomId as $id => $randId) {
+    if ($i > 0){
+    $WHERE_uploadClause = $WHERE_uploadClause.' OR ';
+    }
+    $WHERE_uploadClause = $WHERE_uploadClause.'(upload_id = '.$id.') ';
+    $i++;
+    }
+    $WHERE_uploadClause = $WHERE_uploadClause.') ';
+
 /*    // TODO Stored layouts
-	$layoutQuery = "SELECT t1.layout AS l "
-			. " FROM layouts AS t1 "
-			. " WHERE t1.search_id LIKE '" . $sid . "' "
-			. " AND t1.time = (SELECT max(t1.time) FROM layouts AS t1 "
-			. " WHERE t1.search_id LIKE '" . $sid . "' );";
+    $layoutQuery = "SELECT t1.layout AS l "
+    . " FROM layouts AS t1 "
+    . " WHERE t1.search_id LIKE '" . $sid . "' "
+    . " AND t1.time = (SELECT max(t1.time) FROM layouts AS t1 "
+    . " WHERE t1.search_id LIKE '" . $sid . "' );";
 
-	$layoutResult = pg_query($layoutQuery) or die('Query failed: ' . pg_last_error());
-	while ($line = pg_fetch_array($layoutResult, null, PGSQL_ASSOC)) {
-		echo "\"xiNETLayout\":" . stripslashes($line["l"]) . ",\n\n";
-	}
+    $layoutResult = pg_query($layoutQuery) or die('Query failed: ' . pg_last_error());
+    while ($line = pg_fetch_array($layoutResult, null, PGSQL_ASSOC)) {
+    echo "\"xiNETLayout\":" . stripslashes($line["l"]) . ",\n\n";
+    }
 */
 
-
-    // $query = "SELECT * FROM uploads WHERE id = ".$uploadId.";";
-    // $res = pg_query($query) or die('Query failed: ' . pg_last_error());
-    // $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-    // echo "\"searches\":".json_encode($line). ",\n";
-    // // Free resultset
-    // pg_free_result($res);
-
-
-
-    $query = "SELECT * FROM modifications WHERE upload_id = ".$uploadId.";";
+    $query = "SELECT * FROM modifications WHERE ".$WHERE_uploadClause.";";
     $res = pg_query($query) or die('Query failed: ' . pg_last_error());
     $line = pg_fetch_array($res, null, PGSQL_ASSOC);
     $modifications = [];
@@ -113,9 +107,8 @@ if (count($_GET) > 0) {
     // Free resultset
     pg_free_result($res);
 
-    //load data -
 
-    $query = "SELECT * FROM spectrum_identifications WHERE upload_id = ".$uploadId." AND ";
+    $query = "SELECT * FROM spectrum_identifications WHERE ".$WHERE_uploadClause." AND ";
     if ($spectrumId != null) {
         $query = $query. "spectrum_id = ".$spectrumId.";";
     }
@@ -133,45 +126,21 @@ if (count($_GET) > 0) {
     $sourceIds = array();
     $line = pg_fetch_array($res, null, PGSQL_ASSOC);
     while ($line){// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
-            //$peptideId = $line["peptide_id"];
-            // $peptideIds[$peptideId] = 1;
-            // $sourceId = $line["source"];
-            // $sourceIds[$sourceId] = 1;
             echo "{"
                 . '"id":' . $line["id"] . ','
-            //     . '"ty":' . $line["match_type"] . ','
                 . '"pi1":' . $line["pep1_id"] . ',';
 
             if ($line["pep2_id"]) {
                 echo '"pi2":' . $line["pep2_id"] . ',';
             }
-            //     . '"lp":'. $line["link_position"]. ','
             echo '"sp":' . $line["spectrum_id"] . ','
                 . '"sc":' . json_decode($line["scores"], true)["score"] . ','
                 . '"si":' . $line["upload_id"] . ','
                 . '"r":' . $line["rank"] . ','
-            //     . '"dc":"' . $line["is_decoy"] . '",';
-            // $autoVal =  $line["autovalidated"];
-            // if (isset($autoVal)){
-            //     echo '"av":"' . $autoVal.'"' . ',';
-            // }
-            // $val = $line["validated"];
-            // if (isset($val)){
-            //     echo '"v":"'.$val.'"' . ',';
-            // }
-            // $rej = $line["rejected"];
-            // if (isset($rej)){
-            //     echo '"rj":"'.$rej.'"' . ',';
-            // }
-            // echo '"src":"' . $sourceId. '",'
-                // . '"sn":' . $line["scan_number"]. ','
                 . '"ions":"' . $line["ions"] .'",'
                 . '"pc_c":' . $line["charge_state"] . ','
                 . '"e_mz":' . $line["exp_mz"] . ','
                 . '"c_mz":' . $line["calc_mz"] // . ','
-                // . '"pc_i":' . $line["precursor_intensity"] . ','
-                // . '"e_s":' . $line["elution_time_start"] . ','
-                // . '"e_e":' . $line["elution_time_end"]
                 . "}";
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);
             if ($line) {echo ",\n";}
@@ -185,7 +154,7 @@ if (count($_GET) > 0) {
     /*
      * SPECTRA
      */
-    $query = "SELECT id, peak_list_file_name, scan_id, frag_tol FROM spectra WHERE upload_id = ".$uploadId.";";
+    $query = "SELECT id, peak_list_file_name, scan_id, frag_tol FROM spectra WHERE ".$WHERE_uploadClause.";";
     $startTime = microtime(true);
     $res = pg_query($query) or die('Query failed: ' . pg_last_error());
     $endTime = microtime(true);
@@ -210,17 +179,14 @@ if (count($_GET) > 0) {
     $endTime = microtime(true);
     //~ echo '/*php time: '.($endTime - $startTime)."ms\n\n";
 
-
-    /*
+     /*
      * PEPTIDES
      */
-
-// SELECT (array_agg(p.seq_mods))[1] as seq_mods, (array_agg(p.link_site))[1] as link_site,
-// (array_agg(pe.start)) as pos,(array_agg(pe.dbsequence_ref)) as prt
-// FROM peptides p JOIN (select * from peptide_evidences where upload_id = 1) pe on p.id = pe.peptide_ref
-// WHERE p.upload_id = 1 group by p.id;
-
-     $query = "SELECT * FROM peptides as p left join (select peptide_ref, array_agg(dbsequence_ref) as proteins, array_agg(pep_start) as positions, array_agg(is_decoy) as is_decoy from peptide_evidences where upload_id = " . $uploadId . " group by peptide_ref) as pe on pe.peptide_ref = p.id WHERE upload_id = ".$uploadId.";";
+     $proteinIdField = "dbsequence_ref";
+     if (count($searchId_randomId) > 1) {
+            $proteinIdField = "accession";
+     }
+     $query = "SELECT * FROM peptides as p left join (select peptide_ref, array_agg(".$proteinIdField.") as proteins, array_agg(pep_start) as positions, array_agg(is_decoy) as is_decoy from peptide_evidences where ".$WHERE_uploadClause. " group by peptide_ref) as pe on pe.peptide_ref = p.id WHERE ".$WHERE_uploadClause.";";
      $startTime = microtime(true);
      $res = pg_query($query) or die('Query failed: ' . pg_last_error());
      $endTime = microtime(true);
@@ -288,18 +254,12 @@ if (count($_GET) > 0) {
      * PROTEINS
      */
 
-    // $proteinIdField = "id";
-    // if (count($searchId_randomId) > 1  || $accAsId) {
-    //     $proteinIdField = "accession_number";
-    // }
+    $proteinIdField = "id";
+    if (count($searchId_randomId) > 1) {
+        $proteinIdField = "accession";
+    }
 
-    // $query = "SELECT ".$proteinIdField." AS id, protein.id as real_id,
-    //         CASE WHEN name IS NULL OR name = '' OR name = 'REV_' OR name = 'RAN_' THEN accession_number
-    //         ELSE name END AS name,
-    //         description, accession_number, sequence, is_decoy
-    //         FROM protein WHERE id IN ('".implode(array_keys($dbIds), "','")."')";
-
-    $query = "SELECT * FROM db_sequences WHERE upload_id = ".$uploadId.";";
+    $query = "SELECT * FROM db_sequences WHERE ".$WHERE_uploadClause.";";
 
     $startTime = microtime(true);
     $res = pg_query($query) or die('Query failed: ' . pg_last_error());
@@ -327,7 +287,7 @@ if (count($_GET) > 0) {
     else {
         while ($line){
                 // $isDecoy = ($line["is_decoy"] == "t")? 'true' : 'false';
-                $pId = $line["id"];
+                $pId = $line[$proteinIdField];
                 //~ echo '"' . $pId . '":{'
                 echo '{'
                     . '"id":"' . $pId . '",'
@@ -349,10 +309,10 @@ if (count($_GET) > 0) {
     // Free resultset
     pg_free_result($res);
 
-	//interactors
-	// $interactorQuery = "SELECT * FROM uniprot WHERE accession IN ('"
-	// 		.implode(array_keys($interactorAccs), "','")."');";
-	// //echo "**".$interactorQuery."**";
+    //interactors
+    // $interactorQuery = "SELECT * FROM uniprot WHERE accession IN ('"
+    // 		.implode(array_keys($interactorAccs), "','")."');";
+    // //echo "**".$interactorQuery."**";
     // try {
     //     // @ stops pg_connect echo'ing out failure messages that knacker the returned data
     //     $interactorDbConn = @pg_connect($interactionConnection);// or die('Could not connect: ' . pg_last_error());
@@ -374,8 +334,6 @@ if (count($_GET) > 0) {
     //     //error_log (print_r ("UNIPROT ERR ".$e, true));
     //     echo "\"interactors\":{},\n";
     // }
-
-
 
     echo "}\n";
     $endTime = microtime(true);
