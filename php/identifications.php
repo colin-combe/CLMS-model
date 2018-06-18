@@ -34,7 +34,7 @@ if (count($_GET) > 0) {
     }
     //SQL injection defense
     $pattern = '/[^0-9,\-]/';
-    if (preg_match($pattern, $upload) || preg_match($pattern, $spectrumId)){
+    if (preg_match($pattern, $uploadId) || preg_match($pattern, $spectrumId)){
         exit();
     }
 
