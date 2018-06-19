@@ -184,7 +184,7 @@ if (count($_GET) > 0) {
      */
      $proteinIdField = "dbsequence_ref";
      if (count($searchId_randomId) > 1) {
-            $proteinIdField = "accession";
+            $proteinIdField = "protein_accession";
      }
      $query = "SELECT * FROM peptides as p left join (select peptide_ref, array_agg(".$proteinIdField.") as proteins, array_agg(pep_start) as positions, array_agg(is_decoy) as is_decoy from peptide_evidences where ".$WHERE_uploadClause. " group by peptide_ref) as pe on pe.peptide_ref = p.id WHERE ".$WHERE_uploadClause.";";
      $startTime = microtime(true);
@@ -340,7 +340,7 @@ if (count($_GET) > 0) {
     //~ echo '/*php time: '.($endTime - $startTime)."ms*/\n\n";
 
     // Free resultset
-    pg_free_result($res);
+    //pg_free_result($res);
     // Closing connection
     pg_close($dbconn);
 
