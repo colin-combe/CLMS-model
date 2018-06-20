@@ -9,9 +9,9 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
 
     this.containingModel = containingModel; //containing BB model
 
-    this.id = identification.id;
     this.spectrumId = identification.sp;
     this.searchId = identification.si.toString();
+    this.id = this.searchId + "_" + identification.id;
     this.expMZ = +identification.e_mz;
     this.calcMZ = +identification.c_mz;
     this.score = +identification.sc;
@@ -26,10 +26,10 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     }
 
     this.matchedPeptides = [];
-    this.matchedPeptides[0] = peptides.get("" + identification.pi1);
+    this.matchedPeptides[0] = peptides.get(this.searchId + "_" + identification.pi1);
     // following will be inadequate for trimeric and higher order cross-links
     if (identification.pi2) {
-        this.matchedPeptides[1] = peptides.get("" + identification.pi2);
+        this.matchedPeptides[1] = peptides.get(this.searchId + "_"  + identification.pi2);
     }
 
     //if the match is ambiguous it will relate to many crossLinks

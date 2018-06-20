@@ -39,10 +39,12 @@ if (count($_GET) > 0) {
     }
 
     $id_rands = explode("," , $uploadId);
-    $searchId_metaData = [];
+    $search_meta_json = '{';
     $searchId_randomId = [];
     for ($i = 0; $i < count($id_rands); $i++) {
-        //$s = [];
+        if ($i > 0) {
+            $search_meta_json = $search_meta_json.',';
+        }
         $dashSeperated = explode("-" , $id_rands[$i]);
         $randId = implode('-' , array_slice($dashSeperated, 1 , 4));
         $id = $dashSeperated[0];
@@ -62,25 +64,29 @@ if (count($_GET) > 0) {
             //echo "no";
             exit();
         }
-
-        $searchId_metaData[$id] = $line;
+        $search_meta_json = $search_meta_json.'"'.$id.'":'.json_encode($line);
+        // $searchId_metaData[$id] = json_encode($line);
         $searchId_randomId[$id] = $randId;
     }
-
+    $search_meta_json = $search_meta_json.'}';
     //keep the long identifier for this combination of searches
-    echo '{"sid":"'.$uploadId.'",';//"searches":'.json_encode($searchId_metaData).'",';
+    echo '{"sid":"'.$uploadId.'","searches":'.$search_meta_json.',';
 
     //load data -
     $WHERE_uploadClause = ' (';
+    $WHERE_uploadClause_tableP = ' (';
     $i = 0;
     foreach ($searchId_randomId as $id => $randId) {
-    if ($i > 0){
-    $WHERE_uploadClause = $WHERE_uploadClause.' OR ';
-    }
-    $WHERE_uploadClause = $WHERE_uploadClause.'(upload_id = '.$id.') ';
-    $i++;
+        if ($i > 0){
+            $WHERE_uploadClause = $WHERE_uploadClause.' OR ';
+            $WHERE_uploadClause_tableP = $WHERE_uploadClause_tableP.' OR ';
+        }
+        $WHERE_uploadClause = $WHERE_uploadClause.'(upload_id = '.$id.') ';
+        $WHERE_uploadClause_tableP = $WHERE_uploadClause_tableP.'(p.upload_id = '.$id.') ';
+        $i++;
     }
     $WHERE_uploadClause = $WHERE_uploadClause.') ';
+    $WHERE_uploadClause_tableP = $WHERE_uploadClause_tableP.') ';
 
 /*    // TODO Stored layouts
     $layoutQuery = "SELECT t1.layout AS l "
@@ -186,7 +192,15 @@ if (count($_GET) > 0) {
      if (count($searchId_randomId) > 1) {
             $proteinIdField = "protein_accession";
      }
-     $query = "SELECT * FROM peptides as p left join (select peptide_ref, array_agg(".$proteinIdField.") as proteins, array_agg(pep_start) as positions, array_agg(is_decoy) as is_decoy from peptide_evidences where ".$WHERE_uploadClause. " group by peptide_ref) as pe on pe.peptide_ref = p.id WHERE ".$WHERE_uploadClause.";";
+     $query = "SELECT * FROM peptides as p left join (
+         select peptide_ref, array_agg(".$proteinIdField.") as proteins,
+                array_agg(pep_start) as positions,
+                array_agg(is_decoy) as is_decoy,
+                upload_id
+                from peptide_evidences where ".$WHERE_uploadClause. " group by peptide_ref, upload_id
+            )
+            as pe on (pe.peptide_ref = p.id AND pe.upload_id = p.upload_id)
+            WHERE ".$WHERE_uploadClause_tableP.";";
      $startTime = microtime(true);
      $res = pg_query($query) or die('Query failed: ' . pg_last_error());
      $endTime = microtime(true);
@@ -209,6 +223,7 @@ if (count($_GET) > 0) {
              $positions = $line['positions'];
              echo "{"
                  . '"id":"' . $line["id"] . '",'
+                 . '"u_id":"' . $line["upload_id"] . '",'
                  . '"seq_mods":"' . $line["seq_mods"] . '",'
                  . '"linkSite":' . $line["link_site"]. ','
                  . '"clModMass":"' . $line["crosslinker_modmass"]. '",'

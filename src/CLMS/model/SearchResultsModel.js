@@ -224,7 +224,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                     this.commonRegexes.notUpperCase.lastIndex = 0;
                     peptide = peptideArray[pep];
                     peptide.sequence = peptide.seq_mods.replace(this.commonRegexes.notUpperCase, '');
-                    peptides.set(peptide.id, peptide);
+                    peptides.set(peptide.u_id + "_" + peptide.id, peptide); // concat upload_id and peptide.id
                 }
             }
 
