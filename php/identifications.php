@@ -64,7 +64,21 @@ if (count($_GET) > 0) {
             //echo "no";
             exit();
         }
-        $search_meta_json = $search_meta_json.'"'.$id.'":'.json_encode($line);
+        $search_meta_json = $search_meta_json.'"'.$id.'":{';
+        $v = 0;
+        foreach($line as $key=>$value) {
+            if ($v > 0) {
+                $search_meta_json = $search_meta_json.',';
+            }
+            $v++;
+            if ($value[0] == '{' || $value[0] == '['){
+                $search_meta_json = $search_meta_json.'"'.$key.'":'.$value;
+            }
+            else {
+                $search_meta_json = $search_meta_json.'"'.$key.'":"'.$value.'"';
+            }
+        }
+        $search_meta_json = $search_meta_json.'}';
         // $searchId_metaData[$id] = json_encode($line);
         $searchId_randomId[$id] = $randId;
     }
@@ -140,7 +154,8 @@ if (count($_GET) > 0) {
                 echo '"pi2":' . $line["pep2_id"] . ',';
             }
             echo '"sp":' . $line["spectrum_id"] . ','
-                . '"sc":' . json_decode($line["scores"], true)["score"] . ','
+                // . '"sc":' . json_decode($line["scores"], true)["score"] . ','
+                . '"sc":' . $line["scores"] . ','
                 . '"si":' . $line["upload_id"] . ','
                 . '"r":' . $line["rank"] . ','
                 . '"ions":"' . $line["ions"] .'",'
