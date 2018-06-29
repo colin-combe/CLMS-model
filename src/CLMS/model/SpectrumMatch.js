@@ -205,8 +205,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function(proteins, crossL
         if (!fromProt) {
             alert("FAIL: not protein with ID " + p1ID);
         }
-    }
-    else
+    } else
     if (p1ID <= p2ID) {
         fromProt = proteins.get(p1ID);
         toProt = proteins.get(p2ID);
@@ -311,8 +310,8 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function(proteins, crossL
 }
 
 CLMS.model.SpectrumMatch.prototype.isAmbig = function() {
-    if (this.matchedPeptides[0].pos.length > 1 
-        || (this.matchedPeptides[1] && this.matchedPeptides[1].pos.length > 1)) {
+    if (this.matchedPeptides[0].pos.length > 1 ||
+        (this.matchedPeptides[1] && this.matchedPeptides[1].pos.length > 1)) {
         return true;
     }
     return false;
