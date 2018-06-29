@@ -102,95 +102,95 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             }
             this.set("searches", searches);
 
-/*            var getResiduesFromEnzymeDescription = function(regexMatch, residueSet) {
-                if (regexMatch && regexMatch.length > 1) {
-                    var resArray = regexMatch[1].split(',');
-                    var resCount = resArray.length;
-                    for (var r = 0; r < resCount; r++) {
-                        residueSet.add({
-                            aa: resArray[r],
-                            postConstraint: regexMatch[2] ? regexMatch[2].split(',') : null
-                        });
-                    }
-                }
-            };
+            /*            var getResiduesFromEnzymeDescription = function(regexMatch, residueSet) {
+                            if (regexMatch && regexMatch.length > 1) {
+                                var resArray = regexMatch[1].split(',');
+                                var resCount = resArray.length;
+                                for (var r = 0; r < resCount; r++) {
+                                    residueSet.add({
+                                        aa: resArray[r],
+                                        postConstraint: regexMatch[2] ? regexMatch[2].split(',') : null
+                                    });
+                                }
+                            }
+                        };
 
 
-            //enzyme specificity
-            var postAaSet = new Set();
-            var aaConstrainedCTermSet = new Set();
-            var aaConstrainedNTermSet = new Set();
-            var searchArray = CLMS.arrayFromMapValues(searches);
-            var searchCount = searchArray.length;
-            for (var s = 0; s < searchCount; s++) {
-                var search = searchArray[s];
-                var enzymes = search.enzymes;
-                var enzymeCount = enzymes.length;
-                for (var e = 0; e < enzymeCount; e++) {
-                    var enzymeDescription = enzymes[e].description;
+                        //enzyme specificity
+                        var postAaSet = new Set();
+                        var aaConstrainedCTermSet = new Set();
+                        var aaConstrainedNTermSet = new Set();
+                        var searchArray = CLMS.arrayFromMapValues(searches);
+                        var searchCount = searchArray.length;
+                        for (var s = 0; s < searchCount; s++) {
+                            var search = searchArray[s];
+                            var enzymes = search.enzymes;
+                            var enzymeCount = enzymes.length;
+                            for (var e = 0; e < enzymeCount; e++) {
+                                var enzymeDescription = enzymes[e].description;
 
-                    var postAARegex = /PostAAConstrainedDigestion:DIGESTED:(.*?);ConstrainingAminoAcids:(.*?);/g;
-                    var postAAMatch = postAARegex.exec(enzymeDescription);
-                    getResiduesFromEnzymeDescription(postAAMatch, postAaSet);
+                                var postAARegex = /PostAAConstrainedDigestion:DIGESTED:(.*?);ConstrainingAminoAcids:(.*?);/g;
+                                var postAAMatch = postAARegex.exec(enzymeDescription);
+                                getResiduesFromEnzymeDescription(postAAMatch, postAaSet);
 
-                    var cTermRegex = /CTERMDIGEST:(.*?);/g;
-                    var ctMatch = cTermRegex.exec(enzymeDescription);
-                    getResiduesFromEnzymeDescription(ctMatch, aaConstrainedCTermSet);
+                                var cTermRegex = /CTERMDIGEST:(.*?);/g;
+                                var ctMatch = cTermRegex.exec(enzymeDescription);
+                                getResiduesFromEnzymeDescription(ctMatch, aaConstrainedCTermSet);
 
-                    var nTermRegex = /NTERMDIGEST:(.*?);/g;
-                    var ntMatch = nTermRegex.exec(enzymeDescription);
-                    getResiduesFromEnzymeDescription(ntMatch, aaConstrainedNTermSet);
+                                var nTermRegex = /NTERMDIGEST:(.*?);/g;
+                                var ntMatch = nTermRegex.exec(enzymeDescription);
+                                getResiduesFromEnzymeDescription(ntMatch, aaConstrainedNTermSet);
 
-                }
-            }
-
-            var addEnzymeSpecificityResidues = function(residueSet, type) {
-                var resArray = CLMS.arrayFromMapValues(residueSet);
-                var resCount = resArray.length;
-                for (var r = 0; r < resCount; r++) {
-                    enzymeSpecificity.push({
-                        aa: resArray[r].aa,
-                        type: type,
-                        postConstraint: resArray[r].postConstraint
-                    });
-                }
-            };
-
-            var enzymeSpecificity = [];
-            addEnzymeSpecificityResidues(postAaSet, "DIGESTIBLE"); //"Post AA constrained");
-            addEnzymeSpecificityResidues(aaConstrainedCTermSet, "DIGESTIBLE"); // "AA constrained c-term");
-            addEnzymeSpecificityResidues(aaConstrainedNTermSet, "DIGESTIBLE"); // "AA constrained n-term");
-            this.set("enzymeSpecificity", enzymeSpecificity);
-
-            //crosslink specificity
-            var linkableResSet = new Set();
-            for (var s = 0; s < searchCount; s++) {
-                var search = searchArray[s];
-                var crosslinkers = search.crosslinkers || [];
-                var crosslinkerCount = crosslinkers.length;
-                for (var cl = 0; cl < crosslinkerCount; cl++) {
-                    var crosslinkerDescription = crosslinkers[cl].description;
-                    var linkedAARegex = /LINKEDAMINOACIDS:(.*?);/g;
-                    var result = null;
-                    while ((result = linkedAARegex.exec(crosslinkerDescription)) !== null) {
-                        var resArray = result[1].split(',');
-                        var resCount = resArray.length;
-                        for (var r = 0; r < resCount; r++) {
-                            var resRegex = /([A-Z])(.*)?/
-                            var resMatch = resRegex.exec(resArray[r]);
-                            if (resMatch) {
-                                linkableResSet.add(resMatch[1]);
                             }
                         }
-                    }
-                }
-            }
 
-            this.set("crosslinkerSpecificity", CLMS.arrayFromMapValues(linkableResSet));
+                        var addEnzymeSpecificityResidues = function(residueSet, type) {
+                            var resArray = CLMS.arrayFromMapValues(residueSet);
+                            var resCount = resArray.length;
+                            for (var r = 0; r < resCount; r++) {
+                                enzymeSpecificity.push({
+                                    aa: resArray[r].aa,
+                                    type: type,
+                                    postConstraint: resArray[r].postConstraint
+                                });
+                            }
+                        };
 
-            //saved config should end up including filter settings not just xiNET layout
-            this.set("xiNETLayout", json.xiNETLayout);
-*/
+                        var enzymeSpecificity = [];
+                        addEnzymeSpecificityResidues(postAaSet, "DIGESTIBLE"); //"Post AA constrained");
+                        addEnzymeSpecificityResidues(aaConstrainedCTermSet, "DIGESTIBLE"); // "AA constrained c-term");
+                        addEnzymeSpecificityResidues(aaConstrainedNTermSet, "DIGESTIBLE"); // "AA constrained n-term");
+                        this.set("enzymeSpecificity", enzymeSpecificity);
+
+                        //crosslink specificity
+                        var linkableResSet = new Set();
+                        for (var s = 0; s < searchCount; s++) {
+                            var search = searchArray[s];
+                            var crosslinkers = search.crosslinkers || [];
+                            var crosslinkerCount = crosslinkers.length;
+                            for (var cl = 0; cl < crosslinkerCount; cl++) {
+                                var crosslinkerDescription = crosslinkers[cl].description;
+                                var linkedAARegex = /LINKEDAMINOACIDS:(.*?);/g;
+                                var result = null;
+                                while ((result = linkedAARegex.exec(crosslinkerDescription)) !== null) {
+                                    var resArray = result[1].split(',');
+                                    var resCount = resArray.length;
+                                    for (var r = 0; r < resCount; r++) {
+                                        var resRegex = /([A-Z])(.*)?/
+                                        var resMatch = resRegex.exec(resArray[r]);
+                                        if (resMatch) {
+                                            linkableResSet.add(resMatch[1]);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        this.set("crosslinkerSpecificity", CLMS.arrayFromMapValues(linkableResSet));
+
+                        //saved config should end up including filter settings not just xiNET layout
+                        this.set("xiNETLayout", json.xiNETLayout);
+            */
             //spectrum sources
             var spectrumSources = new Map();
             var specSource;
@@ -321,10 +321,9 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         }
         //protObj.hidden = false;
         // TODO deal with devoys better
-        if (protObj.name.indexOf("DECOY") != -1){
+        if (protObj.name.indexOf("DECOY") != -1) {
             protObj.is_decoy = true;
-        }
-        else {
+        } else {
             protObj.is_decoy = false;
         }
     },

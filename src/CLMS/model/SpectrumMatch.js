@@ -29,7 +29,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     this.matchedPeptides[0] = peptides.get(this.searchId + "_" + identification.pi1);
     // following will be inadequate for trimeric and higher order cross-links
     if (identification.pi2) {
-        this.matchedPeptides[1] = peptides.get(this.searchId + "_"  + identification.pi2);
+        this.matchedPeptides[1] = peptides.get(this.searchId + "_" + identification.pi2);
     }
 
     //if the match is ambiguous it will relate to many crossLinks
@@ -39,7 +39,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
         this.linkPos2 = this.matchedPeptides[1].linkSite;
     }
 
-     if (this.linkPos1 == -1) {
+    if (this.linkPos1 == -1) {
         //its a linear
         this.containingModel.set("linearsPresent", true);
         for (var i = 0; i < this.matchedPeptides[0].prt.length; i++) {
@@ -149,8 +149,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function(proteins, crossL
         if (!fromProt) {
             alert("FAIL: not protein with ID " + p1ID);
         }
-    }
-    else
+    } else
     if (p1ID <= p2ID) {
         fromProt = proteins.get(p1ID);
         toProt = proteins.get(p2ID);
@@ -255,8 +254,8 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function(proteins, crossL
 }
 
 CLMS.model.SpectrumMatch.prototype.isAmbig = function() {
-    if (this.matchedPeptides[0].pos.length > 1
-        || (this.matchedPeptides[1] && this.matchedPeptides[1].pos.length > 1)) {
+    if (this.matchedPeptides[0].pos.length > 1 ||
+        (this.matchedPeptides[1] && this.matchedPeptides[1].pos.length > 1)) {
         return true;
     }
     return false;
@@ -282,7 +281,7 @@ CLMS.model.SpectrumMatch.prototype.runName = function() {
 CLMS.model.SpectrumMatch.prototype.group = function() {
     // cc - hack
     // var group = this.containingModel.get("searches").get(this.searchId).group;
-    return 0;// group;
+    return 0; // group;
 }
 
 /*
