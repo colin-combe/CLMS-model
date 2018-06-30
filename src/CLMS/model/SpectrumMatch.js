@@ -32,6 +32,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     this.id = rawMatches[0].id;
     this.spectrumId = rawMatches[0].spec;
     this.searchId = rawMatches[0].si.toString();
+    this.crosslinker_id = rawMatches[0].cl;
     if (rawMatches[0].dc) {
         this.is_decoy = (rawMatches[0].dc == 't') ? true : false;
     }
@@ -154,7 +155,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     //identify homodimers: if peptides overlap its a homodimer
     this.confirmedHomomultimer = false;
     this.overlap = [];
-    if (p1ID === p2ID) { //todo: fix potential problem here regarding ambiguous homo-multimer link 
+    if (p1ID === p2ID) { //todo: fix potential problem here regarding ambiguous homo-multimer link
 
         if (this.matchedPeptides[0].sequence && this.matchedPeptides[1].sequence) {
 
@@ -363,4 +364,24 @@ CLMS.model.SpectrumMatch.prototype.matchMass = function() {
 
 CLMS.model.SpectrumMatch.prototype.massError = function() {
     return ((this.expMass() - this.matchMass()) / this.matchMass()) * 1000000;
+}
+
+CLMS.model.SpectrumMatch.prototype.ionTypes = function() {
+    return this.containingModel.get("searches").get(this.searchId).ionTypes;
+}
+
+CLMS.model.SpectrumMatch.prototype.crossLinkerModMass = function() {
+    var crosslinkers = this.containingModel.get("searches").get(this.searchId).crosslinkers;
+    var clCount = crosslinkers.length;
+    for (var c = 0; c < clCount ; c++){
+        var crosslinker = crosslinkers[c];
+        if (crosslinker.id == this.crosslinker_id){
+            return crosslinker.mass;
+        }
+    }
+}
+
+CLMS.model.SpectrumMatch.prototype.fragmentTolerance = function() {
+    var search = this.containingModel.get("searches").get(this.searchId);
+    return {"tolerance": search.ms2tolerance, 'unit': search.ms2toleranceunits};
 }
