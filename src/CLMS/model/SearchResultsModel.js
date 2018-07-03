@@ -458,7 +458,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                             if (itsXiFDR) {
                                 //Also add xiFDR decoy to participants
                                 var reversedSeq = tempSeq.trim().split("").reverse().join("");
-                                makeProtein("DECOY:" + tempIdentifier, reversedSeq, "DECOY");
+                                makeProtein("DECOY:" + idFromIdentifier(tempIdentifier), reversedSeq, "DECOY");
                             }
                             tempSeq = "";
                         }
@@ -482,7 +482,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             if (itsXiFDR) {
                 //Also add xiFDR decoy to participants
                 var reversedSeq = tempSeq.trim().split("").reverse().join("");
-                makeProtein("DECOY:" + tempIdentifier, reversedSeq, "DECOY");
+                makeProtein("DECOY:" + idFromIdentifier(tempIdentifier), reversedSeq, "DECOY");
             }
 
             //read links
