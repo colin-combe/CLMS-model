@@ -574,6 +574,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         //for reading fasta files
         function makeProtein(id, sequence, desc) {
             var name = nameFromIdentifier(id);
+            id = idFromIdentifier(id);
             var protein = {
                 id: id,
                 name: name,
@@ -606,6 +607,18 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                 }
             }
             return name;
+        };
+        //for reading fasta files
+        function idFromIdentifier(ident) {
+            var id = ident;
+            var iBar = ident.indexOf("|");
+            if (iBar !== -1) {
+                var splitOnBar = ident.split("|");
+                if (splitOnBar.length === 3) {
+                    id = splitOnBar[1];
+                }
+            }
+            return id;
         };
 
         function uniprotWebServiceFASTA(id, callback) {
