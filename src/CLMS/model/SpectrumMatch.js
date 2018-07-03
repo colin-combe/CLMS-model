@@ -12,11 +12,19 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     this.spectrumId = identification.sp;
     this.searchId = identification.si.toString();
     this.id = this.searchId + "_" + identification.id;
-    this.expMZ = +identification.e_mz;
+    this.precursorMZ = +identification.e_mz; // experimental MZ, accessor for this att is called expMZ()
     this.calcMZ = +identification.c_mz;
     this.score = +identification.sc;
 
-    this.ions = identification.ions;
+    var ionTypes = identification.ions.split(";");
+    var ionTypeCount = ionTypes.length;
+    var ions = [];
+    for (var it = 0; it < ionTypeCount; it++) {
+        var ionType = ionTypes[it];
+        ions.push({"type": (ionType.charAt(0).toUpperCase() + ionType.slice(1) + "Ion")});
+    }
+    this.ions = ions;
+
     this.spectrum = this.containingModel.get("spectrumSources").get(this.spectrumId);
     this.scanNumber = this.spectrum.sn;
 
@@ -279,33 +287,48 @@ CLMS.model.SpectrumMatch.prototype.runName = function() {
 }
 
 CLMS.model.SpectrumMatch.prototype.group = function() {
-    // cc - hack
-    // var group = this.containingModel.get("searches").get(this.searchId).group;
-    return 0; // group;
+    var group = this.containingModel.get("searches").get(this.searchId).group;
+    return group;
 }
 
-/*
 CLMS.model.SpectrumMatch.prototype.expMZ = function() {
-    return this.expMZ;
+    return this.precursorMZ;
 }
-*/
 
 CLMS.model.SpectrumMatch.protonMass = 1.007276466879;
 
 CLMS.model.SpectrumMatch.prototype.expMass = function() {
-    return this.expMZ * this.precursorCharge - (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass);
+    return this.precursorMZ * this.precursorCharge - (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass);
 }
 
-/*
 CLMS.model.SpectrumMatch.prototype.matchMZ = function() {
-    return (this.calc_mass + (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass)) / this.precursorCharge;
+    return this.calcMZ;// (this.calc_mass + (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass)) / this.precursorCharge;
 }
-*/
 
-CLMS.model.SpectrumMatch.prototype.calcMass = function() {
+CLMS.model.SpectrumMatch.prototype.matchMass = function() {
     return (this.precursorCharge * this.calcMZ) - (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass) //this.calc_mass;
 }
 
 CLMS.model.SpectrumMatch.prototype.massError = function() {
-    return ((this.expMass() - this.calcMass()) / this.calcMass()) * 1000000;
+    return ((this.expMass() - this.matchMass()) / this.matchMass()) * 1000000;
+}
+
+CLMS.model.SpectrumMatch.prototype.ionTypes = function() {
+    return this.ions;
+}
+
+CLMS.model.SpectrumMatch.prototype.crossLinkerModMass = function() {
+    var clModMass = +this.matchedPeptides[0].clModMass;
+    if (this.matchedPeptides[1]) {
+        clModMass = clModMass + this.matchedPeptides[1].clModMass;
+    }
+    return clModMass;
+}
+
+CLMS.model.SpectrumMatch.prototype.fragmentTolerance = function() {
+    var fragTolArr = this.spectrum.ft.split(" ");
+    return {
+        "tolerance": fragTolArr[0],
+        'unit': fragTolArr[1]
+    };
 }
