@@ -627,7 +627,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             if (id.indexOf('|') !== -1) {
                 accession = id.split('|')[1];
             }
-            var url = "http://www.uniprot.org/uniprot/" + accession + ".fasta";
+            var url = "https://www.uniprot.org/uniprot/" + accession + ".fasta";
             //todo: give fail message
             d3.text(url, function(error, txt) {
                 if (error) {
