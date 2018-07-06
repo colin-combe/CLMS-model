@@ -375,12 +375,17 @@ if (count($_GET) > 0) {
 		//~ echo '/*db time: '.($endTime - $startTime)."ms\n";
 		//~ echo '/*rows:'.pg_num_rows($res)."\n";
 		$startTime = microtime(true);
+        //TODO get rid of this manual json creation
 		echo "\"rawMatches\":[\n";
 		$peptideIds = array();
 		$sourceIds = array();
 		$line = pg_fetch_array($res, null, PGSQL_ASSOC);
 		while ($line){// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
 				$peptideId = $line["peptide_id"];
+                $crosslinker_id =  $line["crosslinker_id"];
+                if (!isset($crosslinker_id) || trim($crosslinker_id) === '') {
+                    $crosslinker_id = -1;
+                }
 				$peptideIds[$peptideId] = 1;
 				$sourceId = $line["source"];
 				$sourceIds[$sourceId] = 1;
@@ -389,7 +394,7 @@ if (count($_GET) > 0) {
 					. '"ty":' . $line["match_type"] . ','
 					. '"pi":' . $peptideId . ','
 					. '"lp":'. $line["link_position"]. ','
-					. '"cl":' . $line["crosslinker_id"] . ','
+					. '"cl":' . $crosslinker_id . ','
 					. '"spec":' . $line["spectrum_id"] . ','
 					. '"sc":' . round($line["score"], 2) . ','
 					. '"si":' . $line["search_id"] . ','

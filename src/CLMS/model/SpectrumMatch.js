@@ -371,6 +371,10 @@ CLMS.model.SpectrumMatch.prototype.ionTypes = function() {
 }
 
 CLMS.model.SpectrumMatch.prototype.crossLinkerModMass = function() {
+    if (this.crosslinker_id == -1) {
+        return 0;
+    }
+
     var crosslinkers = this.containingModel.get("searches").get(this.searchId).crosslinkers;
     var clCount = crosslinkers.length;
     for (var c = 0; c < clCount; c++) {
