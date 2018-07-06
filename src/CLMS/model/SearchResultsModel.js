@@ -458,7 +458,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                             if (itsXiFDR) {
                                 //Also add xiFDR decoy to participants
                                 var reversedSeq = tempSeq.trim().split("").reverse().join("");
-                                makeProtein("DECOY:" + tempIdentifier, reversedSeq, "DECOY");
+                                makeProtein("DECOY:" + idFromIdentifier(tempIdentifier), reversedSeq, "DECOY");
                             }
                             tempSeq = "";
                         }
@@ -482,7 +482,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             if (itsXiFDR) {
                 //Also add xiFDR decoy to participants
                 var reversedSeq = tempSeq.trim().split("").reverse().join("");
-                makeProtein("DECOY:" + tempIdentifier, reversedSeq, "DECOY");
+                makeProtein("DECOY:" + idFromIdentifier(tempIdentifier), reversedSeq, "DECOY");
             }
 
             //read links
@@ -574,6 +574,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         //for reading fasta files
         function makeProtein(id, sequence, desc) {
             var name = nameFromIdentifier(id);
+            id = idFromIdentifier(id);
             var protein = {
                 id: id,
                 name: name,
@@ -607,6 +608,18 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             }
             return name;
         };
+        //for reading fasta files
+        function idFromIdentifier(ident) {
+            var id = ident;
+            var iBar = ident.indexOf("|");
+            if (iBar !== -1) {
+                var splitOnBar = ident.split("|");
+                if (splitOnBar.length === 3) {
+                    id = splitOnBar[1];
+                }
+            }
+            return id;
+        };
 
         function uniprotWebServiceFASTA(id, callback) {
             id = id + "";
@@ -614,7 +627,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             if (id.indexOf('|') !== -1) {
                 accession = id.split('|')[1];
             }
-            var url = "http://www.uniprot.org/uniprot/" + accession + ".fasta";
+            var url = "https://www.uniprot.org/uniprot/" + accession + ".fasta";
             //todo: give fail message
             d3.text(url, function(error, txt) {
                 if (error) {
