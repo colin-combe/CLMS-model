@@ -544,7 +544,7 @@ if (count($_GET) > 0) {
 						. '"is_decoy":' .$isDecoy
 						. "}";
 
-					$interactorAccs[$line["accession_number"]] = 1;
+					$interactorAccs[preg_split("/-/", $line["accession_number"])[0]] = 1;
 
 					$line = pg_fetch_array($res, null, PGSQL_ASSOC);
 					if ($line) {echo ",\n";}
@@ -558,8 +558,7 @@ if (count($_GET) > 0) {
 			try {
 				// @ stops pg_connect echo'ing out failure messages that knacker the returned data
 				$interactorDbConn = @pg_connect($interactionConnection);// or die('Could not connect: ' . pg_last_error());
-
-				if ($interactorDbConn) {
+                if ($interactorDbConn) {
 					$interactorResult = pg_query($interactorQuery);// or die('Query failed: ' . pg_last_error());
 					echo "\"interactors\":{\n";
 					$line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
