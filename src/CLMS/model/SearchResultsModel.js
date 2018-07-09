@@ -254,7 +254,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
 
             for (var p = 0; p < participantCount; p++) {
                 var participant = realParticipantArray[p];
-                var uniprot = json.interactors ? json.interactors[participant.accession] : null;
+                var uniprot = json.interactors ? json.interactors[participant.accession.split('-')[0]] : null;
                 participant.uniprot = uniprot;
             }
 
