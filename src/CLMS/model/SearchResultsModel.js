@@ -430,7 +430,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         var iPepSeq2 = getHeaderIndex(['PepSeq 2', 'PepSeq2', 'Peptide 2']);
         var iCharge = getHeaderIndex(['Charge']);
         var iPrecursorMZ = getHeaderIndex(['Exp M/Z']); //, 'OBSERVED M/Z']); //?
-        var iCalcMass = getHeaderIndex(['MatchMass']);
+        var iCalcMass = getHeaderIndex(['CalcMass']);
         var iRunName = getHeaderIndex(['RunName', 'SCAN FILENAME']);
         var iScanNo = getHeaderIndex(['ScanNumber', 'SCAN NUMBER']);
 

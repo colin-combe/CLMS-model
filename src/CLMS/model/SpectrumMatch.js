@@ -40,6 +40,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
         this.containingModel.set("decoysPresent", true);
     }
     this.scanNumber = +rawMatches[0].sn;
+    this.scanIndex = +rawMatches[0].sc_i;
     this.precursor_intensity = +rawMatches[0].pc_i;
     this.elution_time_start = +rawMatches[0].e_s;
     this.elution_time_end = +rawMatches[0].e_e;
@@ -354,16 +355,16 @@ CLMS.model.SpectrumMatch.prototype.expMass = function() {
     return this.precursorMZ * this.precursorCharge - (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass);
 }
 
-CLMS.model.SpectrumMatch.prototype.matchMZ = function() {
+CLMS.model.SpectrumMatch.prototype.calcMZ = function() {
     return (this.calc_mass + (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass)) / this.precursorCharge;
 }
 
-CLMS.model.SpectrumMatch.prototype.matchMass = function() {
+CLMS.model.SpectrumMatch.prototype.calcMass = function() {
     return this.calc_mass;
 }
 
 CLMS.model.SpectrumMatch.prototype.massError = function() {
-    return ((this.expMass() - this.matchMass()) / this.matchMass()) * 1000000;
+    return ((this.expMass() - this.calcMass()) / this.calcMass()) * 1000000;
 }
 
 CLMS.model.SpectrumMatch.prototype.ionTypes = function() {

@@ -353,7 +353,7 @@ if (count($_GET) > 0) {
 					mp.link_position + 1 AS link_position, mp.crosslinker_id, sm.spectrum_id,
 					sm.score, sm.autovalidated, sm.validated, sm.rejected,
 					sm.search_id, sm.is_decoy, sm.calc_mass, sm.precursor_charge,
-					sp.scan_number, sp.source_id as source,
+					sp.scan_number, sp.scan_index, sp.source_id as source,
 					sp.precursor_intensity, sp.precursor_mz, sp.elution_time_start, sp.elution_time_end
 				FROM
 					(SELECT sm.id, sm.score, sm.autovalidated, sm.validated, sm.rejected,
@@ -370,6 +370,7 @@ if (count($_GET) > 0) {
 				ORDER BY score DESC, sm.id, mp.match_type;";
 		}
 		$startTime = microtime(true);
+        //echo "**".$query."**";
 		$res = pg_query($query) or die('Query failed: ' . pg_last_error());
 		$endTime = microtime(true);
 		//~ echo '/*db time: '.($endTime - $startTime)."ms\n";
@@ -411,6 +412,10 @@ if (count($_GET) > 0) {
 				if (isset($rej)){
 					echo '"rj":"'.$rej.'"' . ',';
 				}
+                $scan_index = $line["scan_index"];
+                if (isset($scan_index)){
+                    echo '"sc_i":' . $line["scan_index"]. ',';
+                }
 				echo '"src":"' . $sourceId. '",'
 					. '"sn":' . $line["scan_number"]. ','
 					. '"pc_c":' . $line["precursor_charge"]. ','
