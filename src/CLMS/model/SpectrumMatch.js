@@ -371,6 +371,19 @@ CLMS.model.SpectrumMatch.prototype.ionTypes = function() {
     return this.containingModel.get("searches").get(this.searchId).ionTypes;
 }
 
+CLMS.model.SpectrumMatch.prototype.ionTypesString = function() {
+    var ions = this.ionTypes();
+    var returnString = "";
+    for (var i = 0; i < ions.length; i++) {
+        var ion = ions[i].type;
+        if (ion.indexOf("Ion") > 0) {
+            ion = ion.substring(0, ion.indexOf("Ion"));
+        }
+        returnString = returnString + ion.toLowerCase() + ";";
+    }
+    return returnString;
+}
+
 CLMS.model.SpectrumMatch.prototype.crossLinkerModMass = function() {
     if (this.crosslinker_id == -1) {
         return 0;
@@ -392,4 +405,9 @@ CLMS.model.SpectrumMatch.prototype.fragmentTolerance = function() {
         "tolerance": search.ms2tolerance,
         'unit': search.ms2toleranceunits
     };
+}
+
+CLMS.model.SpectrumMatch.prototype.fragmentToleranceString = function() {
+    var search = this.containingModel.get("searches").get(this.searchId);
+    return search.ms2tolerance + " " + search.ms2toleranceunits;
 }
