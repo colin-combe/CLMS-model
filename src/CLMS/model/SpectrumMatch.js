@@ -13,7 +13,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     this.searchId = identification.si.toString();
     this.id = this.searchId + "_" + identification.id;
     this.precursorMZ = +identification.e_mz; // experimental MZ, accessor for this att is called expMZ()
-    this.calcMZ = +identification.c_mz;
+    this.calc_mz = +identification.c_mz;
     this.score = +identification.sc;
 
     var ionTypes = identification.ions.split(";");
@@ -301,16 +301,16 @@ CLMS.model.SpectrumMatch.prototype.expMass = function() {
     return this.precursorMZ * this.precursorCharge - (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass);
 }
 
-CLMS.model.SpectrumMatch.prototype.matchMZ = function() {
-    return this.calcMZ;// (this.calc_mass + (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass)) / this.precursorCharge;
+CLMS.model.SpectrumMatch.prototype.calcMZ = function() {
+    return this.calc_mz;// (this.calc_mass + (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass)) / this.precursorCharge;
 }
 
-CLMS.model.SpectrumMatch.prototype.matchMass = function() {
-    return (this.precursorCharge * this.calcMZ) - (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass) //this.calc_mass;
+CLMS.model.SpectrumMatch.prototype.calcMass = function() {
+    return (this.precursorCharge * this.calc_mz) - (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass) //this.calc_mass;
 }
 
 CLMS.model.SpectrumMatch.prototype.massError = function() {
-    return ((this.expMass() - this.matchMass()) / this.matchMass()) * 1000000;
+    return ((this.expMass() - this.calcMass()) / this.calcMass()) * 1000000;
 }
 
 CLMS.model.SpectrumMatch.prototype.ionTypes = function() {
