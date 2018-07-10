@@ -144,6 +144,7 @@ if (count($_GET) > 0) {
     echo "\"identifications\":[\n";
     $peptideIds = array();
     $sourceIds = array();
+    //TODO - use json encode
     $line = pg_fetch_array($res, null, PGSQL_ASSOC);
     while ($line){// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
             echo "{"
@@ -153,6 +154,10 @@ if (count($_GET) > 0) {
             if ($line["pep2_id"]) {
                 echo '"pi2":' . $line["pep2_id"] . ',';
             }
+            $calc_mz = $line["calc_mz"];
+            if (!isset($calc_mz)) {
+                $calc_mz = 0;
+            }
             echo '"sp":' . $line["spectrum_id"] . ','
                 // . '"sc":' . json_decode($line["scores"], true)["score"] . ','
                 . '"sc":' . $line["scores"] . ','
@@ -161,7 +166,7 @@ if (count($_GET) > 0) {
                 . '"ions":"' . $line["ions"] .'",'
                 . '"pc_c":' . $line["charge_state"] . ','
                 . '"e_mz":' . $line["exp_mz"] . ','
-                . '"c_mz":' . $line["calc_mz"] // . ','
+                . '"c_mz":' . $calc_mz // . ','
                 . "}";
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);
             if ($line) {echo ",\n";}
@@ -216,6 +221,7 @@ if (count($_GET) > 0) {
             )
             as pe on (pe.peptide_ref = p.id AND pe.upload_id = p.upload_id)
             WHERE ".$WHERE_uploadClause_tableP.";";
+     //echo '**'.$query."**";
      $startTime = microtime(true);
      $res = pg_query($query) or die('Query failed: ' . pg_last_error());
      $endTime = microtime(true);

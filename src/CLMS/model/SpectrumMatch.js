@@ -35,6 +35,9 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
 
     this.matchedPeptides = [];
     this.matchedPeptides[0] = peptides.get(this.searchId + "_" + identification.pi1);
+    if (!this.matchedPeptides[0]){
+        alert(this.searchId + "_" + identification.pi1);
+    }
     // following will be inadequate for trimeric and higher order cross-links
     if (identification.pi2) {
         this.matchedPeptides[1] = peptides.get(this.searchId + "_" + identification.pi2);
