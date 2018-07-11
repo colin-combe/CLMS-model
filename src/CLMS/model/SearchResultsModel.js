@@ -155,7 +155,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                 var crosslinkers = search.crosslinkers || [];
                 var crosslinkerCount = crosslinkers.length;
                 for (var cl = 0; cl < crosslinkerCount; cl++) {
-                    var crosslinkerDescription = crosslinkers[cl].description;
+                    var crosslinkerDescription = crosslinkers[cl].description + ";";
                     var linkedAARegex = /LINKEDAMINOACIDS:(.*?);/g;
                     var result = null;
                     while ((result = linkedAARegex.exec(crosslinkerDescription)) !== null) {
