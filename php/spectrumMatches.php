@@ -159,8 +159,8 @@ if (count($_GET) > 0) {
                 $calc_mz = 0;
             }
             echo '"sp":' . $line["spectrum_id"] . ','
-                // . '"sc":' . json_decode($line["scores"], true)["score"] . ','
-                . '"sc":' . $line["scores"] . ','
+                . '"sc":' . json_decode($line["scores"], true)["score"] . ','
+                //. '"sc":' . $line["scores"] . ','
                 . '"si":' . $line["upload_id"] . ','
                 . '"r":' . $line["rank"] . ','
                 . '"ions":"' . $line["ions"] .'",'
