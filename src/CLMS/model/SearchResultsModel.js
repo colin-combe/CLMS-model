@@ -574,14 +574,16 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         //for reading fasta files
         function makeProtein(id, sequence, desc) {
             var name = nameFromIdentifier(id);
-            id = idFromIdentifier(id);
+            var acc = accFromIdentifier(id);
             var protein = {
                 id: id,
+                accession: acc,
                 name: name,
-                sequence: tempSeq,
+                sequence: sequence,
                 description: desc
             };
             participants.set(id, protein);
+            participants.set(acc, protein);
             self.commonRegexes.decoyNames.lastIndex = 0;
             var regexMatch = self.commonRegexes.decoyNames.exec(protein.id);
             if (regexMatch) {
@@ -609,7 +611,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             return name;
         };
         //for reading fasta files
-        function idFromIdentifier(ident) {
+        function accFromIdentifier(ident) {
             var id = ident;
             var iBar = ident.indexOf("|");
             if (iBar !== -1) {
