@@ -388,9 +388,9 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
     getCrosslinkableResiduesAsFeatures: function(participant) {
         var crosslinkableResiduesAsFeatures = [];
 
-        // var sequence = participant.sequence;
-        // var seqLength = sequence.length;
-        // var linkedResSets = this.get("crosslinkerSpecificity");
+        var sequence = participant.sequence;
+        var seqLength = sequence.length;
+        var specificity = this.get("crosslinkerSpecificity");
         // 
         // var temp = d3.values(linkedResSets);
         // for (var cl = 0; cl < temp.length; cl++){
