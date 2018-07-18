@@ -320,6 +320,10 @@ CLMS.model.SpectrumMatch.prototype.ionTypes = function() {
     return this.ions;
 }
 
+CLMS.model.SpectrumMatch.prototype.ionTypesString = function() {
+    return JSON.stringify(this.ionTypes());
+}
+
 CLMS.model.SpectrumMatch.prototype.crossLinkerModMass = function() {
     var clModMass = +this.matchedPeptides[0].clModMass;
     if (this.matchedPeptides[1]) {
@@ -334,4 +338,9 @@ CLMS.model.SpectrumMatch.prototype.fragmentTolerance = function() {
         "tolerance": fragTolArr[0],
         'unit': fragTolArr[1]
     };
+}
+
+CLMS.model.SpectrumMatch.prototype.fragmentToleranceString = function() {
+    var fragTol = this.fragmentTolerance();
+    return fragTol.tolerance + " " + fragTol.unit;
 }
