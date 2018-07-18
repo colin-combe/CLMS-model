@@ -155,8 +155,8 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                 var crosslinkers = search.crosslinkers || [];
                 var crosslinkerCount = crosslinkers.length;
                 for (var cl = 0; cl < crosslinkerCount; cl++) {
-                    var crosslinkerDescription = crosslinkers[cl].description + ";";
-                    var linkedAARegex = /LINKEDAMINOACIDS:(.*?);/g;
+                    var crosslinkerDescription = crosslinkers[cl].description;
+                    var linkedAARegex = /LINKEDAMINOACIDS:(.*?)(?:;|$)/g;
                     var result = null;
                     while ((result = linkedAARegex.exec(crosslinkerDescription)) !== null) {
                         var resArray = result[1].split(',');
@@ -171,8 +171,48 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                     }
                 }
             }
-
             this.set("crosslinkerSpecificity", /*Array.from(linkableResSet)*/ CLMS.arrayFromMapValues(linkableResSet));
+
+            // var linkableResSets = {};
+            // searchArray.forEach (function (search) {
+            //     var crosslinkers = search.crosslinkers || [];
+            // 
+            //     crosslinkers.forEach (function (crosslinker) {
+            //         var crosslinkerDescription = crosslinker.description;
+            //         var crosslinkerName = crosslinker.name;
+            //         var linkedAARegex = /LINKEDAMINOACIDS:(.*?)(?:;|$)/g;   // capture both sets if > 1 set
+            //         console.log ("cld", crosslinkerDescription);
+            //         var resSet = linkableResSets[crosslinkerName];
+            // 
+            //         if (!resSet) {
+            //             resSet = {searches: new Set(), linkables: [], name: crosslinkerName};
+            //             linkableResSets[crosslinkerName] = resSet;
+            //         }
+            //         resSet.searches.add (search.id);
+            // 
+            //         var result = null;
+            //         var i = 0;
+            //         while ((result = linkedAARegex.exec(crosslinkerDescription)) !== null) {
+            //             if (!resSet.linkables[i]) {
+            //                 resSet.linkables[i] = new Set();
+            //             }
+            // 
+            //             var resArray = result[1].split(',');
+            //             resArray.forEach (function (res) {
+            //                 var resRegex = /(cterm|nterm|[A-Z])(.*)?/i;
+            //                 var resMatch = resRegex.exec(res);
+            //                 if (resMatch) {
+            //                     resSet.linkables[i].add(resMatch[1].toUpperCase());
+            //                 }
+            //             });
+            //             i++;
+            //         }
+            // 
+            //         resSet.heterobi = resSet.heterobi || (i > 1);
+            //     });
+            // });
+            // console.log ("CROSS", linkableResSets);
+            //this.set("crosslinkerSpecificity", linkableResSets);
 
             //saved config should end up including filter settings not just xiNET layout
             this.set("xiNETLayout", json.xiNETLayout);
@@ -351,7 +391,13 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         var sequence = participant.sequence;
         var seqLength = sequence.length;
         var specificity = this.get("crosslinkerSpecificity");
-
+        // 
+        // var temp = d3.values(linkedResSets);
+        // for (var cl = 0; cl < temp.length; cl++){
+        //     var crossLinkerLinkedResSet = temp[cl];
+        //     var linkables = crossLinkerLinkedResSet.linkables;
+        // 
+        // }
         var specifCount = specificity.length;
         for (var i = 0; i < specifCount; i++) {
             var spec = specificity[i];
@@ -369,7 +415,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                 }
             }
         }
-        //console.log("sp:", specificity, "clf:", crosslinkableResiduesAsFeatures);
+        console.log("sp:", specificity, "clf:", crosslinkableResiduesAsFeatures);
         return crosslinkableResiduesAsFeatures;
     },
 
@@ -488,7 +534,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             //read links
             addCSVLinks();
         } else if (!itsProxl) { // no FASTA file
-            //we may encounter proteins with
+            //we may encounter proteins withid
             //different ids/names but the same accession number.
             var needsSequence = []
             addProteins(iProt1);
@@ -574,14 +620,16 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         //for reading fasta files
         function makeProtein(id, sequence, desc) {
             var name = nameFromIdentifier(id);
-            id = idFromIdentifier(id);
+            var acc = accFromIdentifier(id);
             var protein = {
                 id: id,
+                accession: acc,
                 name: name,
-                sequence: tempSeq,
+                sequence: sequence,
                 description: desc
             };
             participants.set(id, protein);
+            participants.set(acc, protein);
             self.commonRegexes.decoyNames.lastIndex = 0;
             var regexMatch = self.commonRegexes.decoyNames.exec(protein.id);
             if (regexMatch) {
@@ -609,7 +657,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             return name;
         };
         //for reading fasta files
-        function idFromIdentifier(ident) {
+        function accFromIdentifier(ident) {
             var id = ident;
             var iBar = ident.indexOf("|");
             if (iBar !== -1) {
