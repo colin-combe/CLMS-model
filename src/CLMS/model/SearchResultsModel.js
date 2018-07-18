@@ -171,6 +171,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                     }
                 }
             }
+            this.set("crosslinkerSpecificity", /*Array.from(linkableResSet)*/ CLMS.arrayFromMapValues(linkableResSet));
 
             // var linkableResSets = {};
             // searchArray.forEach (function (search) {
@@ -211,8 +212,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             //     });
             // });
             // console.log ("CROSS", linkableResSets);
-
-            this.set("crosslinkerSpecificity", linkableResSet); //CLMS.arrayFromMapValues(linkableResSet));
+            //this.set("crosslinkerSpecificity", linkableResSets);
 
             //saved config should end up including filter settings not just xiNET layout
             this.set("xiNETLayout", json.xiNETLayout);
