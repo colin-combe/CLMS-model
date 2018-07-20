@@ -149,7 +149,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             this.set("enzymeSpecificity", enzymeSpecificity);
 
             //crosslink specificity
-            var linkableResSet = new Set();
+            /*var linkableResSet = new Set();
             for (var s = 0; s < searchCount; s++) {
                 var search = searchArray[s];
                 var crosslinkers = search.crosslinkers || [];
@@ -171,48 +171,48 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                     }
                 }
             }
-            this.set("crosslinkerSpecificity", /*Array.from(linkableResSet)*/ CLMS.arrayFromMapValues(linkableResSet));
+            this.set("crosslinkerSpecificity", CLMS.arrayFromMapValues(linkableResSet));*/
 
-            // var linkableResSets = {};
-            // searchArray.forEach (function (search) {
-            //     var crosslinkers = search.crosslinkers || [];
-            // 
-            //     crosslinkers.forEach (function (crosslinker) {
-            //         var crosslinkerDescription = crosslinker.description;
-            //         var crosslinkerName = crosslinker.name;
-            //         var linkedAARegex = /LINKEDAMINOACIDS:(.*?)(?:;|$)/g;   // capture both sets if > 1 set
-            //         console.log ("cld", crosslinkerDescription);
-            //         var resSet = linkableResSets[crosslinkerName];
-            // 
-            //         if (!resSet) {
-            //             resSet = {searches: new Set(), linkables: [], name: crosslinkerName};
-            //             linkableResSets[crosslinkerName] = resSet;
-            //         }
-            //         resSet.searches.add (search.id);
-            // 
-            //         var result = null;
-            //         var i = 0;
-            //         while ((result = linkedAARegex.exec(crosslinkerDescription)) !== null) {
-            //             if (!resSet.linkables[i]) {
-            //                 resSet.linkables[i] = new Set();
-            //             }
-            // 
-            //             var resArray = result[1].split(',');
-            //             resArray.forEach (function (res) {
-            //                 var resRegex = /(cterm|nterm|[A-Z])(.*)?/i;
-            //                 var resMatch = resRegex.exec(res);
-            //                 if (resMatch) {
-            //                     resSet.linkables[i].add(resMatch[1].toUpperCase());
-            //                 }
-            //             });
-            //             i++;
-            //         }
-            // 
-            //         resSet.heterobi = resSet.heterobi || (i > 1);
-            //     });
-            // });
-            // console.log ("CROSS", linkableResSets);
-            //this.set("crosslinkerSpecificity", linkableResSets);
+            var linkableResSets = {};
+            searchArray.forEach (function (search) {
+                var crosslinkers = search.crosslinkers || [];
+            
+                crosslinkers.forEach (function (crosslinker) {
+                    var crosslinkerDescription = crosslinker.description;
+                    var crosslinkerName = crosslinker.name;
+                    var linkedAARegex = /LINKEDAMINOACIDS:(.*?)(?:;|$)/g;   // capture both sets if > 1 set
+                    console.log ("cld", crosslinkerDescription);
+                    var resSet = linkableResSets[crosslinkerName];
+            
+                    if (!resSet) {
+                        resSet = {searches: new Set(), linkables: [], name: crosslinkerName};
+                        linkableResSets[crosslinkerName] = resSet;
+                    }
+                    resSet.searches.add (search.id);
+            
+                    var result = null;
+                    var i = 0;
+                    while ((result = linkedAARegex.exec(crosslinkerDescription)) !== null) {
+                        if (!resSet.linkables[i]) {
+                            resSet.linkables[i] = new Set();
+                        }
+            
+                        var resArray = result[1].split(',');
+                        resArray.forEach (function (res) {
+                            var resRegex = /(cterm|nterm|[A-Z])(.*)?/i;
+                            var resMatch = resRegex.exec(res);
+                            if (resMatch) {
+                                resSet.linkables[i].add(resMatch[1].toUpperCase());
+                            }
+                        });
+                        i++;
+                    }
+            
+                    resSet.heterobi = resSet.heterobi || (i > 1);
+                });
+            });
+            console.log ("CROSS", linkableResSets);
+            this.set("crosslinkerSpecificity", linkableResSets);
 
             //saved config should end up including filter settings not just xiNET layout
             this.set("xiNETLayout", json.xiNETLayout);
@@ -385,37 +385,45 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         return digestibleResiduesAsFeatures;
     },
 
-    getCrosslinkableResiduesAsFeatures: function(participant) {
+    getCrosslinkableResiduesAsFeatures: function(participant, reactiveGroup) {
         var crosslinkableResiduesAsFeatures = [];
 
         var sequence = participant.sequence;
         var seqLength = sequence.length;
-        var specificity = this.get("crosslinkerSpecificity");
-        // 
-        // var temp = d3.values(linkedResSets);
-        // for (var cl = 0; cl < temp.length; cl++){
-        //     var crossLinkerLinkedResSet = temp[cl];
-        //     var linkables = crossLinkerLinkedResSet.linkables;
-        // 
-        // }
-        var specifCount = specificity.length;
-        for (var i = 0; i < specifCount; i++) {
-            var spec = specificity[i];
-            for (var s = 0; s < seqLength; s++) {
-                if (sequence[s] == spec) {
-                    crosslinkableResiduesAsFeatures.push({
-                        begin: s + 1,
-                        end: s + 1,
-                        name: "CROSS-LINKABLE",
-                        protID: participant.id,
-                        id: participant.id + " Cross-linkable residue" + (s + 1),
-                        category: "AA",
-                        type: "CROSS-LINKABLE"
-                    });
-                }
+        var linkedResSets = this.get("crosslinkerSpecificity");
+        
+        var temp = d3.values(linkedResSets);
+        for (var cl = 0; cl < temp.length; cl++){
+            // resSet = {searches: new Set(), linkables: [], name: crosslinkerName};
+            var crossLinkerLinkedResSet = temp[cl];
+            var linkables = crossLinkerLinkedResSet.linkables;
+
+            //for (var l = 0 ; l < linkables.length; l++) {
+            if (linkables[reactiveGroup - 1]){
+                var linkableSet = linkables[reactiveGroup - 1];
+                var linkableArr = [];
+                linkableSet.forEach(v => linkableArr.push(v));
+                var specifCount = linkableArr.length;
+                for (var i = 0; i < specifCount; i++) {
+                    var spec = linkableArr[i];
+                    for (var s = 0; s < seqLength; s++) {
+                        if (sequence[s] == spec) {
+                            crosslinkableResiduesAsFeatures.push({
+                                begin: s + 1,
+                                end: s + 1,
+                                name: "CROSS-LINKABLE-"+reactiveGroup,
+                                protID: participant.id,
+                                id: participant.id + " Cross-linkable residue" + (s + 1) + "[group "+reactiveGroup+"]",
+                                category: "AA",
+                                type: "CROSS-LINKABLE-"+reactiveGroup
+                            });
+                        }
+                    }
+                }            
             }
         }
-        console.log("sp:", specificity, "clf:", crosslinkableResiduesAsFeatures);
+
+        console.log("reactiveGroup:", reactiveGroup, "sp:", linkedResSets, "clf:", crosslinkableResiduesAsFeatures);
         return crosslinkableResiduesAsFeatures;
     },
 
