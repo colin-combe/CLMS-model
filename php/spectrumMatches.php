@@ -147,27 +147,42 @@ if (count($_GET) > 0) {
     //TODO - use json encode
     $line = pg_fetch_array($res, null, PGSQL_ASSOC);
     while ($line){// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
-            echo "{"
-                . '"id":' . $line["id"] . ','
-                . '"pi1":' . $line["pep1_id"] . ',';
+            echo json_encode (array(//"user"=>$_SESSION['session_name'], "userRights"=>$userRights, "data"=>pg_fetch_all($result), "utilsLogout"=>$utilsLogout));
+                "id"=>$line["id"],
+                "pi1"=>$line["pep1_id"],
+                "pi2"=>$line["pep2_id"],
+                "sp"=>$line["spectrum_id"],
+                "sc"=>json_decode($line["scores"], true)["score"],
+                //     //. '"sc":' . $line["scores"] . ','
+                "si"=>$line["upload_id"],
+                "r"=>$line["rank"],
+                "ions"=>$line["ions"],
+                "pc_c"=>$line["charge_state"],
+                "e_mz"=>$line["exp_mz"],
+                "c_mz"=>$calc_mz
+            ));
 
-            if ($line["pep2_id"]) {
-                echo '"pi2":' . $line["pep2_id"] . ',';
-            }
-            $calc_mz = $line["calc_mz"];
-            if (!isset($calc_mz)) {
-                $calc_mz = 0;
-            }
-            echo '"sp":' . $line["spectrum_id"] . ','
-                . '"sc":' . json_decode($line["scores"], true)["score"] . ','
-                //. '"sc":' . $line["scores"] . ','
-                . '"si":' . $line["upload_id"] . ','
-                . '"r":' . $line["rank"] . ','
-                . '"ions":"' . $line["ions"] .'",'
-                . '"pc_c":' . $line["charge_state"] . ','
-                . '"e_mz":' . $line["exp_mz"] . ','
-                . '"c_mz":' . $calc_mz // . ','
-                . "}";
+            // echo "{"
+            //     . '"id":' . $line["id"] . ','
+            //     . '"pi1":' . $line["pep1_id"] . ',';
+            //
+            // if ($line["pep2_id"]) {
+            //     echo '"pi2":' . $line["pep2_id"] . ',';
+            // }
+            // $calc_mz = $line["calc_mz"];
+            // if (!isset($calc_mz)) {
+            //     $calc_mz = 0;
+            // }
+            // echo '"sp":' . $line["spectrum_id"] . ','
+            //     . '"sc":' . json_decode($line["scores"], true)["score"] . ','
+            //     //. '"sc":' . $line["scores"] . ','
+            //     . '"si":' . $line["upload_id"] . ','
+            //     . '"r":' . $line["rank"] . ','
+            //     . '"ions":"' . $line["ions"] .'",'
+            //     . '"pc_c":' . $line["charge_state"] . ','
+            //     . '"e_mz":' . $line["exp_mz"] . ','
+            //     . '"c_mz":' . $calc_mz // . ','
+            //     . "}";
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);
             if ($line) {echo ",\n";}
     }

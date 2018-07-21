@@ -26,7 +26,9 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     this.ions = ions;
 
     this.spectrum = this.containingModel.get("spectrumSources").get(this.spectrumId);
-    this.scanNumber = this.spectrum.sn;
+    if (this.spectrum) {
+        this.scanNumber = this.spectrum.sn;
+    }
 
     this.precursorCharge = +identification.pc_c;
     if (this.precursorCharge == -1) {
@@ -41,6 +43,9 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     // following will be inadequate for trimeric and higher order cross-links
     if (identification.pi2) {
         this.matchedPeptides[1] = peptides.get(this.searchId + "_" + identification.pi2);
+        if (!this.matchedPeptides[1]){
+            alert(this.searchId + "_" + identification.pi2);
+        }
     }
 
     //if the match is ambiguous it will relate to many crossLinks
@@ -286,7 +291,9 @@ CLMS.model.SpectrumMatch.prototype.isLinear = function() {
 }
 
 CLMS.model.SpectrumMatch.prototype.runName = function() {
-    return this.spectrum.file;
+    if (this.spectrum) {
+        return this.spectrum.file;
+    }
 }
 
 CLMS.model.SpectrumMatch.prototype.group = function() {
@@ -333,11 +340,13 @@ CLMS.model.SpectrumMatch.prototype.crossLinkerModMass = function() {
 }
 
 CLMS.model.SpectrumMatch.prototype.fragmentTolerance = function() {
-    var fragTolArr = this.spectrum.ft.split(" ");
-    return {
-        "tolerance": fragTolArr[0],
-        'unit': fragTolArr[1]
-    };
+    if (this.spectrum) {
+        var fragTolArr = this.spectrum.ft.split(" ");
+        return {
+            "tolerance": fragTolArr[0],
+            'unit': fragTolArr[1]
+        };
+    }
 }
 
 CLMS.model.SpectrumMatch.prototype.fragmentToleranceString = function() {
