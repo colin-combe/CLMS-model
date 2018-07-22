@@ -147,7 +147,7 @@ if (count($_GET) > 0) {
     //TODO - use json encode
     $line = pg_fetch_array($res, null, PGSQL_ASSOC);
     while ($line){// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
-            echo json_encode (array(//"user"=>$_SESSION['session_name'], "userRights"=>$userRights, "data"=>pg_fetch_all($result), "utilsLogout"=>$utilsLogout));
+            echo json_encode (array(
                 "id"=>$line["id"],
                 "pi1"=>$line["pep1_id"],
                 "pi2"=>$line["pep2_id"],
@@ -161,28 +161,6 @@ if (count($_GET) > 0) {
                 "e_mz"=>$line["exp_mz"],
                 "c_mz"=>$line["calc_mz"]
             ));
-
-            // echo "{"
-            //     . '"id":' . $line["id"] . ','
-            //     . '"pi1":' . $line["pep1_id"] . ',';
-            //
-            // if ($line["pep2_id"]) {
-            //     echo '"pi2":' . $line["pep2_id"] . ',';
-            // }
-            // $calc_mz = $line["calc_mz"];
-            // if (!isset($calc_mz)) {
-            //     $calc_mz = 0;
-            // }
-            // echo '"sp":' . $line["spectrum_id"] . ','
-            //     . '"sc":' . json_decode($line["scores"], true)["score"] . ','
-            //     //. '"sc":' . $line["scores"] . ','
-            //     . '"si":' . $line["upload_id"] . ','
-            //     . '"r":' . $line["rank"] . ','
-            //     . '"ions":"' . $line["ions"] .'",'
-            //     . '"pc_c":' . $line["charge_state"] . ','
-            //     . '"e_mz":' . $line["exp_mz"] . ','
-            //     . '"c_mz":' . $calc_mz // . ','
-            //     . "}";
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);
             if ($line) {echo ",\n";}
     }
@@ -205,12 +183,12 @@ if (count($_GET) > 0) {
     echo "\"spectra\":[\n";
     $line = pg_fetch_array($res, null, PGSQL_ASSOC);
     while ($line){// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
-            echo "{"
-                . '"id":' . $line["id"] . ','
-                . '"file":"' . $line["peak_list_file_name"] . '",'
-                . '"sn":' . $line["scan_id"] . ','
-                . '"ft":"' . $line["frag_tol"]. '"'
-                . "}";
+            echo json_encode (array(
+                "id"=>$line["id"],
+                "file"=>$line["peak_list_file_name"],
+                "sn"=>$line["scan_id"],
+                "ft"=>$line["frag_tol"]
+            ));
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);
             if ($line) {echo ",\n";}
     }
@@ -221,7 +199,7 @@ if (count($_GET) > 0) {
     //~ echo '/*php time: '.($endTime - $startTime)."ms\n\n";
 
      /*
-     * PEPTIDES
+     * PEPTIDES (including PEPTIDE EVIDENCES)
      */
      $proteinIdField = "dbsequence_ref";
      if (count($searchId_randomId) > 1) {
@@ -249,23 +227,30 @@ if (count($_GET) > 0) {
      while ($line){// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
              $proteins = str_replace('"', '',  $line["proteins"]);
              $proteinsArray = explode(",",substr($proteins, 1, strlen($proteins) - 2));
-
+             //
              //get protein ids, in case db_seq missing
              $pCount = count($proteinsArray);
              for ($p = 0; $p < $pCount; $p++) {
                  $proteinIds[$proteinsArray[$p]] = 1;
              }
-
+             //
              $positions = $line['positions'];
-             echo "{"
-                 . '"id":"' . $line["id"] . '",'
-                 . '"u_id":"' . $line["upload_id"] . '",'
-                 . '"seq_mods":"' . $line["seq_mods"] . '",'
-                 . '"linkSite":' . $line["link_site"]. ','
-                 . '"clModMass":"' . $line["crosslinker_modmass"]. '",'
-                 . '"prt":["' . implode($proteinsArray, '","') . '"],'
-                 . '"pos":[' . substr($positions, 1, strlen($positions) - 2) . ']'
-                 . "}";
+             $positionsArray = explode(",",substr($positions, 1, strlen($positions) - 2));
+             $pCount = count($positionsArray);
+             for ($p = 0; $p < $pCount; $p++) {
+                 $positionsArray[$p] = (int) $positionsArray[$p];
+             }
+
+             echo json_encode (array(
+                 "id"=>$line["id"],
+                 "u_id"=>$line["upload_id"],
+                 "seq_mods"=>$line["seq_mods"],
+                 "linkSite"=>(int) $line["link_site"],
+                 "clModMass"=>$line["crosslinker_modmass"],
+                 "prt"=>$proteinsArray,
+                 "pos"=>$positionsArray
+             ));
+
              $line = pg_fetch_array($res, null, PGSQL_ASSOC);
              if ($line) {echo ",\n";}
      }
@@ -274,32 +259,6 @@ if (count($_GET) > 0) {
     pg_free_result($res);
      $endTime = microtime(true);
      //~ echo '/*php time: '.($endTime - $startTime)."ms\n\n";
-
-     /*
-      * PEPTIDE EVIDENCES
-      */
-      // $query = "SELECT * FROM peptide_evidences WHERE upload_id = ".$sid.";";
-      // $startTime = microtime(true);
-      // $res = pg_query($query) or die('Query failed: ' . pg_last_error());
-      // $endTime = microtime(true);
-      // //~ echo '/*db time: '.($endTime - $startTime)."ms\n";
-      // //~ echo '/*rows:'.pg_num_rows($res)."\n";
-      // $startTime = microtime(true);
-      // echo "\"peptide_evidences\":[\n";
-      // $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-      // while ($line){// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
-      //         echo "{"
-      //             . '"pep_id":"' . $line["peptide_ref"] . '",'
-      //             . '"seq_id":"' . $line["dbsequence_ref"] . '",'
-      //             . '"start":' . $line["pep_start"]//. ','
-      //             // . '"isDecoy":' . $line["is_decoy"]
-      //             . "}";
-      //         $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-      //         if ($line) {echo ",\n";}
-      // }
-      // echo "\n],\n";
-      // $endTime = microtime(true);
-      //~ echo '/*php time: '.($endTime - $startTime)."ms\n\n";
 
     /*
      * PROTEINS
@@ -337,18 +296,15 @@ if (count($_GET) > 0) {
     }
     else {
         while ($line){
-                // $isDecoy = ($line["is_decoy"] == "t")? 'true' : 'false';
                 $pId = $line[$proteinIdField];
-                //~ echo '"' . $pId . '":{'
-                echo '{'
-                    . '"id":"' . $pId . '",'
-                    // . '"real_id":"' . $line["real_id"] . '",'
-                    . '"name":"' . $line["protein_name"] . '",'
-                    //. '"description":"' . $line["description"] . '",'
-                    . '"accession":"' .$line["accession"]  . '",'
-                    . '"seq_mods":"' .$line["sequence"] . '"'
-                    // . '"is_decoy":' .$isDecoy
-                    . "}";
+
+                echo json_encode(array(
+                    "id"=>$pId,
+                    "name"=>$line["protein_name"],
+                    "description"=>$line["description"],
+                    "accession"=>$line["accession"],
+                    "seq_mods"=>$line["sequence"]
+                ));
 
                 $interactorAccs[$line["accession"]] = 1;
 
