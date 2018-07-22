@@ -1,7 +1,7 @@
 <?php
 if (count($_GET) > 0) {
 
-    $sid = urldecode($_GET["uid"]);
+    $sid = urldecode($_GET["upload"]);
     $spid = urldecode($_GET['spid']); // spectrum id
     //SQL injection defense
     $pattern = '/[^0-9,\-]/';
@@ -17,9 +17,9 @@ if (count($_GET) > 0) {
     $id = $dashSeperated[0];
 
     $searchDataQuery = "SELECT s.id, s.random_id
-		FROM search s
+		FROM uploads s
 		WHERE s.id = '".$id."';";
-	
+
     $res = pg_query($searchDataQuery)
                 or die('Query failed: ' . pg_last_error());
     $line = pg_fetch_array($res, null, PGSQL_ASSOC);
@@ -33,10 +33,10 @@ if (count($_GET) > 0) {
 	} else {
 		$query = "SELECT peak_list
 			FROM spectra
-			WHERE id = $spid AND upload_id = $uid;";
-
-	    $res = pg_query($dbconn, $query) or die('Query failed: ' . pg_last_error());
-	    echo json_encode(pg_fetch_all($res));
+			WHERE id = $spid AND upload_id = $id;";
+        $res = pg_query($dbconn, $query) or die('Query failed: ' . pg_last_error());
+        $row = pg_fetch_row($res);
+        echo $row[0];
 	}
 
     // Free resultset

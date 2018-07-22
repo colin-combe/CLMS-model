@@ -287,7 +287,7 @@ CLMS.model.SpectrumMatch.prototype.isDecoy = function() {
 }
 
 CLMS.model.SpectrumMatch.prototype.isLinear = function() {
-    return this.linkPos1 === 0;
+    return this.linkPos1 === -1;
 }
 
 CLMS.model.SpectrumMatch.prototype.runName = function() {
