@@ -159,7 +159,7 @@ if (count($_GET) > 0) {
                 "ions"=>$line["ions"],
                 "pc_c"=>$line["charge_state"],
                 "e_mz"=>$line["exp_mz"],
-                "c_mz"=>$calc_mz
+                "c_mz"=>$line["calc_mz"]
             ));
 
             // echo "{"
