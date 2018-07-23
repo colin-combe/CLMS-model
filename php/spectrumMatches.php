@@ -130,11 +130,12 @@ if (count($_GET) > 0) {
 
     $query = "SELECT * FROM spectrum_identifications WHERE ".$WHERE_uploadClause." AND ";
     if ($spectrumId != null) {
-        $query = $query. "spectrum_id = ".$spectrumId.";";
+        $query = $query. "spectrum_id = ".$spectrumId;
     }
     else {
-        $query = $query. "rank = 1;";
+        $query = $query. "rank = 1";
     }
+    $query = $query. " ORDER BY scores->>'score' DESC";
     $startTime = microtime(true);
     $res = pg_query($query) or die('Query failed: ' . pg_last_error());
     $endTime = microtime(true);
