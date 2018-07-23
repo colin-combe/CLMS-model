@@ -284,7 +284,6 @@ if (count($_GET) > 0) {
         for ($p = 0; $p < $pCount; $p++){
             echo '{'
                 . '"id":"' . $pKeys[$p] . '",'
-                // . '"real_id":"' . $line["real_id"] . '",'
                 . '"name":"' . $pKeys[$p] . '",'
                 . '"description":"' . $pKeys[$p] . '",'
                 . '"accession":"' .$pKeys[$p]  . '",'
