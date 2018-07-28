@@ -18,8 +18,10 @@ CLMS.model.CrossLink = function(id, fromProtein, fromResidue, toProtein, toResid
 };
 
 CLMS.model.CrossLink.prototype.isDecoyLink = function() {
-    return (this.fromProtein.is_decoy == true ||
+    var result = (this.fromProtein.is_decoy == true ||
         (this.toProtein && this.toProtein.is_decoy == true));
+    console.log("DECOY:"+result);
+    return result;
 };
 
 CLMS.model.CrossLink.prototype.isSelfLink = function() {

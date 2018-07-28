@@ -228,18 +228,24 @@ if (count($_GET) > 0) {
      while ($line){// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
              $proteins = str_replace('"', '',  $line["proteins"]);
              $proteinsArray = explode(",",substr($proteins, 1, strlen($proteins) - 2));
-             //
              //get protein ids, in case db_seq missing
              $pCount = count($proteinsArray);
              for ($p = 0; $p < $pCount; $p++) {
                  $proteinIds[$proteinsArray[$p]] = 1;
              }
-             //
+
              $positions = $line['positions'];
              $positionsArray = explode(",",substr($positions, 1, strlen($positions) - 2));
              $pCount = count($positionsArray);
              for ($p = 0; $p < $pCount; $p++) {
                  $positionsArray[$p] = (int) $positionsArray[$p];
+             }
+
+             $isDecoys = $line['is_decoy'];
+             $isDecoyArray = explode(",",substr($isDecoys, 1, strlen($isDecoys) - 2));
+             $dCount = count($isDecoyArray);
+             for ($d = 0; $d < $pCount; $d++) {
+                 $isDecoyArray[$d] = (int) $isDecoyArray[$d];
              }
 
              echo json_encode (array(
@@ -249,7 +255,8 @@ if (count($_GET) > 0) {
                  "linkSite"=>(int) $line["link_site"],
                  "clModMass"=>$line["crosslinker_modmass"],
                  "prt"=>$proteinsArray,
-                 "pos"=>$positionsArray
+                 "pos"=>$positionsArray,
+                 "is_decoy"=>$isDecoyArray
              ));
 
              $line = pg_fetch_array($res, null, PGSQL_ASSOC);

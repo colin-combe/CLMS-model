@@ -241,10 +241,10 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
 
                     matches.push(match);
 
-                    if (maxScore === undefined || match.score > maxScore) {
-                        maxScore = match.score;
-                    } else if (minScore === undefined || match.score < minScore) {
-                        minScore = match.score;
+                    if (maxScore === undefined || match.score() > maxScore) {
+                        maxScore = match.score();
+                    } else if (minScore === undefined || match.score() < minScore) {
+                        minScore = match.score();
                     }
                 }
             }
@@ -254,13 +254,13 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
 
             var participantArray = CLMS.arrayFromMapValues(participants);
             // only count real participants towards participant count (which is used as cut-off further on)
-            var realParticipantArray = participantArray.filter(function(p) {
+            var targetParticipantArray = participantArray.filter(function(p) {
                 return !p.is_decoy;
             });
-            var participantCount = realParticipantArray.length;
+            var participantCount = targetParticipantArray.length;
 
             for (var p = 0; p < participantCount; p++) {
-                var participant = realParticipantArray[p];
+                var participant = targetParticipantArray[p];
                 var uniprot = json.interactors ? json.interactors[participant.accession] : null;
                 participant.uniprot = uniprot;
             }
@@ -319,9 +319,9 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         if (!protObj.crossLinks) {
             protObj.crossLinks = [];
         }
-        //protObj.hidden = false;
-        // TODO deal with devoys better
-        if (protObj.name.indexOf("DECOY") != -1) {
+        var decoyNames = /(REV_)|(RAN_)|(DECOY_)|(DECOY:)|(reverse_)/;
+        if (decoyNames.exec(protObj.name)) {
+            this.set("decoysPresent", true);
             protObj.is_decoy = true;
         } else {
             protObj.is_decoy = false;

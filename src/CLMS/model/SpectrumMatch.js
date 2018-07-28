@@ -14,7 +14,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     this.id = this.searchId + "_" + identification.id;
     this.precursorMZ = +identification.e_mz; // experimental MZ, accessor for this att is called expMZ()
     this.calc_mz = +identification.c_mz;
-    this.score = +identification.sc;
+    this._score = +identification.sc;
 
     var ionTypes = identification.ions.split(";");
     var ionTypeCount = ionTypes.length;
@@ -38,16 +38,25 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     this.matchedPeptides = [];
     this.matchedPeptides[0] = peptides.get(this.searchId + "_" + identification.pi1);
     if (!this.matchedPeptides[0]){
-        alert(this.searchId + "_" + identification.pi1);
+        alert("peptide error (missing peptide evidence?) for:" + identification.pi1);
+    }
+    else {
+        if (this.matchedPeptides[0].is_decoy.length > 0) {
+            this.is_decoy = true;
+        }
     }
     // following will be inadequate for trimeric and higher order cross-links
     if (identification.pi2) {
         this.matchedPeptides[1] = peptides.get(this.searchId + "_" + identification.pi2);
         if (!this.matchedPeptides[1]){
-            alert(this.searchId + "_" + identification.pi2);
+            alert("peptide error (missing peptide evidence?) for:" +  + identification.pi2);
         }
     }
-
+    else {
+        if (this.matchedPeptides[1].is_decoy.length > 0) {
+            this.is_decoy = true;
+        }
+    }
     //if the match is ambiguous it will relate to many crossLinks
     this.crossLinks = [];
     this.linkPos1 = +this.matchedPeptides[0].linkSite;
@@ -352,4 +361,8 @@ CLMS.model.SpectrumMatch.prototype.fragmentTolerance = function() {
 CLMS.model.SpectrumMatch.prototype.fragmentToleranceString = function() {
     var fragTol = this.fragmentTolerance();
     return fragTol.tolerance + " " + fragTol.unit;
+}
+
+CLMS.model.SpectrumMatch.prototype.score = function() {
+    return this._score;
 }
