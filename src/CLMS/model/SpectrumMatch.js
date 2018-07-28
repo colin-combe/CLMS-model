@@ -41,7 +41,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
         alert("peptide error (missing peptide evidence?) for:" + identification.pi1);
     }
     else {
-        if (this.matchedPeptides[0].is_decoy.length > 0) {
+        if (this.matchedPeptides[0].is_decoy.indexOf("1") != -1) {
             this.is_decoy = true;
         }
     }
@@ -53,7 +53,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
         }
     }
     else {
-        if (this.matchedPeptides[1].is_decoy.length > 0) {
+        if (this.matchedPeptides[1].is_decoy.indexOf("1") != -1) {
             this.is_decoy = true;
         }
     }
