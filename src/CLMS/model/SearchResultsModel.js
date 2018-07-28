@@ -66,6 +66,9 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             decoysPresent: false,
             ambiguousPresent: false,
             crossLinksPresent: false,
+            linearsPresent: false, // TODO
+            scoreSets: new Set (),
+            selectedScoreSet: null
         };
     },
 
@@ -249,6 +252,8 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                 }
             }
 
+            console.log("score sets:",this.get("scoreSets"));
+
             this.set("minScore", minScore);
             this.set("maxScore", maxScore);
 
@@ -400,31 +405,31 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         prots.forEach(function(prot) {
             nameMap.set(prot.name, prot.id);
             accessionMap.set(prot.accession, prot.id);
-            prot.realProteinID = prot.id; // this gets overwritten for decoys in next bit, mjg
+            prot.targetProteinID = prot.id; // this gets overwritten for decoys in next bit, mjg
         });
-        var decoyToRealMap = d3.map();
+        var decoyToTargetMap = d3.map();
         var decoys = prots.filter(function(p) {
             return p.is_decoy;
         });
         decoys.forEach(function(decoyProt) {
             prefixes.forEach(function(pre) {
-                var realProtIDByName = nameMap.get(decoyProt.name.substring(pre.length));
+                var targetProtIDByName = nameMap.get(decoyProt.name.substring(pre.length));
                 if (decoyProt.accession) {
-                    var realProtIDByAccession = accessionMap.get(decoyProt.accession.substring(pre.length));
-                    if (realProtIDByName && realProtIDByAccession) {
-                        decoyProt.realProteinID = realProtIDByName; // mjg
+                    var targetProtIDByAccession = accessionMap.get(decoyProt.accession.substring(pre.length));
+                    if (targetProtIDByName && targetProtIDByAccession) {
+                        decoyProt.targetProteinID = targetProtIDByName; // mjg
                     }
-                } else if (realProtIDByName) {
-                    decoyProt.realProteinID = realProtIDByName; // mjg
+                } else if (targetProtIDByName) {
+                    decoyProt.targetProteinID = targetProtIDByName; // mjg
                 }
             });
         });
 
-        this.realProteinCount = prots.length - decoys.length;
+        this.targetProteinCount = prots.length - decoys.length;
     },
 
     isMatchingProteinPair: function(prot1, prot2) {
-        return prot1 && prot2 && prot1.realProteinID === prot2.realProteinID;
+        return prot1 && prot2 && prot1.targetProteinID === prot2.targetProteinID;
     },
 
     isMatchingProteinPairFromIDs: function(prot1ID, prot2ID) {

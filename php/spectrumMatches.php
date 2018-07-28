@@ -153,8 +153,8 @@ if (count($_GET) > 0) {
                 "pi1"=>$line["pep1_id"],
                 "pi2"=>$line["pep2_id"],
                 "sp"=>$line["spectrum_id"],
-                "sc"=>json_decode($line["scores"], true)["score"],
-                //     //. '"sc":' . $line["scores"] . ','
+                //"sc"=>json_decode($line["scores"], true)["score"],
+                "sc"=>json_decode($line["scores"]),
                 "si"=>$line["upload_id"],
                 "r"=>$line["rank"],
                 "ions"=>$line["ions"],

@@ -14,7 +14,15 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     this.id = this.searchId + "_" + identification.id;
     this.precursorMZ = +identification.e_mz; // experimental MZ, accessor for this att is called expMZ()
     this.calc_mz = +identification.c_mz;
-    this._score = +identification.sc;
+
+    this._scores = identification.sc;
+    var scoreSets = Object.keys(this._scores);
+    var scoreSetCount = scoreSets.length;
+    for (var s = 0; s < scoreSetCount; s++){
+        var scoreSet = scoreSets[s];
+        console.log("SS:", scoreSet)
+        this.containingModel.get("scoreSets").add(scoreSet);
+    }
 
     var ionTypes = identification.ions.split(";");
     var ionTypeCount = ionTypes.length;
@@ -43,6 +51,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     else {
         if (this.matchedPeptides[0].is_decoy.indexOf("1") != -1) {
             this.is_decoy = true;
+            this.containingModel.set("decoysPresent", true);
         }
     }
     // following will be inadequate for trimeric and higher order cross-links
@@ -55,6 +64,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     else {
         if (this.matchedPeptides[1].is_decoy.indexOf("1") != -1) {
             this.is_decoy = true;
+            this.containingModel.set("decoysPresent", true);
         }
     }
     //if the match is ambiguous it will relate to many crossLinks
@@ -364,5 +374,10 @@ CLMS.model.SpectrumMatch.prototype.fragmentToleranceString = function() {
 }
 
 CLMS.model.SpectrumMatch.prototype.score = function() {
-    return this._score;
+    //return this._scores.score;
+    var scoreSets = this.containingModel.get("scoreSets");
+    if (scoreSets.size == 1) {
+        var scoreSet = scoreSets.keys().next().value;
+        return this._scores[scoreSet];
+    }
 }
