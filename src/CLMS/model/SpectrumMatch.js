@@ -20,7 +20,6 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     var scoreSetCount = scoreSets.length;
     for (var s = 0; s < scoreSetCount; s++){
         var scoreSet = scoreSets[s];
-        console.log("SS:", scoreSet)
         this.containingModel.get("scoreSets").add(scoreSet);
     }
 

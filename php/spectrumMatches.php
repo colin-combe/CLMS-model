@@ -102,18 +102,18 @@ if (count($_GET) > 0) {
     $WHERE_uploadClause = $WHERE_uploadClause.') ';
     $WHERE_uploadClause_tableP = $WHERE_uploadClause_tableP.') ';
 
-/*    // TODO Stored layouts
+    // TODO Stored layouts
     $layoutQuery = "SELECT t1.layout AS l "
     . " FROM layouts AS t1 "
-    . " WHERE t1.search_id LIKE '" . $sid . "' "
+    . " WHERE t1.search_id LIKE '" . $uploadId . "' "
     . " AND t1.time = (SELECT max(t1.time) FROM layouts AS t1 "
-    . " WHERE t1.search_id LIKE '" . $sid . "' );";
+    . " WHERE t1.search_id LIKE '" . $uploadId . "' );";
 
     $layoutResult = pg_query($layoutQuery) or die('Query failed: ' . pg_last_error());
     while ($line = pg_fetch_array($layoutResult, null, PGSQL_ASSOC)) {
     echo "\"xiNETLayout\":" . stripslashes($line["l"]) . ",\n\n";
     }
-*/
+
 
     $query = "SELECT * FROM modifications WHERE ".$WHERE_uploadClause.";";
     $res = pg_query($query) or die('Query failed: ' . pg_last_error());
