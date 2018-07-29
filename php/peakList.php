@@ -15,7 +15,7 @@ if (count($_GET) > 0) {
     include('../../connectionString.php');
     $dbconn = pg_connect($connectionString) or die('Could not connect: ' . pg_last_error());
 
-    $id = validateID_RandID($dbConn, $sid);
+    $id = validateID_RandID($dbconn, $sid);
 
 	if ($id > 0) {
 		$query = "SELECT peak_list
