@@ -375,8 +375,8 @@ CLMS.model.SpectrumMatch.prototype.fragmentToleranceString = function() {
 CLMS.model.SpectrumMatch.prototype.score = function() {
     //return this._scores.score;
     var scoreSets = this.containingModel.get("scoreSets");
-    if (scoreSets.size == 1) {
+    //if (scoreSets.size == 1) {
         var scoreSet = scoreSets.keys().next().value;
         return this._scores[scoreSet];
-    }
+    //}
 }
