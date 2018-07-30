@@ -176,27 +176,27 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             var linkableResSets = {};
             searchArray.forEach (function (search) {
                 var crosslinkers = search.crosslinkers || [];
-            
+
                 crosslinkers.forEach (function (crosslinker) {
                     var crosslinkerDescription = crosslinker.description;
                     var crosslinkerName = crosslinker.name;
                     var linkedAARegex = /LINKEDAMINOACIDS:(.*?)(?:;|$)/g;   // capture both sets if > 1 set
                     console.log ("cld", crosslinkerDescription);
                     var resSet = linkableResSets[crosslinkerName];
-            
+
                     if (!resSet) {
                         resSet = {searches: new Set(), linkables: [], name: crosslinkerName};
                         linkableResSets[crosslinkerName] = resSet;
                     }
                     resSet.searches.add (search.id);
-            
+
                     var result = null;
                     var i = 0;
                     while ((result = linkedAARegex.exec(crosslinkerDescription)) !== null) {
                         if (!resSet.linkables[i]) {
                             resSet.linkables[i] = new Set();
                         }
-            
+
                         var resArray = result[1].split(',');
                         resArray.forEach (function (res) {
                             var resRegex = /(cterm|nterm|[A-Z])(.*)?/i;
@@ -207,7 +207,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                         });
                         i++;
                     }
-            
+
                     resSet.heterobi = resSet.heterobi || (i > 1);
                 });
             });
@@ -274,10 +274,10 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
 
                     matches.push(match);
 
-                    if (maxScore === undefined || match.score > maxScore) {
-                        maxScore = match.score;
-                    } else if (minScore === undefined || match.score < minScore) {
-                        minScore = match.score;
+                    if (maxScore === undefined || match.score() > maxScore) {
+                        maxScore = match.score();
+                    } else if (minScore === undefined || match.score() < minScore) {
+                        minScore = match.score();
                     }
                 }
             }
@@ -391,7 +391,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         var sequence = participant.sequence;
         var seqLength = sequence.length;
         var linkedResSets = this.get("crosslinkerSpecificity");
-        
+
         var temp = d3.values(linkedResSets);
         for (var cl = 0; cl < temp.length; cl++){
             // resSet = {searches: new Set(), linkables: [], name: crosslinkerName};
@@ -419,7 +419,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                             });
                         }
                     }
-                }            
+                }
             }
         }
 

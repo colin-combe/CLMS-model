@@ -413,5 +413,5 @@ CLMS.model.SpectrumMatch.prototype.fragmentToleranceString = function() {
 }
 
 CLMS.model.SpectrumMatch.prototype.score = function() {
-    return this._scores;
+    return this._score;
 }
