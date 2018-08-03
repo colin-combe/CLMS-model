@@ -501,7 +501,7 @@ if (count($_GET) > 0) {
 
                     echo json_encode(array(
                         "id"=>+$line["id"],
-                        "seq_mods"=>$line["sequence"],CLMS-model/php/spectrumMatches.php?sid=11823-40874-48468-41266-27281
+                        "seq_mods"=>$line["sequence"],
     					"prt"=>$proteinsArray,
     					"pos"=>$positionsArray
                     ));
