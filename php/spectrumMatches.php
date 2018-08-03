@@ -549,7 +549,6 @@ if (count($_GET) > 0) {
 						"seq_mods"=>$line["sequence"],
 						"is_decoy"=>$isDecoy
                     ));
-CLMS-model/php/spectrumMatches.php?sid=11823-40874-48468-41266-27281
 					$interactorAccs[preg_split("/-/", $line["accession_number"])[0]] = 1;//echo "**".$interactorQuery."**";
 			
 
