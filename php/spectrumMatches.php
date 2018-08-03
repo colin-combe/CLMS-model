@@ -32,9 +32,22 @@ if (count($_GET) > 0) {
     else {
         $spectrumId = null;
     }
-    //SQL injection defense
+
+    $linears = false;
+    if (isset($_GET['linears'])) {
+        if ($_GET['linears'] === '1' || $_GET['linears'] === '0')     {
+            $linears = (bool) $_GET['linears'];
+        }
+    }
+
+	$matchid = '';
+    if (isset($_GET['matchid'])) {
+        $matchid = (string) $_GET['matchid'];
+    }
+
     $pattern = '/[^0-9,\-]/';
-    if (preg_match($pattern, $uploadId) || preg_match($pattern, $spectrumId)){
+    if (preg_match($pattern, $uploadId) || preg_match($pattern, $spectrumId)
+         || preg_match($pattern, $linears) || preg_match($pattern, $matchid)){
         exit();
     }
 
@@ -324,35 +337,41 @@ if (count($_GET) > 0) {
     pg_free_result($res);
 
     //interactors
-    // $interactorQuery = "SELECT * FROM uniprot WHERE accession IN ('"
-    // 		.implode(array_keys($interactorAccs), "','")."');";
-    // //echo "**".$interactorQuery."**";
-    // try {
-    //     // @ stops pg_connect echo'ing out failure messages that knacker the returned data
-    //     $interactorDbConn = @pg_connect($interactionConnection);// or die('Could not connect: ' . pg_last_error());
-    //
-    //     if ($interactorDbConn) {
-    //         $interactorResult = pg_query($interactorQuery);// or die('Query failed: ' . pg_last_error());
-    //         echo "\"interactors\":{\n";
-    //         $line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
-    //         while ($line) {
-    //             echo "\"".$line["accession"]."\":".$line["json"];
-    //             $line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
-    //             if ($line) {echo ",\n";}
-    //         }
-    //         echo "\n},";
-    //     } else {
-    //         throw new Exception ("Could not connect to interaction database");
-    //     }
-    // } catch (Exception $e) {
-    //     //error_log (print_r ("UNIPROT ERR ".$e, true));
-    //     echo "\"interactors\":{},\n";
-    // }
+    $interactorQuery = "SELECT * FROM uniprot WHERE accession IN ('"
+    		.implode(array_keys($interactorAccs), "','")."');";
+    //echo "**".$interactorQuery."**";
+	$interactors = array();
+    echo ",\"interactors\":\n";
+    try {
+        // @ stops pg_connect echo'ing out failure messages that knacker the returned data
+        $interactorDbConn = @pg_connect($interactionConnection);// or die('Could not connect: ' . pg_last_error());
+    
+        if ($interactorDbConn) {
+            $interactorResult = pg_query($interactorQuery);// or die('Query failed: ' . pg_last_error());
+            $line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
+            while ($line) {
+                $interactors[$line["accession"]] = json_decode($line["json"]);
+                $line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
+            }
+        } else {
+            throw new Exception ("Could not connect to interaction database");
+        }
+    } catch (Exception $e) {
+        //error_log (print_r ("UNIPROT ERR ".$e, true));
+        //echo "\"interactors\":{},\n";
+    }
 
-    echo "}\n";
+    echo json_encode ($interactors);
     $endTime = microtime(true);
     //~ echo '/*php time: '.($endTime - $startTime)."ms*/\n\n";
-
+    //echo ",\n";
+        
+	if ($matchid !== "") {	// send matchid back for sync purposes
+		echo "\n, \"matchid\":\"".$matchid."\"}";
+	}
+    else {
+        echo "}";
+    }
     // Free resultset
     //pg_free_result($res);
     // Closing connection
