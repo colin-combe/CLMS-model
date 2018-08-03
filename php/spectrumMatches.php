@@ -501,7 +501,7 @@ if (count($_GET) > 0) {
 
                     echo json_encode(array(
                         "id"=>+$line["id"],
-                        "seq_mods"=>$line["sequence"],
+                        "seq_mods"=>$line["sequence"],CLMS-model/php/spectrumMatches.php?sid=11823-40874-48468-41266-27281
     					"prt"=>$proteinsArray,
     					"pos"=>$positionsArray
                     ));
@@ -534,7 +534,8 @@ if (count($_GET) > 0) {
 			//~ echo '/*db time: '.($endTime - $startTime)."ms*/\n";
 			//~ echo '/*rows:'.pg_num_rows($res)."*/\n";
 			$interactorAccs = [];
-			echo "\"proteins\":[\n";
+			echo "\"proteins\":[\n";//echo "**".$interactorQuery."**";
+			
 			$line = pg_fetch_array($res, null, PGSQL_ASSOC);
 			while ($line){// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
 					$isDecoy = $line["is_decoy"] == "t";
@@ -548,8 +549,9 @@ if (count($_GET) > 0) {
 						"seq_mods"=>$line["sequence"],
 						"is_decoy"=>$isDecoy
                     ));
-
-					$interactorAccs[preg_split("/-/", $line["accession_number"])[0]] = 1;
+CLMS-model/php/spectrumMatches.php?sid=11823-40874-48468-41266-27281
+					$interactorAccs[preg_split("/-/", $line["accession_number"])[0]] = 1;//echo "**".$interactorQuery."**";
+			
 
 					$line = pg_fetch_array($res, null, PGSQL_ASSOC);
 					if ($line) {echo ",\n";}
@@ -559,28 +561,29 @@ if (count($_GET) > 0) {
 			//interactors
 			$interactorQuery = "SELECT * FROM uniprot WHERE accession IN ('"
 					.implode(array_keys($interactorAccs), "','")."');";
-			//echo "**".$interactorQuery."**";
-			try {
+			$interactors = array();
+            echo "\"interactors\":\n";
+            try {
 				// @ stops pg_connect echo'ing out failure messages that knacker the returned data
 				$interactorDbConn = @pg_connect($interactionConnection);// or die('Could not connect: ' . pg_last_error());
                 if ($interactorDbConn) {
 					$interactorResult = pg_query($interactorQuery);// or die('Query failed: ' . pg_last_error());
-					echo "\"interactors\":{\n";
 					$line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
 					while ($line) {
-						echo "\"".$line["accession"]."\":".$line["json"];
-						$line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
+                        $interactors[$line["accession"]] = json_decode($line["json"]);
+                        $line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
 						if ($line) {echo ",\n";}
 					}
-					echo "\n},";
 				} else {
 					throw new Exception ("Could not connect to interaction database");
 				}
 			} catch (Exception $e) {
 				//error_log (print_r ("UNIPROT ERR ".$e, true));
-				echo "\"interactors\":{},\n";
+				//echo "\"interactors\":{},\n";
 			}
-
+            echo json_encode ($interactors);
+            echo ",\n";
+                
 			if ($matchid !== "") {	// send matchid back for sync purposes
 				echo "\"matchid\":\"".$matchid."\",\n";
 			}
