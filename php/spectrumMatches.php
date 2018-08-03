@@ -571,7 +571,6 @@ if (count($_GET) > 0) {
 					while ($line) {
                         $interactors[$line["accession"]] = json_decode($line["json"]);
                         $line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
-						if ($line) {echo ",\n";}
 					}
 				} else {
 					throw new Exception ("Could not connect to interaction database");
