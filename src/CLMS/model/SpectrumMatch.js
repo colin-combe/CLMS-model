@@ -58,7 +58,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
 
     this.precursorMZ = +rawMatches[0].pc_mz;
     this.calc_mass = +rawMatches[0].cm;
-    this.score = +rawMatches[0].sc;
+    this._score = +rawMatches[0].sc;
     //autovalidated - another attribute
     if (rawMatches[0].av) {
         if (rawMatches[0].av == "t") {
@@ -410,4 +410,8 @@ CLMS.model.SpectrumMatch.prototype.fragmentTolerance = function() {
 CLMS.model.SpectrumMatch.prototype.fragmentToleranceString = function() {
     var search = this.containingModel.get("searches").get(this.searchId);
     return search.ms2tolerance + " " + search.ms2toleranceunits;
+}
+
+CLMS.model.SpectrumMatch.prototype.score = function() {
+    return this._score;
 }
