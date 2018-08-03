@@ -26,11 +26,6 @@ if (count($_GET) > 0) {
     $dbconn = pg_connect($connectionString) or die('Could not connect: ' . pg_last_error());
 
     $sid = urldecode($_GET["sid"]);
-    //SQL injection defense
-    $pattern = '/[^0-9,\-]/';
-    if (preg_match($pattern, $sid)){
-        exit();
-    }
 
     $unval = false;
     if (isset($_GET['unval'])){
@@ -67,6 +62,20 @@ if (count($_GET) > 0) {
             $accAsId = (bool) $_GET['accAsId'];
         }
     }
+
+    //SQL injection defense
+    $pattern = '/[^0-9,\-]/';
+    if (preg_match($pattern, $sid)
+        || preg_match($pattern, $unval)
+        || preg_match($pattern, $linears)
+        || preg_match($pattern, $spectrum)
+        || preg_match($pattern, $matchid)
+        || preg_match($pattern, $lowestScore)
+        || preg_match($pattern, $accIsId)
+        ){
+        exit();
+    }
+
 
     //keep the long identifier for this combination of searches
     echo '{"sid":"'.$sid.'",';
