@@ -26,6 +26,7 @@ if (count($_GET) > 0) {
     $dbconn = pg_connect($connectionString) or die('Could not connect: ' . pg_last_error());
 
     $uploadId = urldecode($_GET["upload"]);
+
     if (isset($_GET["spectrum"])){
         $spectrumId = urldecode($_GET["spectrum"]);
     }
@@ -46,18 +47,20 @@ if (count($_GET) > 0) {
     }
 
     $pattern = '/[^0-9,\-]/';
-    if (preg_match($pattern, $uploadId) || preg_match($pattern, $spectrumId)
-         || preg_match($pattern, $linears) || preg_match($pattern, $matchid)){
+    if (preg_match($pattern, $uploadId)
+            || preg_match($pattern, $spectrumId)
+            || preg_match($pattern, $linears)
+            || preg_match($pattern, $matchid)){
         exit();
     }
 
     $id_rands = explode("," , $uploadId);
-    $search_meta_json = '{';
+    // $search_meta_json = '{';
     $searchId_randomId = [];
     for ($i = 0; $i < count($id_rands); $i++) {
-        if ($i > 0) {
-            $search_meta_json = $search_meta_json.',';
-        }
+        // if ($i > 0) {
+        //     $search_meta_json = $search_meta_json.',';
+        // }
         $dashSeperated = explode("-" , $id_rands[$i]);
         $randId = implode('-' , array_slice($dashSeperated, 1 , 4));
         $id = $dashSeperated[0];
@@ -68,6 +71,18 @@ if (count($_GET) > 0) {
                     or die('Query failed: ' . pg_last_error());
         $line = pg_fetch_array($res, null, PGSQL_ASSOC);
 
+        // json decoding
+        $line["peak_list_file_names"] = json_decode($line["peak_list_file_names"]);
+        $line["analysis_software"] = json_decode($line["analysis_software"]);
+        $line["provider"] = json_decode($line["provider"]);
+        $line["audits"] = json_decode($line["audits"]);
+        $line["samples"] = json_decode($line["samples"]);
+        $line["analyses"] = json_decode($line["analyses"]);
+        $line["protocol"] = json_decode($line["protocol"]);
+        $line["bib"] = json_decode($line["bib"]);
+        $line["spectra_formats"] = json_decode($line["spectra_formats"]);
+        $line["upload_warnings"] = json_decode($line["upload_warnings"]);
+
         if (count($dashSeperated) == 6){
             $line["group"] = $dashSeperated[5];
         } else {
@@ -77,27 +92,13 @@ if (count($_GET) > 0) {
             //echo "no";
             exit();
         }
-        $search_meta_json = $search_meta_json.'"'.$id.'":{';
-        $v = 0;
-        foreach($line as $key=>$value) {
-            if ($v > 0) {
-                $search_meta_json = $search_meta_json.',';
-            }
-            $v++;
-            if ($value[0] == '{' || $value[0] == '['){
-                $search_meta_json = $search_meta_json.'"'.$key.'":'.$value;
-            }
-            else {
-                $search_meta_json = $search_meta_json.'"'.$key.'":"'.$value.'"';
-            }
-        }
-        $search_meta_json = $search_meta_json.'}';
-        // $searchId_metaData[$id] = json_encode($line);
+        $searchId_metaData[$id] = $line;
         $searchId_randomId[$id] = $randId;
     }
-    $search_meta_json = $search_meta_json.'}';
-    //keep the long identifier for this combination of searches
-    echo '{"sid":"'.$uploadId.'","searches":'.$search_meta_json.',';
+
+    $output = [];
+    $output["sid"] = $uploadId;
+    $output["searches"] = $searchId_metaData;
 
     //load data -
     $WHERE_uploadClause = ' (';
@@ -124,9 +125,9 @@ if (count($_GET) > 0) {
 
     $layoutResult = pg_query($layoutQuery) or die('Query failed: ' . pg_last_error());
     while ($line = pg_fetch_array($layoutResult, null, PGSQL_ASSOC)) {
-    echo "\"xiNETLayout\":" . stripslashes($line["l"]) . ",\n\n";
+        // echo "\"xiNETLayout\":" . stripslashes($line["l"]) . ",\n\n";
+        $output["xiNETLayout"] = json_decode($line["l"]);
     }
-
 
     $query = "SELECT * FROM modifications WHERE ".$WHERE_uploadClause.";";
     $res = pg_query($query) or die('Query failed: ' . pg_last_error());
@@ -136,7 +137,8 @@ if (count($_GET) > 0) {
         array_push($modifications, $line);
         $line = pg_fetch_array($res, null, PGSQL_ASSOC);
     }
-    echo "\"modifications\":".json_encode($modifications). ",\n";
+    //echo "\"modifications\":".json_encode($modifications). ",\n";
+    $output["modifications"] = $modifications;
     // Free resultset
     pg_free_result($res);
 
@@ -155,13 +157,14 @@ if (count($_GET) > 0) {
     //~ echo '/*db time: '.($endTime - $startTime)."ms\n";
     //~ echo '/*rows:'.pg_num_rows($res)."\n";
     $startTime = microtime(true);
-    echo "\"identifications\":[\n";
-    $peptideIds = array();
-    $sourceIds = array();
+    //echo "\"identifications\":[\n";
+    $identifications = [];
+    $peptideIds = [];
+    $sourceIds = [];
     //TODO - use json encode
     $line = pg_fetch_array($res, null, PGSQL_ASSOC);
     while ($line){// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
-            echo json_encode (array(
+            array_push( $identifications, array(
                 "id"=>$line["id"],
                 "pi1"=>$line["pep1_id"],
                 "pi2"=>$line["pep2_id"],
@@ -176,9 +179,10 @@ if (count($_GET) > 0) {
                 "c_mz"=>$line["calc_mz"]
             ));
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-            if ($line) {echo ",\n";}
+            // if ($line) {echo ",\n";}
     }
-    echo "\n],\n";
+    // echo "\n],\n";
+    $output["identifications"] = $identifications;
     // Free resultset
     pg_free_result($res);
     $endTime = microtime(true);
@@ -194,19 +198,21 @@ if (count($_GET) > 0) {
     //~ echo '/*db time: '.($endTime - $startTime)."ms\n";
     //~ echo '/*rows:'.pg_num_rows($res)."\n";
     $startTime = microtime(true);
-    echo "\"spectra\":[\n";
+    //echo "\"spectra\":[\n";
+    $spectra = [];
     $line = pg_fetch_array($res, null, PGSQL_ASSOC);
     while ($line){// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
-            echo json_encode (array(
+            array_push($spectra, array(
                 "id"=>$line["id"],
                 "file"=>$line["peak_list_file_name"],
                 "sn"=>$line["scan_id"],
                 "ft"=>$line["frag_tol"]
             ));
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-            if ($line) {echo ",\n";}
+            //if ($line) {echo ",\n";}
     }
-    echo "\n],\n";
+    //echo "\n],\n";
+    $output["spectra"] = $spectra;
     // Free resultset
     pg_free_result($res);
     $endTime = microtime(true);
@@ -236,7 +242,8 @@ if (count($_GET) > 0) {
      //~ echo '/*rows:'.pg_num_rows($res)."\n";
      $startTime = microtime(true);
      $proteinIds = [];
-     echo "\"peptides\":[\n";
+     //echo "\"peptides\":[\n";
+     $peptides = [];
      $line = pg_fetch_array($res, null, PGSQL_ASSOC);
      while ($line){// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
              $proteins = str_replace('"', '',  $line["proteins"]);
@@ -261,7 +268,7 @@ if (count($_GET) > 0) {
                  $isDecoyArray[$d] = (int) $isDecoyArray[$d];
              }
 
-             echo json_encode (array(
+             array_push ($peptides, array(
                  "id"=>$line["id"],
                  "u_id"=>$line["upload_id"],
                  "seq_mods"=>$line["seq_mods"],
@@ -273,9 +280,10 @@ if (count($_GET) > 0) {
              ));
 
              $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-             if ($line) {echo ",\n";}
+             //if ($line) {echo ",\n";}
      }
-     echo "\n],\n";
+     //echo "\n],\n";
+    $output["peptides"] = $peptides;
     // Free resultset
     pg_free_result($res);
      $endTime = microtime(true);
@@ -296,29 +304,30 @@ if (count($_GET) > 0) {
     $res = pg_query($query) or die('Query failed: ' . pg_last_error());
     $endTime = microtime(true);
     $interactorAccs = [];
-    echo "\"proteins\":[\n";
+    //echo "\"proteins\":[\n";
+    $proteins = [];
     $line = pg_fetch_array($res, null, PGSQL_ASSOC);
     if (!$line){
         //get from uniprot table
-        $pCount = count($proteinIds);
-        $pKeys = array_keys($proteinIds);
-        for ($p = 0; $p < $pCount; $p++){
-            echo '{'
-                . '"id":"' . $pKeys[$p] . '",'
-                . '"name":"' . $pKeys[$p] . '",'
-                . '"description":"' . $pKeys[$p] . '",'
-                . '"accession":"' .$pKeys[$p]  . '",'
-                . '"seq_mods":"'  .'ABCDEFG' . '"'
-                // . '"is_decoy":' .$isDecoy
-                . "}";
-            if ($p < ($pCount - 1)) {echo ",\n";}
-        }
+        // $pCount = count($proteinIds);
+        // $pKeys = array_keys($proteinIds);
+        // for ($p = 0; $p < $pCount; $p++){
+        //     echo '{'
+        //         . '"id":"' . $pKeys[$p] . '",'
+        //         . '"name":"' . $pKeys[$p] . '",'
+        //         . '"description":"' . $pKeys[$p] . '",'
+        //         . '"accession":"' .$pKeys[$p]  . '",'
+        //         . '"seq_mods":"'  .'ABCDEFG' . '"'
+        //         // . '"is_decoy":' .$isDecoy
+        //         . "}";
+        //     if ($p < ($pCount - 1)) {echo ",\n";}
+        // }
     }
     else {
         while ($line){
                 $pId = $line[$proteinIdField];
 
-                echo json_encode(array(
+                array_push($proteins, array(
                     "id"=>$pId,
                     "name"=>$line["protein_name"],
                     "description"=>$line["description"],
@@ -329,10 +338,11 @@ if (count($_GET) > 0) {
                 $interactorAccs[$line["accession"]] = 1;
 
                 $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-                if ($line) {echo ",\n";}
+                //if ($line) {echo ",\n";}
         }
     }
-    echo "\n]";
+    //echo "\n]";
+    $output["proteins"] = $proteins;
     // Free resultset
     pg_free_result($res);
 
@@ -340,12 +350,12 @@ if (count($_GET) > 0) {
     $interactorQuery = "SELECT * FROM uniprot WHERE accession IN ('"
     		.implode(array_keys($interactorAccs), "','")."');";
     //echo "**".$interactorQuery."**";
-	$interactors = array();
-    echo ",\"interactors\":\n";
+	$interactors = [];
+    //echo ",\"interactors\":\n";
     try {
         // @ stops pg_connect echo'ing out failure messages that knacker the returned data
         $interactorDbConn = @pg_connect($interactionConnection);// or die('Could not connect: ' . pg_last_error());
-    
+
         if ($interactorDbConn) {
             $interactorResult = pg_query($interactorQuery);// or die('Query failed: ' . pg_last_error());
             $line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
@@ -361,21 +371,25 @@ if (count($_GET) > 0) {
         //echo "\"interactors\":{},\n";
     }
 
-    echo json_encode ($interactors);
+    //echo json_encode ($interactors);
+    $output["interactors"] = $interactors;
     $endTime = microtime(true);
     //~ echo '/*php time: '.($endTime - $startTime)."ms*/\n\n";
     //echo ",\n";
-        
+
 	if ($matchid !== "") {	// send matchid back for sync purposes
-		echo "\n, \"matchid\":\"".$matchid."\"}";
+		$output["matchid"] = $matchid;
 	}
-    else {
-        echo "}";
-    }
+    // else {
+    //     echo "}";
+    // }
     // Free resultset
-    //pg_free_result($res);
+    pg_free_result($interactorResult);
     // Closing connection
     pg_close($dbconn);
+    pg_close($interactorDbConn);
+
+    echo json_encode($output, JSON_PRETTY_PRINT);
 
 }
 ?>
