@@ -263,7 +263,7 @@ if (count($_GET) > 0) {
         $layoutResult = pg_query($layoutQuery) or die('Query failed: ' . pg_last_error());
         while ($line = pg_fetch_array($layoutResult, null, PGSQL_ASSOC)) {
             //echo "\"xiNETLayout\":" . stripslashes($line["l"]) . ",\n\n";
-            $ouput["xiNETLayout"] = json_decode[$line["l"]];
+            $output["xiNETLayout"] = json_decode(stripslashes($line["l"]));
         }
 
         //load data -
