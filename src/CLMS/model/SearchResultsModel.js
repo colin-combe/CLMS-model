@@ -73,7 +73,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
     },
 
     commonRegexes: {
-        uniprotAccession: /[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}/,
+        uniprotAccession: /^[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}/,
         notUpperCase: /[^A-Z]/g,
         decoyNames: /(REV_)|(RAN_)|(DECOY_)|(DECOY:)|(reverse_)/,
     },
@@ -211,7 +211,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                 var participant;
                 for (var p = 0; p < proteinCount; p++) {
                     participant = proteins[p];
-                    this.initProtein(participant);
+                    this.initProtein(participant, json);
                     participants.set(participant.id, participant);
                 }
             }
@@ -315,10 +315,13 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
     },
 
     //adds some attributes we want to protein object
-    initProtein: function(protObj) {
+    initProtein: function(protObj, json) {
+        var accCheck = protObj.accession.match(this.commonRegexes.uniprotAccession);
         if (protObj.seq_mods) {
             this.commonRegexes.notUpperCase.lastIndex = 0;
             protObj.sequence = protObj.seq_mods.replace(this.commonRegexes.notUpperCase, '');
+        } else if (accCheck != null) {
+            protObj.sequence = json.interactors[protObj.accession].sequence;
         }
         if (protObj.sequence) protObj.size = protObj.sequence.length;
         if (!protObj.crossLinks) {

@@ -44,7 +44,7 @@ if (count($_GET) > 0) {
         $matchid = (string) $_GET['matchid'];
     }
 
-    $pattern = '/[^0-9,\-]/';
+    $pattern = '/[^0-9,\-_]/';
     if (preg_match($pattern, $uploadId)
             || preg_match($pattern, $spectrumId)
             || preg_match($pattern, $linears)
@@ -124,7 +124,7 @@ if (count($_GET) > 0) {
     $layoutResult = pg_query($layoutQuery) or die('Query failed: ' . pg_last_error());
     while ($line = pg_fetch_array($layoutResult, null, PGSQL_ASSOC)) {
         // echo "\"xiNETLayout\":" . stripslashes($line["l"]) . ",\n\n";
-        $output["xiNETLayout"] = json_decode($line["l"]);
+        $output["xiNETLayout"] = json_decode(stripslashes($line["l"]));
     }
 
     $query = "SELECT * FROM modifications WHERE ".$WHERE_uploadClause.";";
@@ -188,7 +188,7 @@ if (count($_GET) > 0) {
     /*
      * SPECTRA
      */
-    $query = "SELECT id, peak_list_file_name, scan_id, frag_tol FROM spectra WHERE ".$WHERE_uploadClause.";";
+    $query = "SELECT id, peak_list_file_name, scan_id, frag_tol,  (peak_list is null) as nullpks FROM spectra WHERE ".$WHERE_uploadClause.";";
     $startTime = microtime(true);
     $res = pg_query($query) or die('Query failed: ' . pg_last_error());
     $endTime = microtime(true);
@@ -203,7 +203,8 @@ if (count($_GET) > 0) {
                 "id"=>$line["id"],
                 "file"=>$line["peak_list_file_name"],
                 "sn"=>$line["scan_id"],
-                "ft"=>$line["frag_tol"]
+                "ft"=>$line["frag_tol"],
+                "nullPks"=>$line["nullpks"]
             ));
         $line = pg_fetch_array($res, null, PGSQL_ASSOC);
         //if ($line) {echo ",\n";}
