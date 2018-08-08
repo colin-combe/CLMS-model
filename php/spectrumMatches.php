@@ -188,7 +188,7 @@ if (count($_GET) > 0) {
     /*
      * SPECTRA
      */
-    $query = "SELECT id, peak_list_file_name, scan_id, frag_tol,  (peak_list is null) as nullpks FROM spectra WHERE ".$WHERE_uploadClause.";";
+    $query = "SELECT id, peak_list_file_name, scan_id, frag_tol,  (peak_list is not null) as pks FROM spectra WHERE ".$WHERE_uploadClause.";";
     $startTime = microtime(true);
     $res = pg_query($query) or die('Query failed: ' . pg_last_error());
     $endTime = microtime(true);
@@ -204,7 +204,7 @@ if (count($_GET) > 0) {
                 "file"=>$line["peak_list_file_name"],
                 "sn"=>$line["scan_id"],
                 "ft"=>$line["frag_tol"],
-                "nullPks"=>$line["nullpks"]
+                "pks"=>($line["pks"] == 't')
             ));
         $line = pg_fetch_array($res, null, PGSQL_ASSOC);
         //if ($line) {echo ",\n";}
