@@ -586,7 +586,7 @@ if (count($_GET) > 0) {
             //echo ",\n";
 
             if ($matchid !== "") {	// send matchid back for sync purposes
-                $output["matchId"] = $matchid;
+                $output["matchid"] = $matchid;
             }
 
             $output["oldDB"] = ($oldDB == 1 ? "true" : "false"); // Is this from the old db?
