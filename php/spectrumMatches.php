@@ -22,7 +22,7 @@
 
 if (count($_GET) > 0) {
     include('../../connectionString.php');
-    $dbconn = pg_connect($connectionString) or die('Could not connect: ' . pg_last_error());
+    $dbconn = pg_connect($connectionString) or die('Could not connect to database.');
 
     $sid = urldecode($_GET["sid"]);
 
