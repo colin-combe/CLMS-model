@@ -23,6 +23,8 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
         this.containingModel.get("scoreSets").add(scoreSet);
     }
 
+    this.passThreshold = (identification.pass == 't');
+
     var ionTypes = identification.ions.split(";");
     var ionTypeCount = ionTypes.length;
     var ions = [];
