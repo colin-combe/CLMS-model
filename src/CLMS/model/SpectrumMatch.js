@@ -61,9 +61,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
         if (!this.matchedPeptides[1]){
             alert("peptide error (missing peptide evidence?) for:" +  + identification.pi2);
         }
-    }
-    else {
-        if (this.matchedPeptides[1].is_decoy.indexOf("1") != -1) {
+        else if (this.matchedPeptides[1].is_decoy.indexOf("1") != -1) {
             this.is_decoy = true;
             this.containingModel.set("decoysPresent", true);
         }
