@@ -354,7 +354,7 @@ CLMS.model.SpectrumMatch.prototype.ionTypesString = function() {
 CLMS.model.SpectrumMatch.prototype.crossLinkerModMass = function() {
     var clModMass = +this.matchedPeptides[0].clModMass;
     if (this.matchedPeptides[1]) {
-        clModMass = clModMass + this.matchedPeptides[1].clModMass;
+        clModMass = clModMass + (+this.matchedPeptides[1].clModMass);
     }
     return clModMass;
 }
