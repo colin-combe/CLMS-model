@@ -53,12 +53,8 @@ if (count($_GET) > 0) {
     }
 
     $id_rands = explode(",", $uploadId);
-    // $search_meta_json = '{';
     $searchId_randomId = [];
     for ($i = 0; $i < count($id_rands); $i++) {
-        // if ($i > 0) {
-        //     $search_meta_json = $search_meta_json.',';
-        // }
         $dashSeperated = explode("-", $id_rands[$i]);
         $randId = implode('-', array_slice($dashSeperated, 1, 4));
         $id = $dashSeperated[0];
@@ -158,7 +154,6 @@ if (count($_GET) > 0) {
     $identifications = [];
     $peptideIds = [];
     $sourceIds = [];
-    //TODO - use json encode
     $line = pg_fetch_array($res, null, PGSQL_ASSOC);
     while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
         array_push($identifications, array(
