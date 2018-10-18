@@ -24,15 +24,16 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     }
 
     this.passThreshold = (identification.pass == 't');
-
-    var ionTypes = identification.ions.split(";");
-    var ionTypeCount = ionTypes.length;
-    var ions = [];
-    for (var it = 0; it < ionTypeCount; it++) {
-        var ionType = ionTypes[it];
-        ions.push({"type": (ionType.charAt(0).toUpperCase() + ionType.slice(1) + "Ion")});
+    if (identification.ions) {
+        var ionTypes = identification.ions.split(";");
+        var ionTypeCount = ionTypes.length;
+        var ions = [];
+        for (var it = 0; it < ionTypeCount; it++) {
+            var ionType = ionTypes[it];
+            ions.push({"type": (ionType.charAt(0).toUpperCase() + ionType.slice(1) + "Ion")});
+        }
+        this.ions = ions;
     }
-    this.ions = ions;
 
     this.spectrum = this.containingModel.get("spectrumSources").get(this.spectrumId);
     if (this.spectrum) {

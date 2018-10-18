@@ -316,23 +316,23 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
 
     //adds some attributes we want to protein object
     initProtein: function(protObj, json) {
-        var accCheck = protObj.accession.match(this.commonRegexes.uniprotAccession);
-        if (protObj.seq_mods) {
-            this.commonRegexes.notUpperCase.lastIndex = 0;
-            protObj.sequence = protObj.seq_mods.replace(this.commonRegexes.notUpperCase, '');
-        } else if (accCheck != null) {
-            protObj.sequence = json.interactors[protObj.accession].sequence;
-        }
-        if (protObj.sequence) protObj.size = protObj.sequence.length;
         if (!protObj.crossLinks) {
             protObj.crossLinks = [];
         }
         var decoyNames = /(REV_)|(RAN_)|(DECOY_)|(DECOY:)|(reverse_)/;
-        if (decoyNames.exec(protObj.name)) {
+        if (decoyNames.exec(protObj.name) || decoyNames.exec(protObj.id)) {
             this.set("decoysPresent", true);
             protObj.is_decoy = true;
         } else {
             protObj.is_decoy = false;
+            var accCheck = protObj.accession.match(this.commonRegexes.uniprotAccession);
+            if (protObj.seq_mods) {
+                this.commonRegexes.notUpperCase.lastIndex = 0;
+                protObj.sequence = protObj.seq_mods.replace(this.commonRegexes.notUpperCase, '');
+            } else if (accCheck != null) {
+                protObj.sequence = json.interactors[protObj.accession].sequence;
+            }
+            if (protObj.sequence) protObj.size = protObj.sequence.length;
         }
     },
 
