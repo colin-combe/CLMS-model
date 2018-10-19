@@ -29,5 +29,5 @@ CLMS.model.CrossLink.prototype.isSelfLink = function() {
 };
 
 CLMS.model.CrossLink.prototype.isLinearLink = function() {
-    return this.matches_pp[0].match.linkPos1 === -1;
+    return this.matches_pp[0].match.linkPos1 === -1 || this.matches_pp[0].match.matchedPeptides[1].pos[0] === -1; //hack required by links only CSV, look at again
 };
