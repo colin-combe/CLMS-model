@@ -323,6 +323,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         if (decoyNames.exec(protObj.name) || decoyNames.exec(protObj.id)) {
             this.set("decoysPresent", true);
             protObj.is_decoy = true;
+            protObj.sequence = "";
         } else {
             protObj.is_decoy = false;
             var accCheck = protObj.accession.match(this.commonRegexes.uniprotAccession);
