@@ -226,6 +226,15 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             }
             this.set("spectrumSources", spectrumSources);
 
+            //peak list files
+            var peakListFiles= new Map();
+            var plFile;
+            for (var propertyName in json.peakListFiles) {
+                plFile = json.peakListFiles[propertyName];
+                peakListFiles.set(+plFile.id, plFile.name);
+            }
+            this.set("peakListFiles", peakListFiles);
+
             var participants = this.get("participants");
             if (json.proteins) {
                 var proteins = json.proteins;

@@ -46,6 +46,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     this.elution_time_end = +rawMatches[0].e_e;
 
     this.src = +rawMatches[0].src; //for looking up run name
+    this.plf = +rawMatches[0].plf; //for looking up peak list file name
     //run name may have come from csv file
     if (rawMatches[0].run_name) {
         this.run_name = rawMatches[0].run_name;
@@ -338,6 +339,11 @@ CLMS.model.SpectrumMatch.prototype.runName = function() {
     }
     var runName = this.containingModel.get("spectrumSources").get(this.src);
     return runName;
+}
+
+CLMS.model.SpectrumMatch.prototype.peakListFileName = function() {
+    var peakListName = this.containingModel.get("peakListFiles").get(this.plf);
+    return peakListName;
 }
 
 CLMS.model.SpectrumMatch.prototype.group = function() {
