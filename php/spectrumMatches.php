@@ -468,7 +468,7 @@ if (count($_GET) > 0) {
          * PEAK LIST FILES
          */
         $peakListFiles = [];
-        if (sizeof($peakListFiles) > 0) {
+        if (sizeof($peakListIds) > 0) {
             $implodedPeakListIds = '('.implode(array_keys($peakListIds), ",").')';
             $query = "SELECT plf.id, plf.name
 				FROM peaklistfile AS plf WHERE plf.id IN "
