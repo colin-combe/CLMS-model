@@ -396,8 +396,9 @@ if (count($_GET) > 0) {
             $sourceId = $line["source"];
             $sourceIds[$sourceId] = 1;
             $peakListId = $line["plfid"];
-            $peakListIds[$peakListId] = 1;
-
+            if(isset($peakListId)){
+                $peakListIds[$peakListId] = 1;
+            }
             array_push($matches, array(
                     "id"=>+$line["match_id"],
                     "ty"=>+$line["match_type"],
