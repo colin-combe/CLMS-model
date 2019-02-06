@@ -356,7 +356,7 @@ if (count($_GET) > 0) {
 					mp.link_position + 1 AS link_position, mp.crosslinker_id, sm.spectrum_id,
 					sm.score, sm.autovalidated, sm.validated, sm.rejected,
 					sm.search_id, sm.is_decoy, sm.calc_mass, sm.precursor_charge,
-					sp.scan_number, sp.scan_index, sp.source_id as source,
+					sp.scan_number, sp.scan_index, sp.source_id as source, sp.peaklist_id as plfid,
 					sp.precursor_intensity, sp.precursor_mz, sp.elution_time_start, sp.elution_time_end
 				FROM
 					(SELECT sm.id, sm.score, sm.autovalidated, sm.validated, sm.rejected,
@@ -395,6 +395,8 @@ if (count($_GET) > 0) {
             $peptideIds[$peptideId] = 1;
             $sourceId = $line["source"];
             $sourceIds[$sourceId] = 1;
+            $peakListId = $line["plfid"];
+            $peakListIds[$peakListId] = 1;
 
             array_push($matches, array(
                     "id"=>+$line["match_id"],
@@ -411,6 +413,7 @@ if (count($_GET) > 0) {
                     "rj"=>$line["rejected"],
                     "sc_i"=>$line["scan_index"],
                     "src"=>$sourceId,
+                    "plf"=>$peakListId,
                     "sn"=>+$line["scan_number"],
                     "pc_c"=>+$line["precursor_charge"],
                     "pc_mz"=>+$line["precursor_mz"],
@@ -460,6 +463,38 @@ if (count($_GET) > 0) {
             $endTime = microtime(true);
         }
         $output["spectrumSources"] = $spectrumSources;
+
+        /*
+         * PEAK LIST FILES
+         */
+        $peakListFiles = [];
+        if (sizeof($peakListFiles) > 0) {
+            $implodedPeakListIds = '('.implode(array_keys($peakLIstIds), ",").')';
+            $query = "SELECT plf.id, plf.name
+				FROM peaklistfile AS plf WHERE plf.id IN "
+                        .$implodedPeakListIds.";";
+            $startTime = microtime(true);
+            $res = pg_query($query) or die('Query failed: ' . pg_last_error());
+            $endTime = microtime(true);
+            //~ echo '//db time: '.($endTime - $startTime)."ms\n";
+            //~ echo '//rows:'.pg_num_rows($res)."\n";
+            //echo "\"spectrumSources\":[\n";
+            $line = pg_fetch_array($res, null, PGSQL_ASSOC);
+            while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
+
+                array_push($peakListFiles, array(
+                        "id"=>$line["id"],
+                        "name"=>$line["name"]
+                    ));
+
+                $line = pg_fetch_array($res, null, PGSQL_ASSOC);
+                //if ($line) {echo ",\n";}
+            }
+            //echo "\n],\n";
+            $endTime = microtime(true);
+        }
+        $output["peakListFiles"] = $peakListFiles;
+
 
         $proteinIdField = "hp.protein_id";
         if (count($searchId_randomId) > 1 || $accAsId) {
