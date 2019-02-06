@@ -342,7 +342,7 @@ CLMS.model.SpectrumMatch.prototype.runName = function() {
 }
 
 CLMS.model.SpectrumMatch.prototype.peakListFileName = function() {
-    var runName = this.containingModel.get("PeakListFiles").get(this.plfid);
+    var runName = this.containingModel.get("peakListFiles").get(this.plfid);
     return runName;
 }
 
