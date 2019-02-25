@@ -389,7 +389,8 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                 else {
                     previous = 1;
                 }
-                if (participant.sequence.indexOf(peptide.sequence, i) > -1) {
+                var i2 = participant.sequence.indexOf(peptide.sequence, i + 1);
+                if (i2  > -1) {
                     return true;// is ambig
                 }
             }
