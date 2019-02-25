@@ -174,21 +174,25 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             this.set("crosslinkerSpecificity", CLMS.arrayFromMapValues(linkableResSet));*/
 
             var linkableResSets = {};
-            searchArray.forEach (function (search) {
+            searchArray.forEach(function(search) {
                 var crosslinkers = search.crosslinkers || [];
 
-                crosslinkers.forEach (function (crosslinker) {
+                crosslinkers.forEach(function(crosslinker) {
                     var crosslinkerDescription = crosslinker.description;
                     var crosslinkerName = crosslinker.name;
-                    var linkedAARegex = /LINKEDAMINOACIDS:(.*?)(?:;|$)/g;   // capture both sets if > 1 set
-                    console.log ("cld", crosslinkerDescription);
+                    var linkedAARegex = /LINKEDAMINOACIDS:(.*?)(?:;|$)/g; // capture both sets if > 1 set
+                    console.log("cld", crosslinkerDescription);
                     var resSet = linkableResSets[crosslinkerName];
 
                     if (!resSet) {
-                        resSet = {searches: new Set(), linkables: [], name: crosslinkerName};
+                        resSet = {
+                            searches: new Set(),
+                            linkables: [],
+                            name: crosslinkerName
+                        };
                         linkableResSets[crosslinkerName] = resSet;
                     }
-                    resSet.searches.add (search.id);
+                    resSet.searches.add(search.id);
 
                     var result = null;
                     var i = 0;
@@ -198,7 +202,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                         }
 
                         var resArray = result[1].split(',');
-                        resArray.forEach (function (res) {
+                        resArray.forEach(function(res) {
                             var resRegex = /(cterm|nterm|[A-Z])(.*)?/i;
                             var resMatch = resRegex.exec(res);
                             if (resMatch) {
@@ -211,7 +215,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                     resSet.heterobi = resSet.heterobi || (i > 1);
                 });
             });
-            console.log ("CROSS", linkableResSets);
+            console.log("CROSS", linkableResSets);
             this.set("crosslinkerSpecificity", linkableResSets);
 
             //saved config should end up including filter settings not just xiNET layout
@@ -227,7 +231,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             this.set("spectrumSources", spectrumSources);
 
             //peak list files
-            var peakListFiles= new Map();
+            var peakListFiles = new Map();
             var plFile;
             for (var propertyName in json.peakListFiles) {
                 plFile = json.peakListFiles[propertyName];
@@ -248,6 +252,8 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             }
             this.initDecoyLookup();
 
+            var participantArr = CLMS.arrayFromMapValues(participants);
+
             //peptides
             var peptides = new Map();
             if (json.peptides) {
@@ -259,6 +265,11 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                     peptide = peptideArray[pep];
                     peptide.sequence = peptide.seq_mods.replace(this.commonRegexes.notUpperCase, '');
                     peptides.set(peptide.id, peptide);
+
+                    var pepAmbig = this.checkPeptideAmbiguity(peptide, participantArr);
+                    console.log("pepAmbig: " + pepAmbig)
+                    peptide.ambig = pepAmbig;
+
                 }
             }
 
@@ -364,6 +375,28 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         protObj.hidden = false; //?
     },
 
+    checkPeptideAmbiguity: function(peptide, participants) {
+        var pCount = participants.length;
+        var participant;
+        var previous = 0;
+        for (var p = 0; p < pCount; p++) {
+            var participant = participants[p];
+            var i = participant.sequence.indexOf(peptide.sequence);
+            if (i > -1) {
+                if (previous == 1) {
+                    return true;
+                }
+                else {
+                    previous = 1;
+                }
+                if (participant.sequence.indexOf(peptide.sequence, i) > -1) {
+                    return true;// is ambig
+                }
+            }
+        }
+        return false;
+    },
+
     getDigestibleResiduesAsFeatures: function(participant) {
         var digestibleResiduesAsFeatures = [];
 
@@ -402,13 +435,13 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         var linkedResSets = this.get("crosslinkerSpecificity");
 
         var temp = d3.values(linkedResSets);
-        for (var cl = 0; cl < temp.length; cl++){
+        for (var cl = 0; cl < temp.length; cl++) {
             // resSet = {searches: new Set(), linkables: [], name: crosslinkerName};
             var crossLinkerLinkedResSet = temp[cl];
             var linkables = crossLinkerLinkedResSet.linkables;
 
             //for (var l = 0 ; l < linkables.length; l++) {
-            if (linkables[reactiveGroup - 1]){
+            if (linkables[reactiveGroup - 1]) {
                 var linkableSet = linkables[reactiveGroup - 1];
                 var linkableArr = [];
                 linkableSet.forEach(v => linkableArr.push(v));
@@ -420,11 +453,11 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                             crosslinkableResiduesAsFeatures.push({
                                 begin: s + 1,
                                 end: s + 1,
-                                name: "CROSS-LINKABLE-"+reactiveGroup,
+                                name: "CROSS-LINKABLE-" + reactiveGroup,
                                 protID: participant.id,
-                                id: participant.id + " Cross-linkable residue" + (s + 1) + "[group "+reactiveGroup+"]",
+                                id: participant.id + " Cross-linkable residue" + (s + 1) + "[group " + reactiveGroup + "]",
                                 category: "AA",
-                                type: "CROSS-LINKABLE-"+reactiveGroup
+                                type: "CROSS-LINKABLE-" + reactiveGroup
                             });
                         }
                     }
@@ -942,63 +975,178 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         return randId;
     },
 
-    attributeOptions: [
-        {
-            linkFunc: function (link) { return [link.filteredMatches_pp.length]; },
-            unfilteredLinkFunc: function (link) { return [link.matches_pp.length]; },
-            id: "MatchCount", label: "Cross-Link Match Count", decimalPlaces: 0
+    attributeOptions: [{
+            linkFunc: function(link) {
+                return [link.filteredMatches_pp.length];
+            },
+            unfilteredLinkFunc: function(link) {
+                return [link.matches_pp.length];
+            },
+            id: "MatchCount",
+            label: "Cross-Link Match Count",
+            decimalPlaces: 0
         },
         {
-            linkFunc: function (link) { return link.filteredMatches_pp.map (function (m) { return m.match.score(); }); },
-            unfilteredLinkFunc: function (link) { return link.matches_pp.map (function (m) { return m.match.score(); }); },
-            id: "Score", label: "Match Score", decimalPlaces: 2, matchLevel: true
+            linkFunc: function(link) {
+                return link.filteredMatches_pp.map(function(m) {
+                    return m.match.score();
+                });
+            },
+            unfilteredLinkFunc: function(link) {
+                return link.matches_pp.map(function(m) {
+                    return m.match.score();
+                });
+            },
+            id: "Score",
+            label: "Match Score",
+            decimalPlaces: 2,
+            matchLevel: true
         },
         {
-            linkFunc: function (link) { return link.filteredMatches_pp.map (function (m) { return m.match.precursorMZ; }); },
-            unfilteredLinkFunc: function (link) { return link.matches_pp.map (function (m) { return m.match.precursorMZ; }); },
-            id: "MZ", label: "Match Precursor m/z", decimalPlaces: 4, matchLevel: true
+            linkFunc: function(link) {
+                return link.filteredMatches_pp.map(function(m) {
+                    return m.match.precursorMZ;
+                });
+            },
+            unfilteredLinkFunc: function(link) {
+                return link.matches_pp.map(function(m) {
+                    return m.match.precursorMZ;
+                });
+            },
+            id: "MZ",
+            label: "Match Precursor m/z",
+            decimalPlaces: 4,
+            matchLevel: true
         },
         {
-            linkFunc: function (link) { return link.filteredMatches_pp.map (function (m) { return m.match.precursorCharge; }); },
-            unfilteredLinkFunc: function (link) { return link.matches_pp.map (function (m) { return m.match.precursorCharge; }); },
-            id: "Charge", label: "Match Precursor Charge (z)", decimalPlaces: 0,  matchLevel: true
+            linkFunc: function(link) {
+                return link.filteredMatches_pp.map(function(m) {
+                    return m.match.precursorCharge;
+                });
+            },
+            unfilteredLinkFunc: function(link) {
+                return link.matches_pp.map(function(m) {
+                    return m.match.precursorCharge;
+                });
+            },
+            id: "Charge",
+            label: "Match Precursor Charge (z)",
+            decimalPlaces: 0,
+            matchLevel: true
         },
         {
-            linkFunc: function (link) { return link.filteredMatches_pp.map (function (m) { return m.match.calcMass(); }); },
-            unfilteredLinkFunc: function (link) { return link.matches_pp.map (function (m) { return m.match.calcMass(); }); },
-            id: "CalcMass", label: "Match Calculated Mass (m)", decimalPlaces: 4, matchLevel: true
+            linkFunc: function(link) {
+                return link.filteredMatches_pp.map(function(m) {
+                    return m.match.calcMass();
+                });
+            },
+            unfilteredLinkFunc: function(link) {
+                return link.matches_pp.map(function(m) {
+                    return m.match.calcMass();
+                });
+            },
+            id: "CalcMass",
+            label: "Match Calculated Mass (m)",
+            decimalPlaces: 4,
+            matchLevel: true
         },
         {
-            linkFunc: function(link) { return link.filteredMatches_pp.map (function (m) { return m.match.massError(); }); },
-            unfilteredLinkFunc: function (link) { return link.matches_pp.map (function (m) { return m.match.massError(); }); },
-            id: "MassError", label: "Match Mass Error", decimalPlaces: 4, matchLevel: true
+            linkFunc: function(link) {
+                return link.filteredMatches_pp.map(function(m) {
+                    return m.match.massError();
+                });
+            },
+            unfilteredLinkFunc: function(link) {
+                return link.matches_pp.map(function(m) {
+                    return m.match.massError();
+                });
+            },
+            id: "MassError",
+            label: "Match Mass Error",
+            decimalPlaces: 4,
+            matchLevel: true
         },
         {
-            linkFunc: function (link) { return link.filteredMatches_pp.map (function (m) { return Math.min (m.pepPos[0].length, m.pepPos[1].length); }); },
-            unfilteredLinkFunc: function (link) { return link.matches_pp.map (function (m) { return Math.min (m.pepPos[0].length, m.pepPos[1].length); }); },
-            id: "SmallPeptideLen", label: "Match Smaller Peptide Length (AA)", decimalPlaces: 0, matchLevel: true
+            linkFunc: function(link) {
+                return link.filteredMatches_pp.map(function(m) {
+                    return Math.min(m.pepPos[0].length, m.pepPos[1].length);
+                });
+            },
+            unfilteredLinkFunc: function(link) {
+                return link.matches_pp.map(function(m) {
+                    return Math.min(m.pepPos[0].length, m.pepPos[1].length);
+                });
+            },
+            id: "SmallPeptideLen",
+            label: "Match Smaller Peptide Length (AA)",
+            decimalPlaces: 0,
+            matchLevel: true
         },
         {
-            linkFunc: function (link) { return link.filteredMatches_pp.map (function (m) { var p = m.match.precursor_intensity; return isNaN(p) ? undefined : p; }); },
-            unfilteredLinkFunc: function (link) { return link.matches_pp.map (function (m) { var p = m.match.precursor_intensity; return isNaN(p) ? undefined : p; }); },
-            id: "PrecursorIntensity", label: "Match Precursor Intensity", decimalPlaces: 0, matchLevel: true,
-			valueFormat: d3.format(".1e"), logAxis: true, logStart: 1000
+            linkFunc: function(link) {
+                return link.filteredMatches_pp.map(function(m) {
+                    var p = m.match.precursor_intensity;
+                    return isNaN(p) ? undefined : p;
+                });
+            },
+            unfilteredLinkFunc: function(link) {
+                return link.matches_pp.map(function(m) {
+                    var p = m.match.precursor_intensity;
+                    return isNaN(p) ? undefined : p;
+                });
+            },
+            id: "PrecursorIntensity",
+            label: "Match Precursor Intensity",
+            decimalPlaces: 0,
+            matchLevel: true,
+            valueFormat: d3.format(".1e"),
+            logAxis: true,
+            logStart: 1000
         },
         {
-            linkFunc: function (link) { return link.filteredMatches_pp.map (function (m) { return m.match.elution_time_start; }); },
-            unfilteredLinkFunc: function (link) { return link.matches_pp.map (function (m) { return m.match.elution_time_start; }); },
-            id: "ElutionTimeStart", label: "Elution Time Start", decimalPlaces: 2, matchLevel: true
+            linkFunc: function(link) {
+                return link.filteredMatches_pp.map(function(m) {
+                    return m.match.elution_time_start;
+                });
+            },
+            unfilteredLinkFunc: function(link) {
+                return link.matches_pp.map(function(m) {
+                    return m.match.elution_time_start;
+                });
+            },
+            id: "ElutionTimeStart",
+            label: "Elution Time Start",
+            decimalPlaces: 2,
+            matchLevel: true
         },
         {
-            linkFunc: function (link) { return link.filteredMatches_pp.map (function (m) { return m.match.elution_time_end; }); },
-            unfilteredLinkFunc: function (link) { return link.matches_pp.map (function (m) { return m.match.elution_time_end; }); },
-            id: "ElutionTimeEnd", label: "Elution Time End", decimalPlaces: 2, matchLevel: true
+            linkFunc: function(link) {
+                return link.filteredMatches_pp.map(function(m) {
+                    return m.match.elution_time_end;
+                });
+            },
+            unfilteredLinkFunc: function(link) {
+                return link.matches_pp.map(function(m) {
+                    return m.match.elution_time_end;
+                });
+            },
+            id: "ElutionTimeEnd",
+            label: "Elution Time End",
+            decimalPlaces: 2,
+            matchLevel: true
         },
         {
             //watch out for the 'this' reference
-            linkFunc: function (link, option) { return link.isLinearLink() ? [] : [this.model.getSingleCrosslinkDistance (link, null, null, option)]; },
-            unfilteredLinkFunc: function (link, option) { return link.isLinearLink() ? [] : [this.model.getSingleCrosslinkDistance (link, null, null, option)]; },
-            id: "Distance", label: "Cross-Link Cα-Cα Distance (Å)", decimalPlaces: 2, maxVal: 90,
+            linkFunc: function(link, option) {
+                return link.isLinearLink() ? [] : [this.model.getSingleCrosslinkDistance(link, null, null, option)];
+            },
+            unfilteredLinkFunc: function(link, option) {
+                return link.isLinearLink() ? [] : [this.model.getSingleCrosslinkDistance(link, null, null, option)];
+            },
+            id: "Distance",
+            label: "Cross-Link Cα-Cα Distance (Å)",
+            decimalPlaces: 2,
+            maxVal: 90,
         },
     ],
 
