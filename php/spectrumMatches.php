@@ -530,6 +530,14 @@ if (count($_GET) > 0) {
             while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
                 $proteins = $line["proteins"];
                 $proteinsArray = explode(",", substr($proteins, 1, strlen($proteins) - 2));
+                $protCount = count($proteinsArray);
+                for ($p = 0; $p < $protCount; $p++) {
+                    $id = $proteinsArray[$p];
+                    if (strpos($id, '"') === 0) {
+
+                        $proteinsArray[$p] = substr($id, 1, strlen($id)-2);
+                    }
+                }
                 //$c = count($proteinsArray);
                 $dbProteinIds = $line["test"];
                 $dbProteinsArray = explode(",", substr($dbProteinIds, 1, strlen($dbProteinIds) - 2));
@@ -538,8 +546,8 @@ if (count($_GET) > 0) {
                 }
                 $positions = $line['positions'];
                 $positionsArray = explode(",", substr($positions, 1, strlen($positions) - 2));
-                $pCount = count($positionsArray);
-                for ($p = 0; $p < $pCount; $p++) {
+                $posCount = count($positionsArray);
+                for ($p = 0; $p < $posCount; $p++) {
                     $positionsArray[$p] = (int) $positionsArray[$p];
                 }
 
