@@ -320,6 +320,15 @@ CLMS.model.SpectrumMatch.prototype.isAmbig = function() {
     return false;
 }
 
+
+CLMS.model.SpectrumMatch.prototype.heavyIsAmbig = function() {
+    if (this.matchedPeptides[0].ambig ||
+        (this.matchedPeptides[1] && this.matchedPeptides[1].ambig)) {
+        return true;
+    }
+    return false;
+}
+
 CLMS.model.SpectrumMatch.prototype.isDecoy = function() {
     if (this.is_decoy) {
         return this.is_decoy;

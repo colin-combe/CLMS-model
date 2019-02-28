@@ -266,9 +266,8 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                     peptide.sequence = peptide.seq_mods.replace(this.commonRegexes.notUpperCase, '');
                     peptides.set(peptide.id, peptide);
 
-                    var pepAmbig = this.checkPeptideAmbiguity(peptide, participantArr);
-                    console.log("pepAmbig: " + pepAmbig)
-                    peptide.ambig = pepAmbig;
+                    // var pepAmbig = this.checkPeptideAmbiguity(peptide, participantArr);
+                    // peptide.ambig = pepAmbig;
 
                 }
             }
@@ -381,17 +380,25 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         var previous = 0;
         for (var p = 0; p < pCount; p++) {
             var participant = participants[p];
-            var i = participant.sequence.indexOf(peptide.sequence);
-            if (i > -1) {
-                if (previous == 1) {
-                    return true;
-                }
-                else {
-                    previous = 1;
-                }
-                var i2 = participant.sequence.indexOf(peptide.sequence, i + 1);
-                if (i2  > -1) {
-                    return true;// is ambig
+            if (participant.name.indexOf("REV_") != 0) {
+                // if (peptide.sequence == "VAEETPHLIHKVALDPLTGPMPYQGR") {
+                //     console.log(participant.sequence);
+                // }
+                if (participant.sequence) {
+                    var i = participant.sequence.indexOf(peptide.sequence);
+                    if (i > -1) {
+                        if (previous == 1) {
+                            return true;
+                        } else {
+                            previous = 1;
+                        }
+                        var i2 = participant.sequence.indexOf(peptide.sequence, i + 1);
+                        if (i2 > -1) {
+                            return true; // is ambig
+                        }
+                    }
+                } else {
+                    //console.log("*"+participant.accession);
                 }
             }
         }
