@@ -255,7 +255,7 @@ if (count($_GET) > 0) {
 
     $endTime = microtime(true);
     if ($debug === true) {
-        echo 'Search metadata time: '.($endTime - $startTime)."ms\n";
+        echo 'Search metadata time: '.($endTime - $startTime)." seconds\n";
     }
     $startTime = $endTime;
 
@@ -392,7 +392,7 @@ if (count($_GET) > 0) {
 
         $endTime = microtime(true);
         if ($debug === true) {
-            echo 'Exec matches and peptides query: '.($endTime - $startTime)."ms\n";
+            echo 'Exec matches and peptides query: '.($endTime - $startTime)." seconds\n";
         }
         $startTime = $endTime;
 
@@ -447,7 +447,7 @@ if (count($_GET) > 0) {
 
         $endTime = microtime(true);
         if ($debug === true) {
-            echo 'Matches and peptides php: '.($endTime - $startTime)."ms\n";
+            echo 'Matches and peptides php: '.($endTime - $startTime)." seconds\n";
         }
         $startTime = $endTime;
 
@@ -463,7 +463,7 @@ if (count($_GET) > 0) {
             $startTime = microtime(true);
             $res = pg_query($query) or die('Query failed: ' . pg_last_error());
             $endTime = microtime(true);
-            //~ echo '//db time: '.($endTime - $startTime)."ms\n";
+            //~ echo '//db time: '.($endTime - $startTime)." seconds\n";
             //~ echo '//rows:'.pg_num_rows($res)."\n";
             //echo "\"spectrumSources\":[\n";
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);
@@ -481,7 +481,7 @@ if (count($_GET) > 0) {
 
         $endTime = microtime(true);
         if ($debug === true) {
-            echo 'Spectrum sources query and php: '.($endTime - $startTime)."ms\n";
+            echo 'Spectrum sources query and php: '.($endTime - $startTime)." seconds\n";
         }
         $startTime = $endTime;
 
@@ -497,7 +497,7 @@ if (count($_GET) > 0) {
             $startTime = microtime(true);
             $res = pg_query($query) or die('Query failed: ' . pg_last_error());
             $endTime = microtime(true);
-            //~ echo '//db time: '.($endTime - $startTime)."ms\n";
+            //~ echo '//db time: '.($endTime - $startTime)." seconds\n";
             //~ echo '//rows:'.pg_num_rows($res)."\n";
             //echo "\"spectrumSources\":[\n";
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);
@@ -518,7 +518,7 @@ if (count($_GET) > 0) {
 
         $endTime = microtime(true);
         if ($debug === true) {
-            echo 'Peak lists query and php: '.($endTime - $startTime)."ms\n";
+            echo 'Peak lists query and php: '.($endTime - $startTime)." seconds\n";
         }
         $startTime = $endTime;
 
@@ -583,7 +583,7 @@ if (count($_GET) > 0) {
 
             $endTime = microtime(true);
             if ($debug === true) {
-                echo 'Peptides query and php: '.($endTime - $startTime)."ms\n";
+                echo 'Peptides query and php: '.($endTime - $startTime)." seconds\n";
             }
             $startTime = $endTime;
 
@@ -605,7 +605,7 @@ if (count($_GET) > 0) {
             $startTime = microtime(true);
             $res = pg_query($query) or die('Query failed: ' . pg_last_error());
             $endTime = microtime(true);
-            //~ echo '/*db time: '.($endTime - $startTime)."ms*/\n";
+            //~ echo '/*db time: '.($endTime - $startTime)." seconds*/\n";
             //~ echo '/*rows:'.pg_num_rows($res)."*/\n";
             $interactorAccs = [];
 
@@ -629,7 +629,7 @@ if (count($_GET) > 0) {
 
             $endTime = microtime(true);
             if ($debug === true) {
-                echo 'Proteins query and php: '.($endTime - $startTime)."ms\n";
+                echo 'Proteins query and php: '.($endTime - $startTime)." seconds\n";
             }
             $startTime = $endTime;
 
@@ -677,6 +677,6 @@ if (count($_GET) > 0) {
             json_encode($output, JSON_PRETTY_PRINT);
         $endTime = microtime(true);
 
-        echo 'Json encode: '.($endTime - $startTime)."ms\n";
+        echo 'Json encode: '.($endTime - $startTime)." seconds\n";
     }
 }
