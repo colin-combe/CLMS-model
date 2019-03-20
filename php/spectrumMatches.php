@@ -277,7 +277,8 @@ if (count($_GET) > 0) {
             }
             $id = $key;
             $randId = $value;
-            $WHERE_spectrumMatch = $WHERE_spectrumMatch.'(search_id = '.$id.' AND random_id = \''.$randId.'\''.') ';
+            // change all this to an IN clause
+            $WHERE_spectrumMatch = $WHERE_spectrumMatch.'(search_id = '.$id.') ';
             $WHERE_matchedPeptide = $WHERE_matchedPeptide.'search_id = '.$id.'';
 
             $i++;
