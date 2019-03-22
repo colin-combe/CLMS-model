@@ -370,7 +370,9 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         protObj.hidden = false; //?
 
         //take out organism abbreviation after underscore from names
-        protObj.name = protObj.name.substring(0, protObj.name.indexOf("_"))
+        if (protObj.name.indexOf("_") != -1) {
+          protObj.name = protObj.name.substring(0, protObj.name.indexOf("_"))
+        }
 
     },
 
