@@ -368,6 +368,10 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             protObj.crossLinks = [];
         }
         protObj.hidden = false; //?
+
+        //take out organism abbreviation after underscore from names
+        protObj.name = protObj.name.substring(0, protObj.name.indexOf("_"))
+
     },
 
     getDigestibleResiduesAsFeatures: function(participant) {
