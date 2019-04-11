@@ -74,7 +74,6 @@ if (count($_GET) > 0) {
         || preg_match($pattern, $matchid)
         || preg_match($pattern, $lowestScore)
         || preg_match($pattern, $accAsId)
-        || preg_match($pattern, $accAsId)
         ) {
         exit();
     }
@@ -266,7 +265,7 @@ if (count($_GET) > 0) {
         $output["searches"] = $searchId_metaData;
 
         //Stored layouts
-        $layoutQuery = "SELECT t1.layout AS l "
+        $layoutQuery = "SELECT t1.layout AS l, t1.description AS n "
                 . " FROM layouts AS t1 "
                 . " WHERE t1.search_id LIKE '" . $sid . "' "
                 . " AND t1.time = (SELECT max(t1.time) FROM layouts AS t1 "
@@ -274,8 +273,9 @@ if (count($_GET) > 0) {
 
         $layoutResult = pg_query($layoutQuery) or die('Query failed: ' . pg_last_error());
         while ($line = pg_fetch_array($layoutResult, null, PGSQL_ASSOC)) {
-            //echo "\"xiNETLayout\":" . stripslashes($line["l"]) . ",\n\n";
-            $output["xiNETLayout"] = json_decode(stripslashes($line["l"]));
+            $output["xiNETLayout"] = [];
+            $output["xiNETLayout"]["name"] = $line["n"];
+            $output["xiNETLayout"]["layout"] = json_decode(stripslashes($line["l"]));
         }
 
         //load data -
@@ -289,7 +289,8 @@ if (count($_GET) > 0) {
             }
             $id = $key;
             $randId = $value;
-            $WHERE_spectrumMatch = $WHERE_spectrumMatch.'(search_id = '.$id.' AND random_id = \''.$randId.'\''.') ';
+            // change all this to an IN clause
+            $WHERE_spectrumMatch = $WHERE_spectrumMatch.'(search_id = '.$id.') ';
             $WHERE_matchedPeptide = $WHERE_matchedPeptide.'search_id = '.$id.'';
 
             $i++;
@@ -388,9 +389,10 @@ if (count($_GET) > 0) {
         if ($debug === true) {
             echo "\n".$query."\n";
         }
-        $res = pg_query($query) or die('Query failed: ' . pg_last_error());
 
+        $res = pg_query($query) or die('Query failed: ' . pg_last_error());
         $endTime = microtime(true);
+
         if ($debug === true) {
             echo 'Exec matches and peptides query: '.($endTime - $startTime)." seconds\n";
         }
@@ -463,9 +465,6 @@ if (count($_GET) > 0) {
             $startTime = microtime(true);
             $res = pg_query($query) or die('Query failed: ' . pg_last_error());
             $endTime = microtime(true);
-            //~ echo '//db time: '.($endTime - $startTime)." seconds\n";
-            //~ echo '//rows:'.pg_num_rows($res)."\n";
-            //echo "\"spectrumSources\":[\n";
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);
             while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
 
@@ -497,9 +496,6 @@ if (count($_GET) > 0) {
             $startTime = microtime(true);
             $res = pg_query($query) or die('Query failed: ' . pg_last_error());
             $endTime = microtime(true);
-            //~ echo '//db time: '.($endTime - $startTime)." seconds\n";
-            //~ echo '//rows:'.pg_num_rows($res)."\n";
-            //echo "\"spectrumSources\":[\n";
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);
             while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
 
@@ -605,8 +601,6 @@ if (count($_GET) > 0) {
             $startTime = microtime(true);
             $res = pg_query($query) or die('Query failed: ' . pg_last_error());
             $endTime = microtime(true);
-            //~ echo '/*db time: '.($endTime - $startTime)." seconds*/\n";
-            //~ echo '/*rows:'.pg_num_rows($res)."*/\n";
             $interactorAccs = [];
 
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);

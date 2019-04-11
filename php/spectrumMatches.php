@@ -75,7 +75,6 @@ if (count($_GET) > 0) {
         exit();
     }
 
-
     //keep the long identifier for this combination of searches
 
     $output = [];
@@ -89,7 +88,6 @@ if (count($_GET) > 0) {
     $incorrectSearchIDs = [];
 
     for ($i = 0; $i < count($id_rands); $i++) {
-        //$s = [];
         $dashSeperated = explode("-", $id_rands[$i]);
         $randId = implode('-', array_slice($dashSeperated, 1, 4));
         $id = $dashSeperated[0];
@@ -262,7 +260,6 @@ if (count($_GET) > 0) {
 
         $layoutResult = pg_query($layoutQuery) or die('Query failed: ' . pg_last_error());
         while ($line = pg_fetch_array($layoutResult, null, PGSQL_ASSOC)) {
-            //echo "\"xiNETLayout\":" . stripslashes($line["l"]) . ",\n\n";
             $output["xiNETLayout"] = [];
             $output["xiNETLayout"]["name"] = $line["n"];
             $output["xiNETLayout"]["layout"] = json_decode(stripslashes($line["l"]));
@@ -376,18 +373,14 @@ if (count($_GET) > 0) {
 				ORDER BY score DESC, sm.id, mp.match_type;";
         }
 
-        //$startTime = microtime(true);
-        //echo "**".$query."**";
         $res = pg_query($query) or die('Query failed: ' . pg_last_error());
         $endTime = microtime(true);
-        //~ echo '/*db time: '.($endTime - $startTime)."ms\n";
-        //~ echo '/*rows:'.pg_num_rows($res)."\n";
-        //$startTime = microtime(true);
 
         $matches = [];
 
         $peptideIds = array();
         $sourceIds = array();
+        $peakListIds = array();
         $line = pg_fetch_array($res, null, PGSQL_ASSOC);
         while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
             $peptideId = $line["peptide_id"];
@@ -430,18 +423,14 @@ if (count($_GET) > 0) {
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);
         }
 
-        //echo "\n],\n";
         $output["rawMatches"] = $matches; //TODO - rename to matches or PSM
         $endTime = microtime(true);
-        //~ echo '/*php time: '.($endTime - $startTime)."ms\n\n";
 
         /*
          * SPECTRUM SOURCES
          */
         $spectrumSources = [];
         if (sizeof($sourceIds) > 0) {
-            //echo "\"spectrumSources\":[],";
-            // } else {
             $implodedSourceIds = '('.implode(array_keys($sourceIds), ",").')';
             $query = "SELECT src.id, src.name
 				FROM spectrum_source AS src WHERE src.id IN "
@@ -449,9 +438,6 @@ if (count($_GET) > 0) {
             $startTime = microtime(true);
             $res = pg_query($query) or die('Query failed: ' . pg_last_error());
             $endTime = microtime(true);
-            //~ echo '//db time: '.($endTime - $startTime)."ms\n";
-            //~ echo '//rows:'.pg_num_rows($res)."\n";
-            //echo "\"spectrumSources\":[\n";
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);
             while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
 
@@ -461,10 +447,7 @@ if (count($_GET) > 0) {
                     ));
 
                 $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-                //if ($line) {echo ",\n";}
             }
-            //echo "\n],\n";
-            $endTime = microtime(true);
         }
         $output["spectrumSources"] = $spectrumSources;
 
@@ -480,9 +463,6 @@ if (count($_GET) > 0) {
             $startTime = microtime(true);
             $res = pg_query($query) or die('Query failed: ' . pg_last_error());
             $endTime = microtime(true);
-            //~ echo '//db time: '.($endTime - $startTime)."ms\n";
-            //~ echo '//rows:'.pg_num_rows($res)."\n";
-            //echo "\"spectrumSources\":[\n";
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);
             while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
 
@@ -510,9 +490,6 @@ if (count($_GET) > 0) {
          */
         $peptides = [];
         if (sizeof($peptideIds) > 0) {
-            // 	echo "\"peptides\":[],";
-            // 	echo "\"proteins\":[]}";
-            // } else {
             $implodedPepIds = '('.implode(array_keys($peptideIds), ",").')';
             $query = "SELECT pep.id, (array_agg(pep.sequence))[1] as sequence,
 				array_agg(".$proteinIdField.") as proteins, array_agg(hp.protein_id) as test, array_agg(hp.peptide_position + 1) as positions
@@ -526,9 +503,6 @@ if (count($_GET) > 0) {
             $startTime = microtime(true);
             $res = pg_query($query) or die('Query failed: ' . pg_last_error());
             $endTime = microtime(true);
-            //~ echo '//db time: '.($endTime - $startTime)."ms\n";
-            //~ echo '//rows:'.pg_num_rows($res)."\n";
-            //echo "\"peptides\":[\n";
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);
             while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
                 $proteins = $line["proteins"];
@@ -541,7 +515,6 @@ if (count($_GET) > 0) {
                         $proteinsArray[$p] = substr($id, 1, strlen($id)-2);
                     }
                 }
-                //$c = count($proteinsArray);
                 $dbProteinIds = $line["test"];
                 $dbProteinsArray = explode(",", substr($dbProteinIds, 1, strlen($dbProteinIds) - 2));
                 foreach ($dbProteinsArray as $v) {
@@ -562,12 +535,9 @@ if (count($_GET) > 0) {
                     ));
 
                 $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-                //if ($line) {echo ",\n";}
             }
-            //echo "\n],\n";
-            $output["peptides"] = $peptides;
+           $output["peptides"] = $peptides;
             $endTime = microtime(true);
-            //~ echo '/*php time: '.($endTime - $startTime)."ms*/\n\n";
 
             /*
              * PROTEINS
@@ -587,8 +557,6 @@ if (count($_GET) > 0) {
             $startTime = microtime(true);
             $res = pg_query($query) or die('Query failed: ' . pg_last_error());
             $endTime = microtime(true);
-            //~ echo '/*db time: '.($endTime - $startTime)."ms*/\n";
-            //~ echo '/*rows:'.pg_num_rows($res)."*/\n";
             $interactorAccs = [];
 
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);
@@ -630,7 +598,6 @@ if (count($_GET) > 0) {
                 //error_log (print_r ("UNIPROT ERR ".$e, true));
             }
             $output["interactors"] = $interactors;
-            //echo ",\n";
 
             if ($matchid !== "") {	// send matchid back for sync purposes
                 $output["matchid"] = $matchid;
