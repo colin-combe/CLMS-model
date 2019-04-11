@@ -661,6 +661,10 @@ if (count($_GET) > 0) {
 
             $output["oldDB"] = ($oldDB == 1 ? "true" : "false"); // Is this from the old db?
             $endTime = microtime(true);
+            if ($debug === true) {
+                echo 'Interactors query and php: '.($endTime - $startTime)." seconds\n";
+            }
+
         }
     }
 
