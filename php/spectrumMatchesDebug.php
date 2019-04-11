@@ -289,12 +289,30 @@ if (count($_GET) > 0) {
             }
             $id = $key;
             $randId = $value;
-            // change all this to an IN clause
+            // an IN clause seems to be slower
             $WHERE_spectrumMatch = $WHERE_spectrumMatch.'(search_id = '.$id.') ';
             $WHERE_matchedPeptide = $WHERE_matchedPeptide.'search_id = '.$id.'';
 
             $i++;
         }
+
+        // $WHERE_spectrumMatch = ' (( search_id IN ( '; //WHERE clause for spectrumMatch table
+        // $WHERE_matchedPeptide = ' (( search_id IN ( ';//WHERE clause for matchedPeptide table
+        // $i = 0;
+        // foreach ($searchId_randomId as $key => $value) {
+        //     if ($i > 0) {
+        //         $WHERE_spectrumMatch = $WHERE_spectrumMatch.' , ';
+        //         $WHERE_matchedPeptide = $WHERE_matchedPeptide.' , ';
+        //     }
+        //     $id = $key;
+        //     $randId = $value;
+        //     // change all this to an IN clause
+        //     $WHERE_spectrumMatch = $WHERE_spectrumMatch.$id;
+        //     $WHERE_matchedPeptide = $WHERE_matchedPeptide.$id;
+        //
+        //     $i++;
+        // }
+
         $WHERE_spectrumMatch = $WHERE_spectrumMatch.' ) AND score >= '.$lowestScore;
         if (isset($_GET['highestScore'])) {
             $WHERE_spectrumMatch = $WHERE_spectrumMatch.' AND score <= '.((float) $_GET['highestScore']).') ';

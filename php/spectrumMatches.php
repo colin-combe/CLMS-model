@@ -276,7 +276,7 @@ if (count($_GET) > 0) {
             }
             $id = $key;
             $randId = $value;
-            // change all this to an IN clause
+            // an IN clause seems to be slower
             $WHERE_spectrumMatch = $WHERE_spectrumMatch.'(search_id = '.$id.') ';
             $WHERE_matchedPeptide = $WHERE_matchedPeptide.'search_id = '.$id.'';
 
@@ -504,7 +504,7 @@ if (count($_GET) > 0) {
             $res = pg_query($query) or die('Query failed: ' . pg_last_error());
             $endTime = microtime(true);
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-            while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
+            while ($line) {
                 $proteins = $line["proteins"];
                 $proteinsArray = explode(",", substr($proteins, 1, strlen($proteins) - 2));
                 $protCount = count($proteinsArray);
@@ -536,7 +536,8 @@ if (count($_GET) > 0) {
 
                 $line = pg_fetch_array($res, null, PGSQL_ASSOC);
             }
-           $output["peptides"] = $peptides;
+            $output["peptides"] = $peptides;
+
             $endTime = microtime(true);
 
             /*
