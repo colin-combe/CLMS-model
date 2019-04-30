@@ -898,7 +898,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
 
     initDecoyLookup: function(prefixes) {
         // Make map of reverse/random decoy proteins to real proteins
-        prefixes = prefixes || ["REV_", "RAN_", "DECOY_", "DECOY:", "reverse_"];
+        prefixes = prefixes || ["REV_", "RAN_", "DECOY_", "DECOY:", "reverse_", "REV", "RAN"];
         var prots = CLMS.arrayFromMapValues(this.get("participants"));
         var nameMap = d3.map();
         var accessionMap = d3.map();
@@ -911,13 +911,14 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         var decoys = prots.filter(function(p) {
             return p.is_decoy;
         });
-        decoys.forEach(function(decoyProt) {
-            prefixes.forEach(function(pre) {
+
+        decoys.forEach (function (decoyProt) {
+            prefixes.forEach (function (pre) {
                 var targetProtIDByName = nameMap.get(decoyProt.name.substring(pre.length));
                 if (decoyProt.accession) {
                     var targetProtIDByAccession = accessionMap.get(decoyProt.accession.substring(pre.length));
-                    if (targetProtIDByName && targetProtIDByAccession) {
-                        decoyProt.targetProteinID = targetProtIDByName; // mjg
+                    if (/*targetProtIDByName && */targetProtIDByAccession) {
+                        decoyProt.targetProteinID = targetProtIDByAccession /*targetProtIDByName*/; // mjg
                     }
                 } else if (targetProtIDByName) {
                     decoyProt.targetProteinID = targetProtIDByName; // mjg
