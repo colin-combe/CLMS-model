@@ -103,6 +103,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             };
 
             //enzyme specificity
+            // TODO _ seems like theres a duplication problem here if multiple searches are aggregated
             var postAaSet = new Set();
             var aaConstrainedCTermSet = new Set();
             var aaConstrainedNTermSet = new Set();
