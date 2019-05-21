@@ -421,3 +421,46 @@ CLMS.model.SpectrumMatch.prototype.fragmentToleranceString = function() {
 CLMS.model.SpectrumMatch.prototype.score = function() {
     return this._score;
 }
+
+CLMS.model.SpectrumMatch.prototype.missedCleavageCount = function() {
+    var specificity = this.containingModel.get("enzymeSpecificity");
+    function countMissedCleavages(peptide, linkPos) {
+        var count = 0;
+        var seqMods = peptide.seq_mods;
+        var pepLen = seqMods.length;
+
+        var indexOfLinkedAA = findIndexofNthUpperCaseLetter(seqMods, linkPos)
+
+        for (var i = 0; i < pepLen; i++) {
+            for (var spec of specificity) {
+                if (seqMods[i] == spec.aa) {
+                    if (i < pepLen) {
+                        if (seqMods[i+1] >= "A" && seqMods[i+1] <= "Z"){
+                              if (i != indexOfLinkedAA) {
+                                count ++;
+                              }
+                        }
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
+    var findIndexofNthUpperCaseLetter = function(str, n) { // n is 1-indexed here
+        var i = -1;
+        while (n > 0 && i < str.length) {
+            i++;
+            var c = str[i];
+            if (c >= "A" && c <= "Z") n--;
+        }
+        return i === str.length ? undefined : i;
+    };
+
+    var mc = countMissedCleavages(this.matchedPeptides[0], this.linkPos1);
+    if (this.matchedPeptides[1]) {
+        mc = mc + countMissedCleavages(this.matchedPeptides[1], this.linkPos2);
+    }
+
+    return mc;
+}
