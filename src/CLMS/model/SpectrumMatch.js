@@ -423,7 +423,13 @@ CLMS.model.SpectrumMatch.prototype.score = function() {
 }
 
 CLMS.model.SpectrumMatch.prototype.missedCleavageCount = function() {
-    var specificity = this.containingModel.get("enzymeSpecificity");
+    var enzymeSpecificity = this.containingModel.get("enzymeSpecificity");
+
+    var specSet = new Set();
+    for (var specificity of enzymeSpecificity){
+      specSet.add(specificity.aa);
+    }
+
     function countMissedCleavages(peptide, linkPos) {
         var count = 0;
         var seqMods = peptide.seq_mods;
@@ -432,8 +438,8 @@ CLMS.model.SpectrumMatch.prototype.missedCleavageCount = function() {
         var indexOfLinkedAA = findIndexofNthUpperCaseLetter(seqMods, linkPos)
 
         for (var i = 0; i < pepLen; i++) {
-            for (var spec of specificity) {
-                if (seqMods[i] == spec.aa) {
+            for (var spec of specSet) {
+                if (seqMods[i] == spec) {
                     if (i < pepLen) {
                         if (seqMods[i+1] >= "A" && seqMods[i+1] <= "Z"){
                               if (i != indexOfLinkedAA) {
