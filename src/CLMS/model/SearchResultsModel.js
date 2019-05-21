@@ -1128,6 +1128,22 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             decimalPlaces: 2,
             maxVal: 90,
         },
+        {
+            linkFunc: function(link) {
+                return link.filteredMatches_pp.map(function(m) {
+                    return m.match.missedCleavageCount();
+                });
+            },
+            unfilteredLinkFunc: function(link) {
+                return link.matches_pp.map(function(m) {
+                    return m.match.missedCleavageCount();
+                });
+            },
+            id: "MissedCleavages",
+            label: "Missed Cleavages",
+            decimalPlaces: 2,
+            matchLevel: true
+        },
     ],
 
 });
