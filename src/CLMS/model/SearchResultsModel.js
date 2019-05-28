@@ -1050,6 +1050,22 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         {
             linkFunc: function(link) {
                 return link.filteredMatches_pp.map(function(m) {
+                    return m.match.missingPeaks();
+                });
+            },
+            unfilteredLinkFunc: function(link) {
+                return link.matches_pp.map(function(m) {
+                    return m.match.missingPeaks();
+                });
+            },
+            id: "MissingPeaks",
+            label: "Missing Peaks",
+            decimalPlaces: 0,
+            matchLevel: true
+        },
+        {
+            linkFunc: function(link) {
+                return link.filteredMatches_pp.map(function(m) {
                     return Math.min(m.pepPos[0].length, m.pepPos[1].length);
                 });
             },
@@ -1141,7 +1157,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                 });
             },
             id: "MissedCleavages",
-            label: "Missed Cleavages",
+            label: "Max. Missed Cleavages",
             decimalPlaces: 2,
             matchLevel: true
         },

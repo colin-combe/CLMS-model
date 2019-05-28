@@ -356,6 +356,7 @@ CLMS.model.SpectrumMatch.prototype.expMZ = function() {
 }
 
 CLMS.model.SpectrumMatch.protonMass = 1.007276466879;
+CLMS.model.SpectrumMatch.C13_MASS_DIFFERENCE = 1.0033548;
 
 CLMS.model.SpectrumMatch.prototype.expMass = function() {
     return this.precursorMZ * this.precursorCharge - (this.precursorCharge * CLMS.model.SpectrumMatch.protonMass);
@@ -369,8 +370,24 @@ CLMS.model.SpectrumMatch.prototype.calcMass = function() {
     return this.calc_mass;
 }
 
+
+CLMS.model.SpectrumMatch.prototype.missingPeaks = function() {
+    var errorMZ = this.expMZ() - this.calcMZ();
+    var errorM = errorMZ * this.precursorCharge;
+    //how many peaks assumed missing/miss-assigned
+    var missingPeaks = Math.round(errorM / CLMS.model.SpectrumMatch.C13_MASS_DIFFERENCE);
+    return missingPeaks;
+}
+
 CLMS.model.SpectrumMatch.prototype.massError = function() {
-    return ((this.expMass() - this.calcMass()) / this.calcMass()) * 1000000;
+    //old
+    //return ((this.expMass() - this.calcMass()) / this.calcMass()) * 1000000;
+
+    // new - change needed due to some other change to do with missing peaks
+    // what is the error in m/z
+    var assumedMZ = this.expMZ() - this.missingPeaks() * CLMS.model.SpectrumMatch.C13_MASS_DIFFERENCE / this.precursorCharge;
+    var errorMZ = assumedMZ - this.calcMZ();
+    return errorMZ  / this.calcMZ() * 1000000;
 }
 
 CLMS.model.SpectrumMatch.prototype.ionTypes = function() {
@@ -463,10 +480,9 @@ CLMS.model.SpectrumMatch.prototype.missedCleavageCount = function() {
         return i === str.length ? undefined : i;
     };
 
-    var mc = countMissedCleavages(this.matchedPeptides[0], this.linkPos1);
+    var mc1 = countMissedCleavages(this.matchedPeptides[0], this.linkPos1);
     if (this.matchedPeptides[1]) {
-        mc = mc + countMissedCleavages(this.matchedPeptides[1], this.linkPos2);
+        var mc2 = countMissedCleavages(this.matchedPeptides[1], this.linkPos2);
     }
-
-    return mc;
+    return Math.max(mc1, mc2);
 }
