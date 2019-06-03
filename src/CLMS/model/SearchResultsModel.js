@@ -1153,7 +1153,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             },
             unfilteredLinkFunc: function(link) {
                 return link.matches_pp.map(function(m) {
-                    return m.match.experimentalCleavageCount();
+                    return m.match.experimentalMissedCleavageCount();
                 });
             },
             id: "ExpMissedCleavages",
