@@ -87,6 +87,11 @@ if (count($_GET) > 0) {
     $missingSearchIDs = [];
     $incorrectSearchIDs = [];
 
+    
+    $times = array();
+    $times["start"] = microtime(true);
+    $zz = $times["start"];
+    
     for ($i = 0; $i < count($id_rands); $i++) {
         $dashSeperated = explode("-", $id_rands[$i]);
         $randId = implode('-', array_slice($dashSeperated, 1, 4));
@@ -244,10 +249,14 @@ if (count($_GET) > 0) {
             $searchId_randomId[$id] = $randId;
         }
     }
+    $times["searchData"] = microtime(true) - $zz;
+    $zz = microtime(true);
 
     if (count($missingSearchIDs) > 0 || count($incorrectSearchIDs) > 0) {
-        // missing / mangled any of the search id's then bail out, use these fields to inform user back in javascriptland
-        echo "\"missingSearchIDs\":".json_encode(array_keys($missingSearchIDs)).",\n\"incorrectSearchIDs\":".json_encode(array_keys($incorrectSearchIDs))."}\n";
+        // missing / mangled any of the search id's then bail out, and add these fields to output to inform user back in javascriptland
+        $output["missingSearchIDs"] = array_keys($missingSearchIDs);
+        $output["incorrectSearchIDs"] = array_keys($incorrectSearchIDs);
+        //echo "\"{missingSearchIDs\":".json_encode(array_keys($missingSearchIDs)).",\n\"incorrectSearchIDs\":".json_encode(array_keys($incorrectSearchIDs))."}\n";
     } else {
         $output["searches"] = $searchId_metaData;
 
@@ -264,6 +273,8 @@ if (count($_GET) > 0) {
             $output["xiNETLayout"]["name"] = $line["n"];
             $output["xiNETLayout"]["layout"] = json_decode(stripslashes($line["l"]));
         }
+        $times["layoutData"] = microtime(true) - $zz;
+        $zz = microtime(true);
 
         //load data -
         $WHERE_spectrumMatch = ' ( ( '; //WHERE clause for spectrumMatch table
@@ -317,6 +328,8 @@ if (count($_GET) > 0) {
          * SPECTRUM MATCHES AND MATCHED PEPTIDES
          */
 
+        $times["specString"] = microtime(true) - $zz;
+        $zz = microtime(true);
         if ($oldDB == true) {
             //old DB
 
@@ -374,6 +387,8 @@ if (count($_GET) > 0) {
         }
 
         $res = pg_query($query) or die('Query failed: ' . pg_last_error());
+        $times["matchQueryDone"] = microtime(true) - $zz;
+        $zz = microtime(true);
         $endTime = microtime(true);
 
         $matches = [];
@@ -424,6 +439,8 @@ if (count($_GET) > 0) {
         }
 
         $output["rawMatches"] = $matches; //TODO - rename to matches or PSM
+        $times["matchQueryToArray"] = microtime(true) - $zz;
+        $zz = microtime(true);
         $endTime = microtime(true);
 
         /*
@@ -450,7 +467,8 @@ if (count($_GET) > 0) {
             }
         }
         $output["spectrumSources"] = $spectrumSources;
-
+        $times["spectrumSources"] = microtime(true) - $zz;
+        $zz = microtime(true);
         /*
          * PEAK LIST FILES
          */
@@ -478,6 +496,8 @@ if (count($_GET) > 0) {
             $endTime = microtime(true);
         }
         $output["peakListFiles"] = $peakListFiles;
+        $times["peakListFiles"] = microtime(true) - $zz;
+        $zz = microtime(true);
 
 
         $proteinIdField = "hp.protein_id";
@@ -503,6 +523,8 @@ if (count($_GET) > 0) {
             $startTime = microtime(true);
             $res = pg_query($query) or die('Query failed: ' . pg_last_error());
             $endTime = microtime(true);
+            $times["peptideQuery"] = microtime(true) - $zz;
+            $zz = microtime(true);
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);
             while ($line) {
                 $proteins = $line["proteins"];
@@ -537,8 +559,10 @@ if (count($_GET) > 0) {
                 $line = pg_fetch_array($res, null, PGSQL_ASSOC);
             }
             $output["peptides"] = $peptides;
-
+            
             $endTime = microtime(true);
+            $times["peptideQueryToArray"] = microtime(true) - $zz;
+            $zz = microtime(true);
 
             /*
              * PROTEINS
@@ -577,6 +601,8 @@ if (count($_GET) > 0) {
                 $line = pg_fetch_array($res, null, PGSQL_ASSOC);
             }
             $output["proteins"] = $proteins;
+            $times["proteinQueryAndArray"] = microtime(true) - $zz;
+            $zz = microtime(true);
 
             //interactors
             $interactors = [];
@@ -596,9 +622,12 @@ if (count($_GET) > 0) {
                     throw new Exception("Could not connect to interaction database");
                 }
             } catch (Exception $e) {
+                $output["error"] = $e;
                 //error_log (print_r ("UNIPROT ERR ".$e, true));
             }
             $output["interactors"] = $interactors;
+            $times["uniprotQuery"] = microtime(true) - $zz;
+            $zz = microtime(true);
 
             if ($matchid !== "") {	// send matchid back for sync purposes
                 $output["matchid"] = $matchid;
@@ -608,6 +637,8 @@ if (count($_GET) > 0) {
             $endTime = microtime(true);
         }
     }
+    
+    $output["times"] = $times;
 
     // Free resultset
     pg_free_result($res);
