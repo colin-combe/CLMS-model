@@ -182,7 +182,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                     var crosslinkerDescription = crosslinker.description;
                     var crosslinkerName = crosslinker.name;
                     var linkedAARegex = /LINKEDAMINOACIDS:(.*?)(?:;|$)/g; // capture both sets if > 1 set
-                    //console.log("cld", crosslinkerDescription);
+                    // //console.log("cld", crosslinkerDescription);
                     var resSet = linkableResSets[crosslinkerName];
 
                     if (!resSet) {
