@@ -89,7 +89,7 @@ if (count($_GET) > 0) {
 
     
     $times = array();
-    $times["start"] = microtime(true);
+    $times["startAbsolute"] = microtime(true);
     $zz = $times["start"];
     
     for ($i = 0; $i < count($id_rands); $i++) {
@@ -634,7 +634,7 @@ if (count($_GET) > 0) {
             }
 
             $output["oldDB"] = ($oldDB == 1 ? "true" : "false"); // Is this from the old db?
-            $endTime = microtime(true);
+            $times["endAbsolute"] = microtime(true);
         }
     }
     
