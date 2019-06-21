@@ -182,14 +182,15 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                     var crosslinkerDescription = crosslinker.description;
                     var crosslinkerName = crosslinker.name;
                     var linkedAARegex = /LINKEDAMINOACIDS:(.*?)(?:;|$)/g; // capture both sets if > 1 set
-                    console.log("cld", crosslinkerDescription);
+                    //console.log("cld", crosslinkerDescription);
                     var resSet = linkableResSets[crosslinkerName];
 
                     if (!resSet) {
                         resSet = {
                             searches: new Set(),
                             linkables: [],
-                            name: crosslinkerName
+                            name: crosslinkerName,
+                            id: +crosslinker.id
                         };
                         linkableResSets[crosslinkerName] = resSet;
                     }
@@ -216,7 +217,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                     resSet.heterobi = resSet.heterobi || (i > 1);
                 });
             });
-            console.log("CROSS", linkableResSets);
+            //console.log("CROSS", linkableResSets);
             this.set("crosslinkerSpecificity", linkableResSets);
 
             //saved config should end up including filter settings not just xiNET layout
