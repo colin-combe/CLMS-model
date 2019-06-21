@@ -217,6 +217,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                     resSet.heterobi = resSet.heterobi || (i > 1);
                 });
             }
+
             //console.log("CROSS", linkableResSets);
             this.set("crosslinkerSpecificity", linkableResSets);
 
