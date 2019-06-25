@@ -104,31 +104,31 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
 
             //enzyme specificity
             // TODO _ seems like theres a duplication problem here if multiple searches are aggregated
+
+            //eliminate duplication first
+            var enzymeDescriptions = new Set();
+            for (var search of searches.values()) {
+                for (var enzyme of search.enzymes) {
+                    enzymeDescriptions.add(enzyme.description);
+                }
+            }
+
             var postAaSet = new Set();
             var aaConstrainedCTermSet = new Set();
             var aaConstrainedNTermSet = new Set();
-            var searchArray = CLMS.arrayFromMapValues(searches);
-            var searchCount = searchArray.length;
-            for (var s = 0; s < searchCount; s++) {
-                var search = searchArray[s];
-                var enzymes = search.enzymes;
-                var enzymeCount = enzymes.length;
-                for (var e = 0; e < enzymeCount; e++) {
-                    var enzymeDescription = enzymes[e].description;
 
-                    var postAARegex = /PostAAConstrainedDigestion:DIGESTED:(.*?);ConstrainingAminoAcids:(.*?);/g;
-                    var postAAMatch = postAARegex.exec(enzymeDescription);
-                    getResiduesFromEnzymeDescription(postAAMatch, postAaSet);
+            for (var enzymeDescription of enzymeDescriptions) {
+                var postAARegex = /PostAAConstrainedDigestion:DIGESTED:(.*?);ConstrainingAminoAcids:(.*?);/g;
+                var postAAMatch = postAARegex.exec(enzymeDescription);
+                getResiduesFromEnzymeDescription(postAAMatch, postAaSet);
 
-                    var cTermRegex = /CTERMDIGEST:(.*?);/g;
-                    var ctMatch = cTermRegex.exec(enzymeDescription);
-                    getResiduesFromEnzymeDescription(ctMatch, aaConstrainedCTermSet);
+                var cTermRegex = /CTERMDIGEST:(.*?);/g;
+                var ctMatch = cTermRegex.exec(enzymeDescription);
+                getResiduesFromEnzymeDescription(ctMatch, aaConstrainedCTermSet);
 
-                    var nTermRegex = /NTERMDIGEST:(.*?);/g;
-                    var ntMatch = nTermRegex.exec(enzymeDescription);
-                    getResiduesFromEnzymeDescription(ntMatch, aaConstrainedNTermSet);
-
-                }
+                var nTermRegex = /NTERMDIGEST:(.*?);/g;
+                var ntMatch = nTermRegex.exec(enzymeDescription);
+                getResiduesFromEnzymeDescription(ntMatch, aaConstrainedNTermSet);
             }
 
             var addEnzymeSpecificityResidues = function(residueSet, type) {
@@ -175,21 +175,22 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             this.set("crosslinkerSpecificity", CLMS.arrayFromMapValues(linkableResSet));*/
 
             var linkableResSets = {};
-            searchArray.forEach(function(search) {
+            for (var search of searches.values()) {
                 var crosslinkers = search.crosslinkers || [];
 
                 crosslinkers.forEach(function(crosslinker) {
                     var crosslinkerDescription = crosslinker.description;
                     var crosslinkerName = crosslinker.name;
                     var linkedAARegex = /LINKEDAMINOACIDS:(.*?)(?:;|$)/g; // capture both sets if > 1 set
-                    console.log("cld", crosslinkerDescription);
+                    // //console.log("cld", crosslinkerDescription);
                     var resSet = linkableResSets[crosslinkerName];
 
                     if (!resSet) {
                         resSet = {
                             searches: new Set(),
                             linkables: [],
-                            name: crosslinkerName
+                            name: crosslinkerName,
+                            id: +crosslinker.id
                         };
                         linkableResSets[crosslinkerName] = resSet;
                     }
@@ -215,8 +216,9 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
 
                     resSet.heterobi = resSet.heterobi || (i > 1);
                 });
-            });
-            console.log("CROSS", linkableResSets);
+            }
+
+            //console.log("CROSS", linkableResSets);
             this.set("crosslinkerSpecificity", linkableResSets);
 
             //saved config should end up including filter settings not just xiNET layout
@@ -372,7 +374,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
 
         //take out organism abbreviation after underscore from names
         if (protObj.name.indexOf("_") != -1) {
-          protObj.name = protObj.name.substring(0, protObj.name.indexOf("_"))
+            protObj.name = protObj.name.substring(0, protObj.name.indexOf("_"))
         }
 
     },
@@ -913,13 +915,13 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             return p.is_decoy;
         });
 
-        decoys.forEach (function (decoyProt) {
-            prefixes.forEach (function (pre) {
+        decoys.forEach(function(decoyProt) {
+            prefixes.forEach(function(pre) {
                 var targetProtIDByName = nameMap.get(decoyProt.name.substring(pre.length));
                 if (decoyProt.accession) {
                     var targetProtIDByAccession = accessionMap.get(decoyProt.accession.substring(pre.length));
-                    if (/*targetProtIDByName && */targetProtIDByAccession) {
-                        decoyProt.targetProteinID = targetProtIDByAccession /*targetProtIDByName*/; // mjg
+                    if ( /*targetProtIDByName && */ targetProtIDByAccession) {
+                        decoyProt.targetProteinID = targetProtIDByAccession /*targetProtIDByName*/ ; // mjg
                     }
                 } else if (targetProtIDByName) {
                     decoyProt.targetProteinID = targetProtIDByName; // mjg
@@ -1148,16 +1150,32 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         {
             linkFunc: function(link) {
                 return link.filteredMatches_pp.map(function(m) {
-                    return m.match.missedCleavageCount();
+                    return m.match.experimentalMissedCleavageCount();
                 });
             },
             unfilteredLinkFunc: function(link) {
                 return link.matches_pp.map(function(m) {
-                    return m.match.missedCleavageCount();
+                    return m.match.experimentalMissedCleavageCount();
                 });
             },
-            id: "MissedCleavages",
-            label: "Max. Missed Cleavages",
+            id: "ExpMissedCleavages",
+            label: "Experimental Max. Missed Cleavages",
+            decimalPlaces: 2,
+            matchLevel: true
+        },
+        {
+            linkFunc: function(link) {
+                return link.filteredMatches_pp.map(function(m) {
+                    return m.match.searchMissedCleavageCount();
+                });
+            },
+            unfilteredLinkFunc: function(link) {
+                return link.matches_pp.map(function(m) {
+                    return m.match.searchMissedCleavageCount();
+                });
+            },
+            id: "SearchMissedCleavages",
+            label: "Search Max. Missed Cleavages",
             decimalPlaces: 2,
             matchLevel: true
         },

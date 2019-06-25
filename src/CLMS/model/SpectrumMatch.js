@@ -387,7 +387,7 @@ CLMS.model.SpectrumMatch.prototype.massError = function() {
     // what is the error in m/z
     var assumedMZ = this.expMZ() - this.missingPeaks() * CLMS.model.SpectrumMatch.C13_MASS_DIFFERENCE / this.precursorCharge;
     var errorMZ = assumedMZ - this.calcMZ();
-    return errorMZ  / this.calcMZ() * 1000000;
+    return errorMZ / this.calcMZ() * 1000000;
 }
 
 CLMS.model.SpectrumMatch.prototype.ionTypes = function() {
@@ -439,29 +439,36 @@ CLMS.model.SpectrumMatch.prototype.score = function() {
     return this._score;
 }
 
-CLMS.model.SpectrumMatch.prototype.missedCleavageCount = function() {
+CLMS.model.SpectrumMatch.prototype.experimentalMissedCleavageCount = function() {
     var enzymeSpecificity = this.containingModel.get("enzymeSpecificity");
 
-    var specSet = new Set();
-    for (var specificity of enzymeSpecificity){
-      specSet.add(specificity.aa);
-    }
+    //yes... this should prob be done with regex
+    // (https://github.com/Rappsilber-Laboratory/xi3-issue-tracker/issues/401#issuecomment-495158293)
 
     function countMissedCleavages(peptide, linkPos) {
         var count = 0;
         var seqMods = peptide.seq_mods;
         var pepLen = seqMods.length;
 
-        var indexOfLinkedAA = findIndexofNthUpperCaseLetter(seqMods, linkPos)
+        var indexOfLinkedAA = findIndexofNthUpperCaseLetter(seqMods, linkPos);
 
         for (var i = 0; i < pepLen; i++) {
-            for (var spec of specSet) {
-                if (seqMods[i] == spec) {
+            for (var spec of enzymeSpecificity) {
+                if (seqMods[i] == spec.aa) {
                     if (i < pepLen) {
-                        if (seqMods[i+1] >= "A" && seqMods[i+1] <= "Z"){
-                              if (i != indexOfLinkedAA) {
-                                count ++;
-                              }
+                        if (seqMods[i + 1] >= "A" && seqMods[i + 1] <= "Z") {
+                            if (i != indexOfLinkedAA) {
+                                var postConstrained = false;
+                                for (var pc of spec.postConstraint) {
+                                    if (peptide.sequence[i+1] == pc) {
+                                        postConstrained = true;
+                                        break;
+                                    }
+                                }
+                                if (!postConstrained){
+                                    count++;
+                                }
+                            }
                         }
                     }
                 }
@@ -483,6 +490,32 @@ CLMS.model.SpectrumMatch.prototype.missedCleavageCount = function() {
     var mc1 = countMissedCleavages(this.matchedPeptides[0], this.linkPos1);
     if (this.matchedPeptides[1]) {
         var mc2 = countMissedCleavages(this.matchedPeptides[1], this.linkPos2);
+    }
+    return Math.max(mc1, mc2);
+}
+
+CLMS.model.SpectrumMatch.prototype.searchMissedCleavageCount = function() {
+    var enzymeSpecificity = this.containingModel.get("enzymeSpecificity");
+
+    function countSearchMissedCleavages(peptide, linkPos) {
+        var count = 0;
+        var sequence = peptide.sequence;
+        var pepLen = sequence.length;
+        for (var i = 0; i < pepLen; i++) {
+            for (var spec of enzymeSpecificity) {
+                if (sequence[i] == spec.aa) {
+                    if (i < (pepLen - 1)) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
+    var mc1 = countSearchMissedCleavages(this.matchedPeptides[0]);
+    if (this.matchedPeptides[1]) {
+        var mc2 = countSearchMissedCleavages(this.matchedPeptides[1]);
     }
     return Math.max(mc1, mc2);
 }
