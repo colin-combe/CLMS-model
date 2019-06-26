@@ -574,7 +574,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             var protCount = needsSequence.length;
             var countSequences = 0;
             var protArray = needsSequence; //CLMS.arrayFromMapValues(participants);
-            if (protCount > 1) {
+            //if (protCount > 1) {
                 for (var p = 0; p < protCount; p++) {
                     var prot = protArray[p];
                     if (prot.is_decoy == false) {
@@ -595,9 +595,9 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                         }
                     }
                 }
-            } else {
-                addCSVLinks();
-            }
+            //} else {
+             //   addCSVLinks();
+            //}
         } else {
             addCSVLinks();
         }
