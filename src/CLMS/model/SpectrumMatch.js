@@ -407,9 +407,17 @@ CLMS.model.SpectrumMatch.prototype.ionTypesString = function() {
     return returnString;
 }
 
-CLMS.model.SpectrumMatch.prototype.crossLinkerModMass = function() {
+CLMS.model.SpectrumMatch.prototype.crosslinkerModMass = function() {
+    var crosslinker = this.getCrosslinker()
+    if (crosslinker) {
+        return crosslinker.MassError;
+    }
+    else return 0;
+}
+
+CLMS.model.SpectrumMatch.prototype.getCrosslinker = function() {
     if (this.crosslinker_id == -1) {
-        return 0;
+        return null;
     }
 
     var crosslinkers = this.containingModel.get("searches").get(this.searchId).crosslinkers;
@@ -417,7 +425,7 @@ CLMS.model.SpectrumMatch.prototype.crossLinkerModMass = function() {
     for (var c = 0; c < clCount; c++) {
         var crosslinker = crosslinkers[c];
         if (crosslinker.id == this.crosslinker_id) {
-            return crosslinker.mass;
+            return crosslinker;
         }
     }
 }
