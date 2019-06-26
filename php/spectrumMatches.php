@@ -22,9 +22,9 @@
 
 if (count($_GET) > 0) {
     include('../../connectionString.php');
-    
+
     $output = [];
-                
+
     $dbconn = @pg_connect($connectionString);// or die('Could not connect to database.');
     if ($dbconn) {
 
@@ -59,12 +59,12 @@ if (count($_GET) > 0) {
             $lowestScore= (float) $_GET['lowestScore'];
         }
 
-        $accAsId = 0;
-        if (isset($_GET['accAsId'])) {
-            if ($_GET['accAsId'] === '1' || $_GET['accAsId'] === '0') {
-                $accAsId = (bool) $_GET['accAsId'];
-            }
-        }
+        $accAsId = true;
+        // if (isset($_GET['accAsId'])) {
+        //     if ($_GET['accAsId'] === '1' || $_GET['accAsId'] === '0') {
+        //         $accAsId = (bool) $_GET['accAsId'];
+        //     }
+        // }
 
         //SQL injection defense
         $pattern = '/[^0-9,\-]/';
