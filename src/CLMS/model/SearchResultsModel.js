@@ -544,7 +544,6 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                         if (iFirstSpace === -1) iFirstSpace = line.length;
                         tempIdentifier = line.substring(1, iFirstSpace).trim().replace(/(['"])/g, '');
                         tempDescription = line.substring(iFirstSpace).trim();
-                        //console.log(tempIdentifier);
                     } else {
                         tempSeq += line.trim();
                     }
@@ -661,7 +660,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                 description: desc
             };
             participants.set(id, protein);
-            participants.set(acc, protein);
+            //participants.set(acc, protein);
             self.commonRegexes.decoyNames.lastIndex = 0;
             var regexMatch = self.commonRegexes.decoyNames.exec(protein.id);
             if (regexMatch) {
@@ -670,7 +669,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                 protein.is_decoy = false;
             }
             self.initProtein(protein);
-        };
+        }
 
         //for reading fasta files
         function nameFromIdentifier(ident) {
