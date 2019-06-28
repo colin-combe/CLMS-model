@@ -320,73 +320,38 @@ if (count($_GET) > 0) {
                 $WHERE_spectrumMatch = $WHERE_spectrumMatch.' AND dynamic_rank ';
             }
 
-            // MJG. 06/09/16. Changed query 'cos it crashed when using old db
-            $isNewQuery = pg_query("SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'spectrum_source'");
-            $isNewQueryRow = pg_fetch_object($isNewQuery);
-            $oldDB = ($isNewQueryRow->count == 0 ? true : false);
-            //pg_query("SELECT * FROM spectrum_source LIMIT 0") or ($oldDB = true);
-
             /*
              * SPECTRUM MATCHES AND MATCHED PEPTIDES
              */
 
             $times["specString"] = microtime(true) - $zz;
             $zz = microtime(true);
-            if ($oldDB == true) {
-                //old DB
 
-                $query = "
-                    SELECT
-                        mp.match_id, mp.match_type, mp.peptide_id,
-                        mp.link_position + 1 AS link_position,
-                        sm.score, sm.autovalidated, sm.validated, sm.rejected,
-                        sm.search_id, sm.precursor_charge, sm.is_decoy, sm.spectrum_id,
-                        sp.scan_number, r.run_name
-                    FROM
-                        (SELECT sm.id, sm.score, sm.autovalidated, sm.validated, sm.rejected,
-                        sm.search_id, sm.precursor_charge, sm.is_decoy, sm.spectrum_id
-                        FROM spectrum_match sm INNER JOIN search s ON search_id = s.id
-                        WHERE ".$WHERE_spectrumMatch.")
-                        sm
-                    INNER JOIN
-                        (SELECT mp.match_id, mp.match_type, mp.peptide_id,
-                        mp.link_position
-                        FROM matched_peptide mp WHERE link_position != -1) mp
-                        ON sm.id = mp.match_id
-                    INNER JOIN spectrum sp ON sm.spectrum_id = sp.id
-                    INNER JOIN (SELECT run_name, spectrum_match_id from  v_export_materialized
-                        WHERE (".$WHERE_matchedPeptide.")
-                        ) r ON sm.id = r.spectrum_match_id
-                    ORDER BY score DESC, sm.id, mp.match_type;";
-            } else {
-                //New DB
-
-                if ($linears == false) {
-                    $WHERE_matchedPeptide = $WHERE_matchedPeptide." AND link_position != -1 ";
-                }
-
-                $query = "
-                        SELECT
-                        mp.match_id, mp.match_type, mp.peptide_id,
-                        mp.link_position + 1 AS link_position, mp.crosslinker_id, sm.spectrum_id,
-                        sm.score, sm.autovalidated, sm.validated, sm.rejected,
-                        sm.search_id, sm.is_decoy, sm.calc_mass, sm.precursor_charge,
-                        sp.scan_number, sp.scan_index, sp.source_id as source, sp.peaklist_id as plfid,
-                        sp.precursor_intensity, sp.precursor_mz, sp.elution_time_start, sp.elution_time_end
-                    FROM
-                        (SELECT sm.id, sm.score, sm.autovalidated, sm.validated, sm.rejected,
-                        sm.search_id, sm.precursor_charge, sm.is_decoy, sm.spectrum_id,
-                        sm.calc_mass
-                        FROM spectrum_match sm INNER JOIN search s ON search_id = s.id
-                        WHERE ".$WHERE_spectrumMatch.") sm
-                    INNER JOIN
-                        (SELECT mp.match_id, mp.match_type, mp.peptide_id,
-                        mp.link_position, mp.crosslinker_id
-                        FROM matched_peptide mp WHERE ".$WHERE_matchedPeptide.") mp
-                        ON sm.id = mp.match_id
-                    INNER JOIN spectrum sp ON sm.spectrum_id = sp.id
-                    ORDER BY score DESC, sm.id, mp.match_type;";
+            if ($linears == false) {
+                $WHERE_matchedPeptide = $WHERE_matchedPeptide." AND link_position != -1 ";
             }
+
+            $query = "
+                    SELECT
+                    mp.match_id, mp.match_type, mp.peptide_id,
+                    mp.link_position + 1 AS link_position, mp.crosslinker_id, sm.spectrum_id,
+                    sm.score, sm.autovalidated, sm.validated, sm.rejected,
+                    sm.search_id, sm.is_decoy, sm.calc_mass, sm.precursor_charge,
+                    sp.scan_number, sp.scan_index, sp.source_id as source, sp.peaklist_id as plfid,
+                    sp.precursor_intensity, sp.precursor_mz, sp.elution_time_start, sp.elution_time_end
+                FROM
+                    (SELECT sm.id, sm.score, sm.autovalidated, sm.validated, sm.rejected,
+                    sm.search_id, sm.precursor_charge, sm.is_decoy, sm.spectrum_id,
+                    sm.calc_mass
+                    FROM spectrum_match sm INNER JOIN search s ON search_id = s.id
+                    WHERE ".$WHERE_spectrumMatch.") sm
+                INNER JOIN
+                    (SELECT mp.match_id, mp.match_type, mp.peptide_id,
+                    mp.link_position, mp.crosslinker_id
+                    FROM matched_peptide mp WHERE ".$WHERE_matchedPeptide.") mp
+                    ON sm.id = mp.match_id
+                INNER JOIN spectrum sp ON sm.spectrum_id = sp.id
+                ORDER BY score DESC, sm.id, mp.match_type;";
 
             $res = pg_query($query) or die('Query failed: ' . pg_last_error());
             $times["matchQueryDone"] = microtime(true) - $zz;
