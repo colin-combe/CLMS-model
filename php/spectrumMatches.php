@@ -367,8 +367,7 @@ if (count($_GET) > 0) {
 
                 $query = "
                         SELECT
-                        mp.match_id, mp.match_type, mp.peptide_id,
-                        mp.link_position + 1 AS link_position, mp.crosslinker_id, sm.spectrum_id,
+                        mp.match_id, mtypes, mpeps, link_positions, mclids, sm.spectrum_id,
                         sm.score, sm.autovalidated, sm.validated, sm.rejected,
                         sm.search_id, sm.is_decoy, sm.calc_mass, sm.precursor_charge,
                         sp.scan_number, sp.scan_index, sp.source_id as source, sp.peaklist_id as plfid,
@@ -377,15 +376,15 @@ if (count($_GET) > 0) {
                         (SELECT sm.id, sm.score, sm.autovalidated, sm.validated, sm.rejected,
                         sm.search_id, sm.precursor_charge, sm.is_decoy, sm.spectrum_id,
                         sm.calc_mass
-                        FROM spectrum_match sm INNER JOIN search s ON search_id = s.id
+                        FROM spectrum_match sm
                         WHERE ".$WHERE_spectrumMatch.") sm
                     INNER JOIN
-                        (SELECT mp.match_id, mp.match_type, mp.peptide_id,
-                        mp.link_position, mp.crosslinker_id
-                        FROM matched_peptide mp WHERE ".$WHERE_matchedPeptide.") mp
+                       (SELECT mp.match_id, json_agg(mp.match_type) as mtypes, json_agg(mp.peptide_id) as mpeps,
+					    json_agg(mp.link_position + 1) as link_positions, json_agg(mp.crosslinker_id) as mclids
+                        FROM matched_peptide mp WHERE ".$WHERE_matchedPeptide." GROUP BY mp.match_id) mp
                         ON sm.id = mp.match_id
                     INNER JOIN spectrum sp ON sm.spectrum_id = sp.id
-                    ORDER BY score DESC, sm.id, mp.match_type;";
+                    ORDER BY score DESC, sm.id;";
             }
 
             $res = pg_query($query) or die('Query failed: ' . pg_last_error());
@@ -399,13 +398,23 @@ if (count($_GET) > 0) {
             $sourceIds = array();
             $peakListIds = array();
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);
+            $lineCount = 0;
             while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
-                $peptideId = $line["peptide_id"];
-                $crosslinker_id =  $line["crosslinker_id"];
-                if (!isset($crosslinker_id) || trim($crosslinker_id) === '') {
-                    $crosslinker_id = -1;
+                $peptideId = json_decode ($line["mpeps"]);
+                $crosslinker_id = json_decode ($line["mclids"]);
+                if ($lineCount === 0) {
+                    error_log (print_r ($line, true));
+                    error_log (print_r ($peptideId, true));
                 }
-                $peptideIds[$peptideId] = 1;
+                
+                //if (!isset($crosslinker_id) || trim($crosslinker_id) === '') {
+                //    $crosslinker_id = -1;
+                //}
+                
+                foreach ($peptideId as $value) {
+                    $peptideIds[$value] = 1;
+                }
+                //$peptideIds[$peptideId] = 1;
                 $sourceId = $line["source"];
                 $sourceIds[$sourceId] = 1;
                 $peakListId = $line["plfid"];
@@ -414,10 +423,10 @@ if (count($_GET) > 0) {
                 }
                 array_push($matches, array(
                         "id"=>+$line["match_id"],
-                        "ty"=>+$line["match_type"],
-                        "pi"=>+$peptideId,
-                        "lp"=>+$line["link_position"],
-                        "cl"=>+$crosslinker_id,
+                        "ty"=>json_decode($line["mtypes"]),
+                        "pi"=>$peptideId,
+                        "lp"=>json_decode($line["link_positions"]),
+                        "cl"=>$crosslinker_id,
                         "spec"=>$line["spectrum_id"],
                         "sc"=>round($line["score"], 2),
                         "si"=>+$line["search_id"],
@@ -438,6 +447,7 @@ if (count($_GET) > 0) {
                     ));
 
                 $line = pg_fetch_array($res, null, PGSQL_ASSOC);
+                $lineCount++;
             }
 
             $output["rawMatches"] = $matches; //TODO - rename to matches or PSM

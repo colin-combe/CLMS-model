@@ -276,6 +276,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             var rawMatches = json.rawMatches;
             var minScore = undefined;
             var maxScore = undefined;
+            console.log ("GOT HERE 1");
             if (rawMatches) {
                 var matches = this.get("matches");
 
@@ -283,12 +284,34 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                     match;
                 for (var i = 0; i < l; i++) {
                     //this would need updated for trimeric or higher order crosslinks
+                    /*
                     if ((i < (l - 1)) && rawMatches[i].id == rawMatches[i + 1].id) {
                         match = new CLMS.model.SpectrumMatch(this, participants, crossLinks, peptides, [rawMatches[i], rawMatches[i + 1]]);
                         i++;
                     } else {
                         match = new CLMS.model.SpectrumMatch(this, participants, crossLinks, peptides, [rawMatches[i]]);
                     }
+                    */
+                    var rawMatchArray = [];
+                    var rawMatch = rawMatches[i];
+                    var size = rawMatch.ty.length;
+                    if (size === 1) {
+                        rawMatch.ty = rawMatch.ty[0];
+                        rawMatch.pi = rawMatch.pi[0];
+                        rawMatch.lp = rawMatch.lp[0];
+                        rawMatch.cl = rawMatch.cl[0];
+                        rawMatchArray.push (rawMatch);
+                    } else {
+                        for (var j = 0; j < size; j++) {
+                            var newObj = $.extend ({}, rawMatch);
+                            newObj.ty = rawMatch.ty[j];
+                            newObj.pi = rawMatch.pi[j];
+                            newObj.lp = rawMatch.lp[j];
+                            newObj.cl = rawMatch.cl[j];
+                            rawMatchArray.push (newObj);
+                        }
+                    }
+                    match = new CLMS.model.SpectrumMatch(this, participants, crossLinks, peptides, rawMatchArray);
 
                     matches.push(match);
 
@@ -299,6 +322,8 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                     }
                 }
             }
+            
+            console.log ("GOT HERE 2");
 
             this.set("minScore", minScore);
             this.set("maxScore", maxScore);
