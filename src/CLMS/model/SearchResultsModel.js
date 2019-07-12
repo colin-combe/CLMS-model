@@ -276,6 +276,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             var rawMatches = json.rawMatches;
             var minScore = undefined;
             var maxScore = undefined;
+
             if (rawMatches) {
                 var matches = this.get("matches");
 
@@ -283,13 +284,28 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                     match;
                 for (var i = 0; i < l; i++) {
                     //this would need updated for trimeric or higher order crosslinks
-                    if ((i < (l - 1)) && rawMatches[i].id == rawMatches[i + 1].id) {
-                        match = new CLMS.model.SpectrumMatch(this, participants, crossLinks, peptides, [rawMatches[i], rawMatches[i + 1]]);
-                        i++;
+                    var rawMatch = rawMatches[i];
+                    var rawMatchArray = [rawMatch];
+                    
+                    if (rawMatch.ty.length === undefined) {
+                        if ((i < (l - 1)) && rawMatch.id == rawMatches[i + 1].id) {
+                            rawMatchArray.push (rawMatches[i + 1]);
+                            i++;
+                        }
                     } else {
-                        match = new CLMS.model.SpectrumMatch(this, participants, crossLinks, peptides, [rawMatches[i]]);
+                        var size = rawMatch.ty.length;
+                        if (size > 1) {
+                            for (var j = 1; j < size; j++) {
+                                rawMatchArray.push ({pi: rawMatch.pi[j], lp: rawMatch.lp[j]});
+                            }
+                        }
+                        rawMatch.ty = rawMatch.ty[0];
+                        rawMatch.pi = rawMatch.pi[0];
+                        rawMatch.lp = rawMatch.lp[0];
+                        //rawMatch.cl = rawMatch.cl[0]; // PHP/SQL now returns crosslinker_id as single value, not array
                     }
 
+                    match = new CLMS.model.SpectrumMatch(this, participants, crossLinks, peptides, rawMatchArray);
                     matches.push(match);
 
                     if (maxScore === undefined || match.score() > maxScore) {
