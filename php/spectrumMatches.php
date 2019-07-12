@@ -401,13 +401,6 @@ if (count($_GET) > 0) {
                 $lineCount = 0;
                 while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
                     $peptideId = json_decode ($line["mpeps"]);
-                    /*
-                    if ($lineCount === 0) {
-                        error_log (print_r ($line, true));
-                        error_log (print_r ($peptideId, true));
-                    }
-                    */
-                    
                     // COALESCE command in SQL does this now
                     // $crosslinker_id = json_decode ($line["mclids"]);
                     //if (!isset($crosslinker_id) || trim($crosslinker_id) === '') {
@@ -415,9 +408,15 @@ if (count($_GET) > 0) {
                     //}
                     
                     foreach ($peptideId as $value) {
-                        $peptideIds[$value] = 1;
+                        $peptideIds[strval($value)] = 1;
                     }
-                    //$peptideIds[$peptideId] = 1;       
+                    //$peptideIds[$peptideId] = 1;  
+                    /*
+                    if ($lineCount === 0) {
+                        error_log (print_r ($line, true));
+                        error_log (print_r ($peptideIds, true));
+                    }
+                    */
 
                     $sourceId = $line["source"];
                     $sourceIds[$sourceId] = 1;
@@ -536,6 +535,7 @@ if (count($_GET) > 0) {
                                 .$implodedPepIds.") hp ON pep.id = hp.peptide_id ";
                     $query = $query."INNER JOIN protein p ON hp.protein_id = p.id ";
                     $query = $query."GROUP BY pep.id;";
+                    
                     $startTime = microtime(true);
                     $res = pg_query($query) or die('Query failed: ' . pg_last_error());
                     $endTime = microtime(true);
