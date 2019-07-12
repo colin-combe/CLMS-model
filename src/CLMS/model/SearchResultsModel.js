@@ -302,7 +302,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                         rawMatch.ty = rawMatch.ty[0];
                         rawMatch.pi = rawMatch.pi[0];
                         rawMatch.lp = rawMatch.lp[0];
-                        rawMatch.cl = rawMatch.cl[0];
+                        //rawMatch.cl = rawMatch.cl[0]; // PHP/SQL now returns crosslinker_id as single value, not array
                     }
 
                     match = new CLMS.model.SpectrumMatch(this, participants, crossLinks, peptides, rawMatchArray);

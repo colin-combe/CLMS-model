@@ -367,7 +367,7 @@ if (count($_GET) > 0) {
 
                     $query = "
                             SELECT
-                            mp.match_id, mtypes, mpeps, link_positions, mclids, sm.spectrum_id,
+                            mp.match_id, mtypes, mpeps, link_positions, mclid, sm.spectrum_id,
                             sm.score, sm.autovalidated, sm.validated, sm.rejected,
                             sm.search_id, sm.is_decoy, sm.calc_mass, sm.precursor_charge,
                             sp.scan_number, sp.scan_index, sp.source_id as source, sp.peaklist_id as plfid,
@@ -380,7 +380,7 @@ if (count($_GET) > 0) {
                             WHERE ".$WHERE_spectrumMatch.") sm
                         INNER JOIN
                            (SELECT mp.match_id, json_agg(mp.match_type) as mtypes, json_agg(mp.peptide_id) as mpeps,
-                            json_agg(mp.link_position + 1) as link_positions, json_agg(COALESCE(mp.crosslinker_id, -1)) as mclids
+                            json_agg(mp.link_position + 1) as link_positions, max(COALESCE(mp.crosslinker_id, -1)) as mclid
                             FROM matched_peptide mp WHERE ".$WHERE_matchedPeptide." GROUP BY mp.match_id) mp
                             ON sm.id = mp.match_id
                         INNER JOIN spectrum sp ON sm.spectrum_id = sp.id
@@ -401,7 +401,6 @@ if (count($_GET) > 0) {
                 $lineCount = 0;
                 while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
                     $peptideId = json_decode ($line["mpeps"]);
-                    $crosslinker_id = json_decode ($line["mclids"]);
                     /*
                     if ($lineCount === 0) {
                         error_log (print_r ($line, true));
@@ -410,6 +409,7 @@ if (count($_GET) > 0) {
                     */
                     
                     // COALESCE command in SQL does this now
+                    // $crosslinker_id = json_decode ($line["mclids"]);
                     //if (!isset($crosslinker_id) || trim($crosslinker_id) === '') {
                     //    $crosslinker_id = -1;
                     //}
@@ -430,7 +430,7 @@ if (count($_GET) > 0) {
                             "ty"=>json_decode($line["mtypes"]),
                             "pi"=>$peptideId,
                             "lp"=>json_decode($line["link_positions"]),
-                            "cl"=>$crosslinker_id,
+                            "cl"=>+$line["mclid"],
                             "spec"=>$line["spectrum_id"],
                             "sc"=>round($line["score"], 2),
                             "si"=>+$line["search_id"],
