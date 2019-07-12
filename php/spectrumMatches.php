@@ -667,5 +667,5 @@ if (count($_GET) > 0) {
         $output["error"] = "Could not connect to database";
     }
 
-    echo json_encode($output, JSON_PRETTY_PRINT);
+    echo json_encode($output);
 }
