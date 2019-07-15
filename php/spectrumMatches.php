@@ -383,5 +383,5 @@ if (count($_GET) > 0) {
     pg_close($dbconn);
     pg_close($interactorDbConn);
 
-    echo json_encode($output, JSON_PRETTY_PRINT);
+    echo json_encode($output);
 }
