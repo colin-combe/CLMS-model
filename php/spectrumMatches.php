@@ -394,13 +394,15 @@ if (count($_GET) > 0) {
 
                 $matches = [];
 
+                //error_log (print_r ("1 ".memory_get_usage(), true));
+                
                 $peptideIds = array();
                 $sourceIds = array();
                 $peakListIds = array();
                 $line = pg_fetch_array($res, null, PGSQL_ASSOC);
                 $lineCount = 0;
                 while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
-                    $peptideId = json_decode ($line["mpeps"]);
+                    $peptideId = json_decode($line["mpeps"]);
                     // COALESCE command in SQL does this now
                     // $crosslinker_id = json_decode ($line["mclids"]);
                     //if (!isset($crosslinker_id) || trim($crosslinker_id) === '') {
@@ -424,7 +426,7 @@ if (count($_GET) > 0) {
                     if(isset($peakListId)){
                         $peakListIds[$peakListId] = 1;
                     }
-                    array_push($matches, array(
+                    /*array_push($matches,*/  $matches[] = array(
                             "id"=>+$line["match_id"],
                             "ty"=>json_decode($line["mtypes"]),
                             "pi"=>$peptideId,
@@ -447,13 +449,16 @@ if (count($_GET) > 0) {
                             "pc_i"=>+$line["precursor_intensity"],
                             "e_s"=>+$line["elution_time_start"],
                             "e_e"=>+$line["elution_time_end"]
-                        ));
+                        )
+                /*)*/;
 
                     $line = pg_fetch_array($res, null, PGSQL_ASSOC);
                     $lineCount++;
                 }
-
+                
+                //error_log (print_r ("2 ".memory_get_usage(), true));
                 $output["rawMatches"] = $matches; //TODO - rename to matches or PSM
+                
                 $times["matchQueryToArray"] = microtime(true) - $zz;
                 $zz = microtime(true);
                 $endTime = microtime(true);
@@ -544,33 +549,34 @@ if (count($_GET) > 0) {
                     $line = pg_fetch_array($res, null, PGSQL_ASSOC);
                     while ($line) {
                         $proteins = $line["proteins"];
-                        $proteinsArray = explode(",", substr($proteins, 1, strlen($proteins) - 2));
+                        $proteinsArray = explode(",", substr($proteins, 1, -1));
                         $protCount = count($proteinsArray);
                         for ($p = 0; $p < $protCount; $p++) {
                             $id = $proteinsArray[$p];
                             if (strpos($id, '"') === 0) {
 
-                                $proteinsArray[$p] = substr($id, 1, strlen($id)-2);
+                                $proteinsArray[$p] = substr($id, 1, -1);
                             }
                         }
                         $dbProteinIds = $line["test"];
-                        $dbProteinsArray = explode(",", substr($dbProteinIds, 1, strlen($dbProteinIds) - 2));
+                        $dbProteinsArray = explode(",", substr($dbProteinIds, 1, -1));
                         foreach ($dbProteinsArray as $v) {
                             $dbIds[$v] = 1;
                         }
                         $positions = $line['positions'];
-                        $positionsArray = explode(",", substr($positions, 1, strlen($positions) - 2));
+                        $positionsArray = explode(",", substr($positions, 1, -1));
                         $posCount = count($positionsArray);
                         for ($p = 0; $p < $posCount; $p++) {
                             $positionsArray[$p] = (int) $positionsArray[$p];
                         }
 
-                        array_push($peptides, array(
+                        $peptides[] =
+                        /*array_push($peptides,*/ array(
                                 "id"=>+$line["id"],
                                 "seq_mods"=>$line["sequence"],
                                 "prt"=>$proteinsArray,
                                 "pos"=>$positionsArray
-                            ));
+                            )/*)*/;
 
                         $line = pg_fetch_array($res, null, PGSQL_ASSOC);
                     }
