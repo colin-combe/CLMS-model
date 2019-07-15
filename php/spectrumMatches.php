@@ -401,24 +401,12 @@ if (count($_GET) > 0) {
                 $peakListIds = array();
                 $line = pg_fetch_array($res, null, PGSQL_ASSOC);
                 $lineCount = 0;
-                while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
+                while ($line) {
                     $peptideId = json_decode($line["mpeps"]);
-                    // COALESCE command in SQL does this now
-                    // $crosslinker_id = json_decode ($line["mclids"]);
-                    //if (!isset($crosslinker_id) || trim($crosslinker_id) === '') {
-                    //    $crosslinker_id = -1;
-                    //}
                     
                     foreach ($peptideId as $value) {
                         $peptideIds[strval($value)] = 1;
                     }
-                    //$peptideIds[$peptideId] = 1;  
-                    /*
-                    if ($lineCount === 0) {
-                        error_log (print_r ($line, true));
-                        error_log (print_r ($peptideIds, true));
-                    }
-                    */
 
                     $sourceId = $line["source"];
                     $sourceIds[$sourceId] = 1;
@@ -426,7 +414,7 @@ if (count($_GET) > 0) {
                     if(isset($peakListId)){
                         $peakListIds[$peakListId] = 1;
                     }
-                    /*array_push($matches,*/  $matches[] = array(
+                    $matches[] = array(
                             "id"=>+$line["match_id"],
                             "ty"=>json_decode($line["mtypes"]),
                             "pi"=>$peptideId,
@@ -450,7 +438,7 @@ if (count($_GET) > 0) {
                             "e_s"=>+$line["elution_time_start"],
                             "e_e"=>+$line["elution_time_end"]
                         )
-                /*)*/;
+                    ;
 
                     $line = pg_fetch_array($res, null, PGSQL_ASSOC);
                     $lineCount++;
