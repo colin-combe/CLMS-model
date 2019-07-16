@@ -27,7 +27,7 @@ if (count($_GET) > 0) {
 
     $dbconn = @pg_connect($connectionString);// or die('Could not connect to database.');
     if ($dbconn) {
-
+        try {
         $sid = urldecode($_GET["sid"]);
 
         $unval = false;
@@ -333,8 +333,7 @@ if (count($_GET) > 0) {
 
             $query = "
                     SELECT
-                    mp.match_id, mp.match_type, mp.peptide_id,
-                    mp.link_position + 1 AS link_position, mp.crosslinker_id, sm.spectrum_id,
+                            mp.match_id, mtypes, mpeps, link_positions, mclid, sm.spectrum_id,
                     sm.score, sm.autovalidated, sm.validated, sm.rejected,
                     sm.search_id, sm.is_decoy, sm.calc_mass, sm.precursor_charge,
                     sp.scan_number, sp.scan_index, sp.source_id as source, sp.peaklist_id as plfid,
@@ -343,15 +342,16 @@ if (count($_GET) > 0) {
                     (SELECT sm.id, sm.score, sm.autovalidated, sm.validated, sm.rejected,
                     sm.search_id, sm.precursor_charge, sm.is_decoy, sm.spectrum_id,
                     sm.calc_mass
-                    FROM spectrum_match sm INNER JOIN search s ON search_id = s.id
+                            FROM spectrum_match sm
                     WHERE ".$WHERE_spectrumMatch.") sm
                 INNER JOIN
-                    (SELECT mp.match_id, mp.match_type, mp.peptide_id,
-                    mp.link_position, mp.crosslinker_id
-                    FROM matched_peptide mp WHERE ".$WHERE_matchedPeptide.") mp
+                           (SELECT mp.match_id, json_agg(mp.match_type) as mtypes, json_agg(mp.peptide_id) as mpeps,
+                            json_agg(mp.link_position + 1) as link_positions, max(COALESCE(mp.crosslinker_id, -1)) as mclid
+                            FROM matched_peptide mp WHERE ".$WHERE_matchedPeptide." GROUP BY mp.match_id) mp
                     ON sm.id = mp.match_id
                 INNER JOIN spectrum sp ON sm.spectrum_id = sp.id
-                ORDER BY score DESC, sm.id, mp.match_type;";
+                        ORDER BY score DESC, sm.id;";
+                }
 
             $res = pg_query($query) or die('Query failed: ' . pg_last_error());
             $times["matchQueryDone"] = microtime(true) - $zz;
@@ -360,29 +360,44 @@ if (count($_GET) > 0) {
 
             $matches = [];
 
+                //error_log (print_r ("1 ".memory_get_usage(), true));
+
             $peptideIds = array();
             $sourceIds = array();
             $peakListIds = array();
             $line = pg_fetch_array($res, null, PGSQL_ASSOC);
+                $lineCount = 0;
             while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
-                $peptideId = $line["peptide_id"];
-                $crosslinker_id =  $line["crosslinker_id"];
-                if (!isset($crosslinker_id) || trim($crosslinker_id) === '') {
-                    $crosslinker_id = -1;
+                    $peptideId = json_decode($line["mpeps"]);
+                    // COALESCE command in SQL does this now
+                    // $crosslinker_id = json_decode ($line["mclids"]);
+                    //if (!isset($crosslinker_id) || trim($crosslinker_id) === '') {
+                    //    $crosslinker_id = -1;
+                    //}
+
+                    foreach ($peptideId as $value) {
+                        $peptideIds[strval($value)] = 1;
+                    }
+                    //$peptideIds[$peptideId] = 1;
+                    /*
+                    if ($lineCount === 0) {
+                        error_log (print_r ($line, true));
+                        error_log (print_r ($peptideIds, true));
                 }
-                $peptideIds[$peptideId] = 1;
+                    */
+
                 $sourceId = $line["source"];
                 $sourceIds[$sourceId] = 1;
                 $peakListId = $line["plfid"];
                 if(isset($peakListId)){
                     $peakListIds[$peakListId] = 1;
                 }
-                array_push($matches, array(
+                    /*array_push($matches,*/  $matches[] = array(
                         "id"=>+$line["match_id"],
-                        "ty"=>+$line["match_type"],
-                        "pi"=>+$peptideId,
-                        "lp"=>+$line["link_position"],
-                        "cl"=>+$crosslinker_id,
+                            "ty"=>json_decode($line["mtypes"]),
+                            "pi"=>$peptideId,
+                            "lp"=>json_decode($line["link_positions"]),
+                            "cl"=>+$line["mclid"],
                         "spec"=>$line["spectrum_id"],
                         "sc"=>round($line["score"], 2),
                         "si"=>+$line["search_id"],
@@ -400,12 +415,16 @@ if (count($_GET) > 0) {
                         "pc_i"=>+$line["precursor_intensity"],
                         "e_s"=>+$line["elution_time_start"],
                         "e_e"=>+$line["elution_time_end"]
-                    ));
+                        )
+                /*)*/;
 
                 $line = pg_fetch_array($res, null, PGSQL_ASSOC);
+                    $lineCount++;
             }
 
+                //error_log (print_r ("2 ".memory_get_usage(), true));
             $output["rawMatches"] = $matches; //TODO - rename to matches or PSM
+
             $times["matchQueryToArray"] = microtime(true) - $zz;
             $zz = microtime(true);
             $endTime = microtime(true);
@@ -487,6 +506,7 @@ if (count($_GET) > 0) {
                             .$implodedPepIds.") hp ON pep.id = hp.peptide_id ";
                 $query = $query."INNER JOIN protein p ON hp.protein_id = p.id ";
                 $query = $query."GROUP BY pep.id;";
+
                 $startTime = microtime(true);
                 $res = pg_query($query) or die('Query failed: ' . pg_last_error());
                 $endTime = microtime(true);
@@ -495,33 +515,34 @@ if (count($_GET) > 0) {
                 $line = pg_fetch_array($res, null, PGSQL_ASSOC);
                 while ($line) {
                     $proteins = $line["proteins"];
-                    $proteinsArray = explode(",", substr($proteins, 1, strlen($proteins) - 2));
+                        $proteinsArray = explode(",", substr($proteins, 1, -1));
                     $protCount = count($proteinsArray);
                     for ($p = 0; $p < $protCount; $p++) {
                         $id = $proteinsArray[$p];
                         if (strpos($id, '"') === 0) {
 
-                            $proteinsArray[$p] = substr($id, 1, strlen($id)-2);
+                                $proteinsArray[$p] = substr($id, 1, -1);
                         }
                     }
                     $dbProteinIds = $line["test"];
-                    $dbProteinsArray = explode(",", substr($dbProteinIds, 1, strlen($dbProteinIds) - 2));
+                        $dbProteinsArray = explode(",", substr($dbProteinIds, 1, -1));
                     foreach ($dbProteinsArray as $v) {
                         $dbIds[$v] = 1;
                     }
                     $positions = $line['positions'];
-                    $positionsArray = explode(",", substr($positions, 1, strlen($positions) - 2));
+                        $positionsArray = explode(",", substr($positions, 1, -1));
                     $posCount = count($positionsArray);
                     for ($p = 0; $p < $posCount; $p++) {
                         $positionsArray[$p] = (int) $positionsArray[$p];
                     }
 
-                    array_push($peptides, array(
+                        $peptides[] =
+                        /*array_push($peptides,*/ array(
                             "id"=>+$line["id"],
                             "seq_mods"=>$line["sequence"],
                             "prt"=>$proteinsArray,
                             "pos"=>$positionsArray
-                        ));
+                            )/*)*/;
 
                     $line = pg_fetch_array($res, null, PGSQL_ASSOC);
                 }
@@ -609,11 +630,14 @@ if (count($_GET) > 0) {
 
         // Free resultset
         pg_free_result($res);
+        } catch (Exception $e) {
+            $output["error"] = $e;
+        }
         // Closing connection
         pg_close($dbconn);
     } else {
         $output["error"] = "Could not connect to database";
     }
 
-    echo json_encode($output, JSON_PRETTY_PRINT);
+    echo json_encode($output);
 }
