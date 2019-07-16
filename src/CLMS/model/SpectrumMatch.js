@@ -498,8 +498,9 @@ CLMS.model.SpectrumMatch.prototype.experimentalMissedCleavageCount = function() 
     var mc1 = countMissedCleavages(this.matchedPeptides[0], this.linkPos1);
     if (this.matchedPeptides[1]) {
         var mc2 = countMissedCleavages(this.matchedPeptides[1], this.linkPos2);
+        return Math.max(mc1, mc2);
     }
-    return Math.max(mc1, mc2);
+    return mc1;
 }
 
 CLMS.model.SpectrumMatch.prototype.searchMissedCleavageCount = function() {
@@ -524,6 +525,7 @@ CLMS.model.SpectrumMatch.prototype.searchMissedCleavageCount = function() {
     var mc1 = countSearchMissedCleavages(this.matchedPeptides[0]);
     if (this.matchedPeptides[1]) {
         var mc2 = countSearchMissedCleavages(this.matchedPeptides[1]);
+        return Math.max(mc1, mc2);
     }
-    return Math.max(mc1, mc2);
+    return mc1;
 }
