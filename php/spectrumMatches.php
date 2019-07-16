@@ -585,7 +585,9 @@ if (count($_GET) > 0) {
                             "seq_mods"=>$line["sequence"],
                             "is_decoy"=>$isDecoy
                         ));
-                    $interactorAccs[preg_split("/-/", $line["accession_number"])[0]] = 1;//echo "**".$interactorQuery."**";
+                    if (!$isDecoy) {
+                        $interactorAccs[preg_split("/-/", $line["accession_number"])[0]] = 1;
+                    }
                     $line = pg_fetch_array($res, null, PGSQL_ASSOC);
                 }
                 $output["proteins"] = $proteins;
@@ -594,16 +596,18 @@ if (count($_GET) > 0) {
 
                 //interactors
                 $interactors = [];
-                $interactorQuery = "SELECT * FROM uniprot WHERE accession IN ('"
+                $interactorQuery = "SELECT accession, sequence, features, array_to_json(go) AS go FROM uniprot_trembl WHERE accession IN ('"
                         .implode(array_keys($interactorAccs), "','")."');";
                 try {
                     // @ stops pg_connect echo'ing out failure messages that knacker the returned data
-                    $interactorDbConn = @pg_connect($interactionConnection);// or die('Could not connect: ' . pg_last_error());
+                    $interactorDbConn = @pg_connect($interactionConnection);
                     if ($interactorDbConn) {
-                        $interactorResult = pg_query($interactorQuery);// or die('Query failed: ' . pg_last_error());
+                        $interactorResult = pg_query($interactorQuery);
                         $line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
                         while ($line) {
-                            $interactors[$line["accession"]] = json_decode($line["json"]);
+                            $line["features"] = json_decode($line["features"]);
+                            $line["go"] = json_decode($line["go"]);
+                            $interactors[$line["accession"]] = $line;
                             $line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
                         }
                     } else {
@@ -611,7 +615,6 @@ if (count($_GET) > 0) {
                     }
                 } catch (Exception $e) {
                     $output["error"] = $e;
-                    //error_log (print_r ("UNIPROT ERR ".$e, true));
                 }
                 $output["interactors"] = $interactors;
                 $times["uniprotQuery"] = microtime(true) - $zz;
@@ -621,7 +624,6 @@ if (count($_GET) > 0) {
                     $output["matchid"] = $matchid;
                 }
 
-                $output["oldDB"] = ($oldDB == 1 ? "true" : "false"); // Is this from the old db?
                 $times["endAbsolute"] = microtime(true);
             }
         }
