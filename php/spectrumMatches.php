@@ -113,7 +113,7 @@ if (count($_GET) > 0) {
 
                 $res = pg_query($searchDataQuery)
                             or die('Query failed: ' . pg_last_error());
-                $line = pg_fetch_array($res, null, PGSQL_ASSOC);
+                $line = pg_fetch_assoc($res);
 
                 if (pg_num_rows($res) === 0) {
                     $missingSearchIDs[$id] = true;
@@ -266,11 +266,13 @@ if (count($_GET) > 0) {
                 $layoutQuery = "SELECT t1.layout AS l, t1.description AS n "
                         . " FROM layouts AS t1 "
                         . " WHERE t1.search_id LIKE '" . $sid . "' "
-                        . " AND t1.time = (SELECT max(t1.time) FROM layouts AS t1 "
-                        . " WHERE t1.search_id LIKE '" . $sid . "' );";
+                        . " ORDER BY t1.time desc LIMIT 1"
+                        //. " AND t1.time = (SELECT max(t1.time) FROM layouts AS t1 "
+                        //. " WHERE t1.search_id LIKE '" . $sid . "' );"
+                ;
 
                 $layoutResult = pg_query($layoutQuery) or die('Query failed: ' . pg_last_error());
-                while ($line = pg_fetch_array($layoutResult, null, PGSQL_ASSOC)) {
+                if ($line = pg_fetch_assoc($layoutResult)) {
                     $output["xiNETLayout"] = [];
                     $output["xiNETLayout"]["name"] = $line["n"];
                     $output["xiNETLayout"]["layout"] = json_decode(stripslashes($line["l"]));
@@ -417,7 +419,7 @@ if (count($_GET) > 0) {
                 $peptideIds = array();
                 $sourceIds = array();
                 $peakListIds = array();
-                $line = pg_fetch_array($res, null, PGSQL_ASSOC);
+                $line = pg_fetch_assoc($res);
                 $lineCount = 0;
                 while ($line) {
                     $peptideId = stringagg_number_split($line["mpeps"]); //json_decode($line["mpeps"]);
@@ -481,16 +483,8 @@ if (count($_GET) > 0) {
                     $startTime = microtime(true);
                     $res = pg_query($query) or die('Query failed: ' . pg_last_error());
                     $endTime = microtime(true);
-                    $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-                    while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
-
-                        array_push($spectrumSources, array(
-                                "id"=>$line["id"],
-                                "name"=>$line["name"]
-                            ));
-
-                        $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-                    }
+                    
+                    $spectrumSources = pg_fetch_all ($res);
                 }
                 $output["spectrumSources"] = $spectrumSources;
                 $times["spectrumSources"] = microtime(true) - $zz;
@@ -506,20 +500,8 @@ if (count($_GET) > 0) {
                                 .$implodedPeakListIds.";";
                     $startTime = microtime(true);
                     $res = pg_query($query) or die('Query failed: ' . pg_last_error());
-                    $endTime = microtime(true);
-                    $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-                    while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
-
-                        array_push($peakListFiles, array(
-                                "id"=>$line["id"],
-                                "name"=>$line["name"]
-                            ));
-
-                        $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-                        //if ($line) {echo ",\n";}
-                    }
-                    //echo "\n],\n";
-                    $endTime = microtime(true);
+                    
+                    $peakListFiles = pg_fetch_all ($res);
                 }
                 $output["peakListFiles"] = $peakListFiles;
                 $times["peakListFiles"] = microtime(true) - $zz;
@@ -552,7 +534,7 @@ if (count($_GET) > 0) {
                     $endTime = microtime(true);
                     $times["peptideQuery"] = microtime(true) - $zz;
                     $zz = microtime(true);
-                    $line = pg_fetch_array($res, null, PGSQL_ASSOC);
+                    $line = pg_fetch_assoc($res);
                     while ($line) {
                         $proteins = $line["proteins"];
                         $proteinsArray = explode(",", $proteins);
@@ -560,7 +542,7 @@ if (count($_GET) > 0) {
                         for ($p = 0; $p < $protCount; $p++) {
                             $id = $proteinsArray[$p];
                             //if (strpos($id, '"') === 0) {
-                            if (substr ($id, 0, 1) === '"') {
+                            if (strncmp ($id, '"', 1) === 0) {
                                 $proteinsArray[$p] = substr($id, 1, -1);
                             }
                         }
@@ -572,15 +554,14 @@ if (count($_GET) > 0) {
 
                         $positionsArray = jsonagg_number_split ($line['positions']);
 
-                        $peptides[] =
-                        /*array_push($peptides,*/ array(
-                                "id"=>+$line["id"],
-                                "seq_mods"=>$line["sequence"],
-                                "prt"=>$proteinsArray,
-                                "pos"=>$positionsArray
-                            )/*)*/;
+                        $peptides[] = array(
+                            "id"=>+$line["id"],
+                            "seq_mods"=>$line["sequence"],
+                            "prt"=>$proteinsArray,
+                            "pos"=>$positionsArray
+                        );
 
-                        $line = pg_fetch_array($res, null, PGSQL_ASSOC);
+                        $line = pg_fetch_assoc($res);
                     }
                     $output["peptides"] = $peptides;
 
@@ -601,28 +582,27 @@ if (count($_GET) > 0) {
                     $query = "SELECT ".$proteinIdField." AS id,
                             CASE WHEN name IS NULL OR name = '' OR name = 'REV_' OR name = 'RAN_' THEN accession_number
                             ELSE name END AS name,
-                            description, accession_number, sequence, is_decoy
+                            description, accession_number as accession, sequence, is_decoy
                             FROM protein WHERE id IN ('".implode(array_keys($dbIds), "','")."')";
                     $startTime = microtime(true);
                     $res = pg_query($query) or die('Query failed: ' . pg_last_error());
                     $endTime = microtime(true);
                     $interactorAccs = [];
 
-                    $line = pg_fetch_array($res, null, PGSQL_ASSOC);
+                    $line = pg_fetch_assoc($res);
                     while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
                         $isDecoy = $line["is_decoy"] == "t";
-                        $pId = $line["id"];
 
-                        array_push($proteins, array(
-                                "id"=>$pId,
-                                "name"=>$line["name"],
-                                "description"=>$line["description"],
-                                "accession"=>$line["accession_number"],
-                                "seq_mods"=>$line["sequence"],
-                                "is_decoy"=>$isDecoy
-                            ));
+                        $proteins[] = array(
+                            "id"=>$line["id"],
+                            "name"=>$line["name"],
+                            "description"=>$line["description"],
+                            "accession"=>$line["accession"],
+                            "seq_mods"=>$line["sequence"],
+                            "is_decoy"=>$isDecoy
+                        );
                         $interactorAccs[preg_split("/-/", $line["accession_number"])[0]] = 1;//echo "**".$interactorQuery."**";
-                        $line = pg_fetch_array($res, null, PGSQL_ASSOC);
+                        $line = pg_fetch_assoc($res);
                     }
                     $output["proteins"] = $proteins;
                     $times["proteinQueryAndArray"] = microtime(true) - $zz;
@@ -637,10 +617,10 @@ if (count($_GET) > 0) {
                         $interactorDbConn = @pg_connect($interactionConnection);// or die('Could not connect: ' . pg_last_error());
                         if ($interactorDbConn) {
                             $interactorResult = pg_query($interactorQuery);// or die('Query failed: ' . pg_last_error());
-                            $line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
+                            $line = pg_fetch_assoc($interactorResult);
                             while ($line) {
                                 $interactors[$line["accession"]] = json_decode($line["json"]);
-                                $line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
+                                $line = pg_fetch_assoc($interactorResult);
                             }
                         } else {
                             throw new Exception("Could not connect to interaction database");
