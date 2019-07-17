@@ -339,9 +339,8 @@ if (count($_GET) > 0) {
 
                     $query = "
                         SELECT
-                            mp.match_id, mp.match_type, mp.peptide_id,
-                            mp.link_position + 1 AS link_position,
-                            sm.score, sm.autovalidated, sm.validated, sm.rejected,
+                            mp.match_id, mtypes, mpeps, link_positions,
+                            ROUND(sm.score,2) as score, sm.autovalidated, sm.validated, sm.rejected,
                             sm.search_id, sm.precursor_charge, sm.is_decoy, sm.spectrum_id,
                             sp.scan_number, r.run_name
                         FROM
@@ -351,15 +350,15 @@ if (count($_GET) > 0) {
                             WHERE ".$WHERE_spectrumMatch.")
                             sm
                         INNER JOIN
-                            (SELECT mp.match_id, mp.match_type, mp.peptide_id,
-                            mp.link_position
-                            FROM matched_peptide mp WHERE link_position != -1) mp
+                           (SELECT mp.match_id, string_agg(mp.match_type::text,',') as mtypes, string_agg(mp.peptide_id::text,',') as mpeps,
+                            json_agg(mp.link_position + 1) as link_positions
+                            FROM matched_peptide mp WHERE ".$WHERE_matchedPeptide." GROUP BY mp.match_id) mp
                             ON sm.id = mp.match_id
                         INNER JOIN spectrum sp ON sm.spectrum_id = sp.id
                         INNER JOIN (SELECT run_name, spectrum_match_id from  v_export_materialized
                             WHERE (".$WHERE_matchedPeptide.")
                             ) r ON sm.id = r.spectrum_match_id
-                        ORDER BY score DESC, sm.id, mp.match_type;";
+                        ORDER BY score DESC, sm.id;";
                 } else {
                     //New DB
 
@@ -370,7 +369,7 @@ if (count($_GET) > 0) {
                     $query = "
                             SELECT
                             mp.match_id, mtypes, mpeps, link_positions, mclid, sm.spectrum_id,
-                            sm.score, sm.autovalidated, sm.validated, sm.rejected,
+                            ROUND(sm.score,2) as score, sm.autovalidated, sm.validated, sm.rejected,
                             sm.search_id, sm.is_decoy, sm.calc_mass, sm.precursor_charge,
                             sp.scan_number, sp.scan_index, sp.source_id as source, sp.peaklist_id as plfid,
                             sp.precursor_intensity, sp.precursor_mz, sp.elution_time_start, sp.elution_time_end
@@ -441,7 +440,7 @@ if (count($_GET) > 0) {
                             "lp"=>jsonagg_number_split($line["link_positions"]),
                             "cl"=>+$line["mclid"],
                             "spec"=>$line["spectrum_id"],
-                            "sc"=>round($line["score"], 2),
+                            "sc"=>+$line["score"],
                             "si"=>+$line["search_id"],
                             "dc"=>$line["is_decoy"],
                             "av"=>$line["autovalidated"],
