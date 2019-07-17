@@ -379,7 +379,7 @@ if (count($_GET) > 0) {
                             FROM spectrum_match sm
                             WHERE ".$WHERE_spectrumMatch.") sm
                         INNER JOIN
-                           (SELECT mp.match_id, json_agg(mp.match_type) as mtypes, json_agg(mp.peptide_id) as mpeps,
+                           (SELECT mp.match_id, string_agg(mp.match_type::text,',') as mtypes, string_agg(mp.peptide_id::text,',') as mpeps,
                             json_agg(mp.link_position + 1) as link_positions, max(COALESCE(mp.crosslinker_id, -1)) as mclid
                             FROM matched_peptide mp WHERE ".$WHERE_matchedPeptide." GROUP BY mp.match_id) mp
                             ON sm.id = mp.match_id
@@ -395,8 +395,7 @@ if (count($_GET) > 0) {
                 $matches = [];
                 
                 function jsonagg_number_split ($str) {
-                    $str = substr($str, 1, -1);
-                    $arr = explode(', ', $str);
+                    $arr = explode(', ', substr($str, 1, -1));
                     $arrCount = count($arr);
                     for ($i = 0; $i < $arrCount; $i++) {
                         $arr[$i] = (int)$arr[$i];
@@ -421,7 +420,7 @@ if (count($_GET) > 0) {
                 $line = pg_fetch_array($res, null, PGSQL_ASSOC);
                 $lineCount = 0;
                 while ($line) {
-                    $peptideId = jsonagg_number_split($line["mpeps"]); //json_decode($line["mpeps"]);
+                    $peptideId = stringagg_number_split($line["mpeps"]); //json_decode($line["mpeps"]);
                     
                     foreach ($peptideId as $value) {
                         $peptideIds[strval($value)] = 1;
@@ -435,7 +434,7 @@ if (count($_GET) > 0) {
                     }
                     $matches[] = array(
                             "id"=>+$line["match_id"],
-                            "ty"=>jsonagg_number_split($line["mtypes"]),
+                            "ty"=>stringagg_number_split($line["mtypes"]),
                             "pi"=>$peptideId,
                             "lp"=>jsonagg_number_split($line["link_positions"]),
                             "cl"=>+$line["mclid"],
