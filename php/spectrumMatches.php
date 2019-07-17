@@ -520,7 +520,7 @@ if (count($_GET) > 0) {
                 if (sizeof($peptideIds) > 0) {
                     $implodedPepIds = '('.implode(array_keys($peptideIds), ",").')';
                     $query = "SELECT pep.id, (array_agg(pep.sequence))[1] as sequence,
-                        array_agg(".$proteinIdField.") as proteins, array_agg(hp.protein_id) as test, array_agg(hp.peptide_position + 1) as positions
+                        string_agg(".$proteinIdField."::text,',') as proteins, string_agg(hp.protein_id::text,',') as test, json_agg(hp.peptide_position + 1) as positions
                         FROM (SELECT id, sequence FROM peptide WHERE id IN "
                                 .$implodedPepIds.") pep
                         INNER JOIN (SELECT peptide_id, protein_id, peptide_position
@@ -537,7 +537,7 @@ if (count($_GET) > 0) {
                     $line = pg_fetch_array($res, null, PGSQL_ASSOC);
                     while ($line) {
                         $proteins = $line["proteins"];
-                        $proteinsArray = explode(",", substr($proteins, 1, -1));
+                        $proteinsArray = explode(",", $proteins);
                         $protCount = count($proteinsArray);
                         for ($p = 0; $p < $protCount; $p++) {
                             $id = $proteinsArray[$p];
@@ -547,12 +547,12 @@ if (count($_GET) > 0) {
                             }
                         }
                         $dbProteinIds = $line["test"];
-                        $dbProteinsArray = explode(",", substr($dbProteinIds, 1, -1));
+                        $dbProteinsArray = explode(",", $dbProteinIds);
                         foreach ($dbProteinsArray as $v) {
                             $dbIds[$v] = 1;
                         }
                         $positions = $line['positions'];
-                        $positionsArray = explode(",", substr($positions, 1, -1));
+                        $positionsArray = explode(", ", substr($positions, 1, -1));
                         $posCount = count($positionsArray);
                         for ($p = 0; $p < $posCount; $p++) {
                             $positionsArray[$p] = (int) $positionsArray[$p];
