@@ -393,6 +393,25 @@ if (count($_GET) > 0) {
                 $endTime = microtime(true);
 
                 $matches = [];
+                
+                function jsonagg_number_split ($str) {
+                    $str = substr($str, 1, -1);
+                    $arr = explode(', ', $str);
+                    $arrCount = count($arr);
+                    for ($i = 0; $i < $arrCount; $i++) {
+                        $arr[$i] = (int)$arr[$i];
+                    }
+                    return $arr;
+                }
+                
+                function stringagg_number_split ($str) {
+                    $arr = explode(',', $str);
+                    $arrCount = count($arr);
+                    for ($i = 0; $i < $arrCount; $i++) {
+                        $arr[$i] = (int)$arr[$i];
+                    }
+                    return $arr;
+                }
 
                 //error_log (print_r ("1 ".memory_get_usage(), true));
                 
@@ -402,7 +421,7 @@ if (count($_GET) > 0) {
                 $line = pg_fetch_array($res, null, PGSQL_ASSOC);
                 $lineCount = 0;
                 while ($line) {
-                    $peptideId = json_decode($line["mpeps"]);
+                    $peptideId = jsonagg_number_split($line["mpeps"]); //json_decode($line["mpeps"]);
                     
                     foreach ($peptideId as $value) {
                         $peptideIds[strval($value)] = 1;
@@ -416,9 +435,9 @@ if (count($_GET) > 0) {
                     }
                     $matches[] = array(
                             "id"=>+$line["match_id"],
-                            "ty"=>json_decode($line["mtypes"]),
+                            "ty"=>jsonagg_number_split($line["mtypes"]),
                             "pi"=>$peptideId,
-                            "lp"=>json_decode($line["link_positions"]),
+                            "lp"=>jsonagg_number_split($line["link_positions"]),
                             "cl"=>+$line["mclid"],
                             "spec"=>$line["spectrum_id"],
                             "sc"=>round($line["score"], 2),
@@ -541,8 +560,8 @@ if (count($_GET) > 0) {
                         $protCount = count($proteinsArray);
                         for ($p = 0; $p < $protCount; $p++) {
                             $id = $proteinsArray[$p];
-                            if (strpos($id, '"') === 0) {
-
+                            //if (strpos($id, '"') === 0) {
+                            if (substr ($id, 0, 1) === '"') {
                                 $proteinsArray[$p] = substr($id, 1, -1);
                             }
                         }
@@ -551,14 +570,8 @@ if (count($_GET) > 0) {
                         foreach ($dbProteinsArray as $v) {
                             $dbIds[$v] = 1;
                         }
-                        $positions = $line['positions'];
-                        $positionsArray = json_decode ($positions); //explode(", ", substr($positions, 1, -1));
-                        /*
-                        $posCount = count($positionsArray);
-                        for ($p = 0; $p < $posCount; $p++) {
-                            $positionsArray[$p] = (int) $positionsArray[$p];
-                        }
-                        */
+
+                        $positionsArray = jsonagg_number_split ($line['positions']);
 
                         $peptides[] =
                         /*array_push($peptides,*/ array(
