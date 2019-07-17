@@ -420,7 +420,7 @@ if (count($_GET) > 0) {
                 $sourceIds = array();
                 $peakListIds = array();
                 $line = pg_fetch_assoc($res);
-                $lineCount = 0;
+                //$lineCount = 0;
                 while ($line) {
                     $peptideId = stringagg_number_split($line["mpeps"]); //json_decode($line["mpeps"]);
                     
@@ -460,9 +460,11 @@ if (count($_GET) > 0) {
                         )
                     ;
 
-                    $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-                    $lineCount++;
+                    $line = pg_fetch_assoc($res);
+                    //$lineCount++;
                 }
+                
+                pg_free_result ($res);
                 
                 //error_log (print_r ("2 ".memory_get_usage(), true));
                 $output["rawMatches"] = $matches; //TODO - rename to matches or PSM
@@ -563,6 +565,7 @@ if (count($_GET) > 0) {
 
                         $line = pg_fetch_assoc($res);
                     }
+                    pg_free_result ($res);
                     $output["peptides"] = $peptides;
 
                     $endTime = microtime(true);
