@@ -552,11 +552,13 @@ if (count($_GET) > 0) {
                             $dbIds[$v] = 1;
                         }
                         $positions = $line['positions'];
-                        $positionsArray = explode(", ", substr($positions, 1, -1));
+                        $positionsArray = json_decode ($positions); //explode(", ", substr($positions, 1, -1));
+                        /*
                         $posCount = count($positionsArray);
                         for ($p = 0; $p < $posCount; $p++) {
                             $positionsArray[$p] = (int) $positionsArray[$p];
                         }
+                        */
 
                         $peptides[] =
                         /*array_push($peptides,*/ array(
