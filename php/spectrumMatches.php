@@ -366,7 +366,7 @@ if (count($_GET) > 0) {
                     $arr = explode(', ', substr($str, 1, -1));
                     $arrCount = count($arr);
                     for ($i = 0; $i < $arrCount; $i++) {
-                        $arr[$i] = (int)$arr[$i];
+                        $arr[$i] = +$arr[$i];
                     }
                     return $arr;
                 }
@@ -375,7 +375,7 @@ if (count($_GET) > 0) {
                     $arr = explode(',', $str);
                     $arrCount = count($arr);
                     for ($i = 0; $i < $arrCount; $i++) {
-                        $arr[$i] = (int)$arr[$i];
+                        $arr[$i] = +$arr[$i];
                     }
                     return $arr;
                 }
@@ -388,6 +388,7 @@ if (count($_GET) > 0) {
                 $line = pg_fetch_assoc($res);
                 //$lineCount = 0;
                 while ($line) {
+                    //error_log (print_r ($line["mpeps"], true));
                     $peptideId = stringagg_number_split($line["mpeps"]); //json_decode($line["mpeps"]);
 
                     foreach ($peptideId as $value) {
@@ -434,6 +435,8 @@ if (count($_GET) > 0) {
 
                 //error_log (print_r ("2 ".memory_get_usage(), true));
             $output["rawMatches"] = $matches; //TODO - rename to matches or PSM
+
+                //error_log (print_r ($matches, true));
 
             $times["matchQueryToArray"] = microtime(true) - $zz;
             $zz = microtime(true);
@@ -485,6 +488,7 @@ if (count($_GET) > 0) {
              * PEPTIDES
              */
             $peptides = [];
+                $dbIds = [];
             if (sizeof($peptideIds) > 0) {
                 $implodedPepIds = '('.implode(array_keys($peptideIds), ",").')';
                 $query = "SELECT pep.id, (array_agg(pep.sequence))[1] as sequence,
@@ -531,6 +535,9 @@ if (count($_GET) > 0) {
 
                         $line = pg_fetch_assoc($res);
                 }
+                     //error_log (print_r ($dbIds, true));
+                    //error_log (print_r (count($peptides), true));
+                     //error_log (print_r ($peptideIds, true));
                     pg_free_result ($res);
                 $output["peptides"] = $peptides;
 
