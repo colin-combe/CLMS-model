@@ -113,7 +113,7 @@ if (count($_GET) > 0) {
 
             $res = pg_query($searchDataQuery)
                         or die('Query failed: ' . pg_last_error());
-            $line = pg_fetch_array($res, null, PGSQL_ASSOC);
+                $line = pg_fetch_assoc($res);
 
             if (pg_num_rows($res) === 0) {
                 $missingSearchIDs[$id] = true;
@@ -266,11 +266,13 @@ if (count($_GET) > 0) {
             $layoutQuery = "SELECT t1.layout AS l, t1.description AS n "
                     . " FROM layouts AS t1 "
                     . " WHERE t1.search_id LIKE '" . $sid . "' "
-                    . " AND t1.time = (SELECT max(t1.time) FROM layouts AS t1 "
-                    . " WHERE t1.search_id LIKE '" . $sid . "' );";
+                        . " ORDER BY t1.time desc LIMIT 1"
+                        //. " AND t1.time = (SELECT max(t1.time) FROM layouts AS t1 "
+                        //. " WHERE t1.search_id LIKE '" . $sid . "' );"
+                ;
 
             $layoutResult = pg_query($layoutQuery) or die('Query failed: ' . pg_last_error());
-            while ($line = pg_fetch_array($layoutResult, null, PGSQL_ASSOC)) {
+                if ($line = pg_fetch_assoc($layoutResult)) {
                 $output["xiNETLayout"] = [];
                 $output["xiNETLayout"]["name"] = $line["n"];
                 $output["xiNETLayout"]["layout"] = json_decode(stripslashes($line["l"]));
@@ -334,7 +336,7 @@ if (count($_GET) > 0) {
             $query = "
                     SELECT
                             mp.match_id, mtypes, mpeps, link_positions, mclid, sm.spectrum_id,
-                    sm.score, sm.autovalidated, sm.validated, sm.rejected,
+                            ROUND(sm.score,2) as score, sm.autovalidated, sm.validated, sm.rejected,
                     sm.search_id, sm.is_decoy, sm.calc_mass, sm.precursor_charge,
                     sp.scan_number, sp.scan_index, sp.source_id as source, sp.peaklist_id as plfid,
                     sp.precursor_intensity, sp.precursor_mz, sp.elution_time_start, sp.elution_time_end
@@ -345,7 +347,7 @@ if (count($_GET) > 0) {
                             FROM spectrum_match sm
                     WHERE ".$WHERE_spectrumMatch.") sm
                 INNER JOIN
-                           (SELECT mp.match_id, json_agg(mp.match_type) as mtypes, json_agg(mp.peptide_id) as mpeps,
+                           (SELECT mp.match_id, string_agg(mp.match_type::text,',') as mtypes, string_agg(mp.peptide_id::text,',') as mpeps,
                             json_agg(mp.link_position + 1) as link_positions, max(COALESCE(mp.crosslinker_id, -1)) as mclid
                             FROM matched_peptide mp WHERE ".$WHERE_matchedPeptide." GROUP BY mp.match_id) mp
                     ON sm.id = mp.match_id
@@ -360,31 +362,37 @@ if (count($_GET) > 0) {
 
             $matches = [];
 
+                function jsonagg_number_split ($str) {
+                    $arr = explode(', ', substr($str, 1, -1));
+                    $arrCount = count($arr);
+                    for ($i = 0; $i < $arrCount; $i++) {
+                        $arr[$i] = (int)$arr[$i];
+                    }
+                    return $arr;
+                }
+
+                function stringagg_number_split ($str) {
+                    $arr = explode(',', $str);
+                    $arrCount = count($arr);
+                    for ($i = 0; $i < $arrCount; $i++) {
+                        $arr[$i] = (int)$arr[$i];
+                    }
+                    return $arr;
+                }
+
                 //error_log (print_r ("1 ".memory_get_usage(), true));
 
             $peptideIds = array();
             $sourceIds = array();
             $peakListIds = array();
-            $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-                $lineCount = 0;
-            while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
-                    $peptideId = json_decode($line["mpeps"]);
-                    // COALESCE command in SQL does this now
-                    // $crosslinker_id = json_decode ($line["mclids"]);
-                    //if (!isset($crosslinker_id) || trim($crosslinker_id) === '') {
-                    //    $crosslinker_id = -1;
-                    //}
+                $line = pg_fetch_assoc($res);
+                //$lineCount = 0;
+                while ($line) {
+                    $peptideId = stringagg_number_split($line["mpeps"]); //json_decode($line["mpeps"]);
 
                     foreach ($peptideId as $value) {
                         $peptideIds[strval($value)] = 1;
                     }
-                    //$peptideIds[$peptideId] = 1;
-                    /*
-                    if ($lineCount === 0) {
-                        error_log (print_r ($line, true));
-                        error_log (print_r ($peptideIds, true));
-                }
-                    */
 
                 $sourceId = $line["source"];
                 $sourceIds[$sourceId] = 1;
@@ -392,14 +400,14 @@ if (count($_GET) > 0) {
                 if(isset($peakListId)){
                     $peakListIds[$peakListId] = 1;
                 }
-                    /*array_push($matches,*/  $matches[] = array(
+                    $matches[] = array(
                         "id"=>+$line["match_id"],
-                            "ty"=>json_decode($line["mtypes"]),
+                            "ty"=>stringagg_number_split($line["mtypes"]),
                             "pi"=>$peptideId,
-                            "lp"=>json_decode($line["link_positions"]),
+                            "lp"=>jsonagg_number_split($line["link_positions"]),
                             "cl"=>+$line["mclid"],
                         "spec"=>$line["spectrum_id"],
-                        "sc"=>round($line["score"], 2),
+                            "sc"=>+$line["score"],
                         "si"=>+$line["search_id"],
                         "dc"=>$line["is_decoy"],
                         "av"=>$line["autovalidated"],
@@ -416,11 +424,13 @@ if (count($_GET) > 0) {
                         "e_s"=>+$line["elution_time_start"],
                         "e_e"=>+$line["elution_time_end"]
                         )
-                /*)*/;
+                    ;
 
-                $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-                    $lineCount++;
+                    $line = pg_fetch_assoc($res);
+                    //$lineCount++;
             }
+
+                pg_free_result ($res);
 
                 //error_log (print_r ("2 ".memory_get_usage(), true));
             $output["rawMatches"] = $matches; //TODO - rename to matches or PSM
@@ -441,16 +451,8 @@ if (count($_GET) > 0) {
                 $startTime = microtime(true);
                 $res = pg_query($query) or die('Query failed: ' . pg_last_error());
                 $endTime = microtime(true);
-                $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-                while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
 
-                    array_push($spectrumSources, array(
-                            "id"=>$line["id"],
-                            "name"=>$line["name"]
-                        ));
-
-                    $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-                }
+                    $spectrumSources = pg_fetch_all ($res);
             }
             $output["spectrumSources"] = $spectrumSources;
             $times["spectrumSources"] = microtime(true) - $zz;
@@ -466,20 +468,8 @@ if (count($_GET) > 0) {
                             .$implodedPeakListIds.";";
                 $startTime = microtime(true);
                 $res = pg_query($query) or die('Query failed: ' . pg_last_error());
-                $endTime = microtime(true);
-                $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-                while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
 
-                    array_push($peakListFiles, array(
-                            "id"=>$line["id"],
-                            "name"=>$line["name"]
-                        ));
-
-                    $line = pg_fetch_array($res, null, PGSQL_ASSOC);
-                    //if ($line) {echo ",\n";}
-                }
-                //echo "\n],\n";
-                $endTime = microtime(true);
+                    $peakListFiles = pg_fetch_all ($res);
             }
             $output["peakListFiles"] = $peakListFiles;
             $times["peakListFiles"] = microtime(true) - $zz;
@@ -498,7 +488,7 @@ if (count($_GET) > 0) {
             if (sizeof($peptideIds) > 0) {
                 $implodedPepIds = '('.implode(array_keys($peptideIds), ",").')';
                 $query = "SELECT pep.id, (array_agg(pep.sequence))[1] as sequence,
-                    array_agg(".$proteinIdField.") as proteins, array_agg(hp.protein_id) as test, array_agg(hp.peptide_position + 1) as positions
+                        string_agg(".$proteinIdField."::text,',') as proteins, string_agg(hp.protein_id::text,',') as test, json_agg(hp.peptide_position + 1) as positions
                     FROM (SELECT id, sequence FROM peptide WHERE id IN "
                             .$implodedPepIds.") pep
                     INNER JOIN (SELECT peptide_id, protein_id, peptide_position
@@ -512,40 +502,36 @@ if (count($_GET) > 0) {
                 $endTime = microtime(true);
                 $times["peptideQuery"] = microtime(true) - $zz;
                 $zz = microtime(true);
-                $line = pg_fetch_array($res, null, PGSQL_ASSOC);
+                    $line = pg_fetch_assoc($res);
                 while ($line) {
                     $proteins = $line["proteins"];
-                        $proteinsArray = explode(",", substr($proteins, 1, -1));
+                        $proteinsArray = explode(",", $proteins);
                     $protCount = count($proteinsArray);
                     for ($p = 0; $p < $protCount; $p++) {
                         $id = $proteinsArray[$p];
-                        if (strpos($id, '"') === 0) {
-
+                            //if (strpos($id, '"') === 0) {
+                            if (strncmp ($id, '"', 1) === 0) {
                                 $proteinsArray[$p] = substr($id, 1, -1);
                         }
                     }
                     $dbProteinIds = $line["test"];
-                        $dbProteinsArray = explode(",", substr($dbProteinIds, 1, -1));
+                        $dbProteinsArray = explode(",", $dbProteinIds);
                     foreach ($dbProteinsArray as $v) {
                         $dbIds[$v] = 1;
                     }
-                    $positions = $line['positions'];
-                        $positionsArray = explode(",", substr($positions, 1, -1));
-                    $posCount = count($positionsArray);
-                    for ($p = 0; $p < $posCount; $p++) {
-                        $positionsArray[$p] = (int) $positionsArray[$p];
-                    }
 
-                        $peptides[] =
-                        /*array_push($peptides,*/ array(
+                        $positionsArray = jsonagg_number_split ($line['positions']);
+
+                        $peptides[] = array(
                             "id"=>+$line["id"],
                             "seq_mods"=>$line["sequence"],
                             "prt"=>$proteinsArray,
                             "pos"=>$positionsArray
-                            )/*)*/;
+                        );
 
-                    $line = pg_fetch_array($res, null, PGSQL_ASSOC);
+                        $line = pg_fetch_assoc($res);
                 }
+                    pg_free_result ($res);
                 $output["peptides"] = $peptides;
 
                 $endTime = microtime(true);
@@ -565,30 +551,29 @@ if (count($_GET) > 0) {
                 $query = "SELECT ".$proteinIdField." AS id,
                         CASE WHEN name IS NULL OR name = '' OR name = 'REV_' OR name = 'RAN_' THEN accession_number
                         ELSE name END AS name,
-                        description, accession_number, sequence, is_decoy
+                            description, accession_number as accession, sequence, is_decoy
                         FROM protein WHERE id IN ('".implode(array_keys($dbIds), "','")."')";
                 $startTime = microtime(true);
                 $res = pg_query($query) or die('Query failed: ' . pg_last_error());
                 $endTime = microtime(true);
                 $interactorAccs = [];
 
-                $line = pg_fetch_array($res, null, PGSQL_ASSOC);
+                    $line = pg_fetch_assoc($res);
                 while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
                     $isDecoy = $line["is_decoy"] == "t";
-                    $pId = $line["id"];
 
-                    array_push($proteins, array(
-                            "id"=>$pId,
+                        $proteins[] = array(
+                            "id"=>$line["id"],
                             "name"=>$line["name"],
                             "description"=>$line["description"],
-                            "accession"=>$line["accession_number"],
+                            "accession"=>$line["accession"],
                             "seq_mods"=>$line["sequence"],
                             "is_decoy"=>$isDecoy
-                        ));
+                        );
                     if (!$isDecoy) {
                         $interactorAccs[preg_split("/-/", $line["accession_number"])[0]] = 1;
                     }
-                    $line = pg_fetch_array($res, null, PGSQL_ASSOC);
+                    $line = pg_fetch_array($res);
                 }
                 $output["proteins"] = $proteins;
                 $times["proteinQueryAndArray"] = microtime(true) - $zz;
@@ -626,7 +611,6 @@ if (count($_GET) > 0) {
 
                 $times["endAbsolute"] = microtime(true);
             }
-        }
 
         $output["times"] = $times;
 
