@@ -456,25 +456,27 @@ CLMS.model.SpectrumMatch.prototype.experimentalMissedCleavageCount = function() 
     function countMissedCleavages(peptide, linkPos) {
         var count = 0;
         var seqMods = peptide.seq_mods;
-        var pepLen = seqMods.length;
+        if (seqMods) {
+            var pepLen = seqMods.length;
 
-        var indexOfLinkedAA = findIndexofNthUpperCaseLetter(seqMods, linkPos);
+            var indexOfLinkedAA = findIndexofNthUpperCaseLetter(seqMods, linkPos);
 
-        for (var i = 0; i < pepLen; i++) {
-            for (var spec of enzymeSpecificity) {
-                if (seqMods[i] == spec.aa) {
-                    if (i < pepLen) {
-                        if (seqMods[i + 1] >= "A" && seqMods[i + 1] <= "Z") {
-                            if (i != indexOfLinkedAA) {
-                                var postConstrained = false;
-                                for (var pc of spec.postConstraint) {
-                                    if (peptide.sequence[i+1] == pc) {
-                                        postConstrained = true;
-                                        break;
+            for (var i = 0; i < pepLen; i++) {
+                for (var spec of enzymeSpecificity) {
+                    if (seqMods[i] == spec.aa) {
+                        if (i < pepLen) {
+                            if (seqMods[i + 1] >= "A" && seqMods[i + 1] <= "Z") {
+                                if (i != indexOfLinkedAA) {
+                                    var postConstrained = false;
+                                    for (var pc of spec.postConstraint) {
+                                        if (peptide.sequence[i+1] == pc) {
+                                            postConstrained = true;
+                                            break;
+                                        }
                                     }
-                                }
-                                if (!postConstrained){
-                                    count++;
+                                    if (!postConstrained){
+                                        count++;
+                                    }
                                 }
                             }
                         }
