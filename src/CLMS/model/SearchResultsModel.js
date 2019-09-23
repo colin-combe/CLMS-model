@@ -1187,10 +1187,12 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         {
             //watch out for the 'this' reference
             linkFunc: function(link, option) {
-                return link.isLinearLink() ? [] : [this.model.getSingleCrosslinkDistance(link, null, null, option)];
+                //return link.isLinearLink() ? [] : [this.model.getSingleCrosslinkDistance(link, null, null, option)];
+                return link.isLinearLink() ? [] : [link.getMeta("distance")];
             },
             unfilteredLinkFunc: function(link, option) {
-                return link.isLinearLink() ? [] : [this.model.getSingleCrosslinkDistance(link, null, null, option)];
+                //return link.isLinearLink() ? [] : [this.model.getSingleCrosslinkDistance(link, null, null, option)];
+                return link.isLinearLink() ? [] : [link.getMeta("distance")];
             },
             id: "Distance",
             label: "Cross-Link Cα-Cα Distance (Å)",
