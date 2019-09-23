@@ -8,7 +8,6 @@
 
 var CLMS = CLMS || {};
 
-//TODO - get rid of this somehow
 //For IE, which doesn't yet support values(). entries(), or keys() on ECMA6 Map
 CLMS.arrayFromMapValues = function(map) {
     if (map.values && Array.from) {
@@ -67,7 +66,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             ambiguousPresent: false,
             crossLinksPresent: false,
             linearsPresent: false, // TODO
-            scoreSets: new Set (),
+            scoreSets: new Set(),
             selectedScoreSet: null
         };
     },
@@ -252,7 +251,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                 }
             }
 
-            console.log("score sets:",this.get("scoreSets"));
+            console.log("score sets:", this.get("scoreSets"));
 
             this.set("minScore", minScore);
             this.set("maxScore", maxScore);
@@ -458,47 +457,118 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         return randId;
     },
 
-    attributeOptions: [
-        {
-            linkFunc: function (link) { return [link.filteredMatches_pp.length]; },
-            unfilteredLinkFunc: function (link) { return [link.matches_pp.length]; },
-            id: "MatchCount", label: "Cross-Link Match Count", decimalPlaces: 0
+    attributeOptions: [{
+            linkFunc: function(link) {
+                return [link.filteredMatches_pp.length];
+            },
+            unfilteredLinkFunc: function(link) {
+                return [link.matches_pp.length];
+            },
+            id: "MatchCount",
+            label: "Cross-Link Match Count",
+            decimalPlaces: 0
         },
         {
-            linkFunc: function (link) { return link.filteredMatches_pp.map (function (m) { return m.match.score(); }); },
-            unfilteredLinkFunc: function (link) { return link.matches_pp.map (function (m) { return m.match.score(); }); },
-            id: "Score", label: "Match Score", decimalPlaces: 2, matchLevel: true
+            linkFunc: function(link) {
+                return link.filteredMatches_pp.map(function(m) {
+                    return m.match.score();
+                });
+            },
+            unfilteredLinkFunc: function(link) {
+                return link.matches_pp.map(function(m) {
+                    return m.match.score();
+                });
+            },
+            id: "Score",
+            label: "Match Score",
+            decimalPlaces: 2,
+            matchLevel: true
         },
         {
-            linkFunc: function (link) { return link.filteredMatches_pp.map (function (m) { return m.match.precursorMZ; }); },
-            unfilteredLinkFunc: function (link) { return link.matches_pp.map (function (m) { return m.match.precursorMZ; }); },
-            id: "MZ", label: "Match Precursor m/z", decimalPlaces: 4, matchLevel: true
+            linkFunc: function(link) {
+                return link.filteredMatches_pp.map(function(m) {
+                    return m.match.precursorMZ;
+                });
+            },
+            unfilteredLinkFunc: function(link) {
+                return link.matches_pp.map(function(m) {
+                    return m.match.precursorMZ;
+                });
+            },
+            id: "MZ",
+            label: "Match Precursor m/z",
+            decimalPlaces: 4,
+            matchLevel: true
         },
         {
-            linkFunc: function (link) { return link.filteredMatches_pp.map (function (m) { return m.match.precursorCharge; }); },
-            unfilteredLinkFunc: function (link) { return link.matches_pp.map (function (m) { return m.match.precursorCharge; }); },
-            id: "Charge", label: "Match Precursor Charge (z)", decimalPlaces: 0,  matchLevel: true
+            linkFunc: function(link) {
+                return link.filteredMatches_pp.map(function(m) {
+                    return m.match.precursorCharge;
+                });
+            },
+            unfilteredLinkFunc: function(link) {
+                return link.matches_pp.map(function(m) {
+                    return m.match.precursorCharge;
+                });
+            },
+            id: "Charge",
+            label: "Match Precursor Charge (z)",
+            decimalPlaces: 0,
+            matchLevel: true
         },
         {
-            linkFunc: function (link) { return link.filteredMatches_pp.map (function (m) { return m.match.calcMass(); }); },
-            unfilteredLinkFunc: function (link) { return link.matches_pp.map (function (m) { return m.match.calcMass(); }); },
-            id: "CalcMass", label: "Match Calculated Mass (m)", decimalPlaces: 4, matchLevel: true
+            linkFunc: function(link) {
+                return link.filteredMatches_pp.map(function(m) {
+                    return m.match.calcMass();
+                });
+            },
+            unfilteredLinkFunc: function(link) {
+                return link.matches_pp.map(function(m) {
+                    return m.match.calcMass();
+                });
+            },
+            id: "CalcMass",
+            label: "Match Calculated Mass (m)",
+            decimalPlaces: 4,
+            matchLevel: true
         },
         {
-            linkFunc: function(link) { return link.filteredMatches_pp.map (function (m) { return m.match.massError(); }); },
-            unfilteredLinkFunc: function (link) { return link.matches_pp.map (function (m) { return m.match.massError(); }); },
-            id: "MassError", label: "Match Mass Error", decimalPlaces: 4, matchLevel: true
+            linkFunc: function(link) {
+                return link.filteredMatches_pp.map(function(m) {
+                    return m.match.massError();
+                });
+            },
+            unfilteredLinkFunc: function(link) {
+                return link.matches_pp.map(function(m) {
+                    return m.match.massError();
+                });
+            },
+            id: "MassError",
+            label: "Match Mass Error",
+            decimalPlaces: 4,
+            matchLevel: true
         },
         {
-            linkFunc: function (link) { return link.filteredMatches_pp.map (function (m) { return Math.min (m.pepPos[0].length, m.pepPos[1].length); }); },
-            unfilteredLinkFunc: function (link) { return link.matches_pp.map (function (m) { return Math.min (m.pepPos[0].length, m.pepPos[1].length); }); },
-            id: "SmallPeptideLen", label: "Match Smaller Peptide Length (AA)", decimalPlaces: 0, matchLevel: true
+            linkFunc: function(link) {
+                return link.filteredMatches_pp.map(function(m) {
+                    return Math.min(m.pepPos[0].length, m.pepPos[1].length);
+                });
+            },
+            unfilteredLinkFunc: function(link) {
+                return link.matches_pp.map(function(m) {
+                    return Math.min(m.pepPos[0].length, m.pepPos[1].length);
+                });
+            },
+            id: "SmallPeptideLen",
+            label: "Match Smaller Peptide Length (AA)",
+            decimalPlaces: 0,
+            matchLevel: true
         },
         // {
         //     linkFunc: function (link) { return link.filteredMatches_pp.map (function (m) { var p = m.match.precursor_intensity; return isNaN(p) ? undefined : p; }); },
         //     unfilteredLinkFunc: function (link) { return link.matches_pp.map (function (m) { var p = m.match.precursor_intensity; return isNaN(p) ? undefined : p; }); },
         //     id: "PrecursorIntensity", label: "Match Precursor Intensity", decimalPlaces: 0, matchLevel: true,
-		// 	valueFormat: d3.format(".1e"), logAxis: true, logStart: 1000
+        // 	valueFormat: d3.format(".1e"), logAxis: true, logStart: 1000
         // },
         // {
         //     linkFunc: function (link) { return link.filteredMatches_pp.map (function (m) { return m.match.elution_time_start; }); },
@@ -511,9 +581,18 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         //     id: "ElutionTimeEnd", label: "Elution Time End", decimalPlaces: 2, matchLevel: true
         // },
         {
-            linkFunc: function (link, option) { return link.isLinearLink() ? [] : [this.model.getSingleCrosslinkDistance (link, null, null, option)]; },
-            unfilteredLinkFunc: function (link, option) { return link.isLinearLink() ? [] : [this.model.getSingleCrosslinkDistance (link, null, null, option)]; },
-            id: "Distance", label: "Cross-Link Cα-Cα Distance (Å)", decimalPlaces: 2, maxVal: 90,
+            linkFunc: function(link, option) {
+                //return link.isLinearLink() ? [] : [this.model.getSingleCrosslinkDistance(link, null, null, option)];
+                return link.isLinearLink() ? [] : [link.getMeta("distance")];
+            },
+            unfilteredLinkFunc: function(link, option) {
+                //return link.isLinearLink() ? [] : [this.model.getSingleCrosslinkDistance(link, null, null, option)];
+                return link.isLinearLink() ? [] : [link.getMeta("distance")];
+            },
+            id: "Distance",
+            label: "Cross-Link Cα-Cα Distance (Å)",
+            decimalPlaces: 2,
+            maxVal: 90,
         },
     ],
 
