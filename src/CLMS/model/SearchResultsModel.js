@@ -213,6 +213,10 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                         });
                         i++;
                     }
+                    
+                    if (i === 0) {
+                        resSet.linkables.push (new Set(["*"]));  // in case non-covalent
+                    }
 
                     resSet.heterobi = resSet.heterobi || (i > 1);
                 });
