@@ -276,14 +276,14 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             var rawMatches = json.rawMatches;
             var minScore = undefined;
             var maxScore = undefined;
-            
+
             // moved from modelUtils 05/08/19
             // Connect searches to proteins, and add the protein set as a property of a search in the clmsModel, MJG 17/05/17
             var searchMap = this.getProteinSearchMap (json.peptides, json.rawMatches || json.identifications);
             this.get("searches").forEach(function(value, key) {
                 value.participantIDSet = searchMap[key];
             });
-            
+
 
             if (rawMatches) {
                 var matches = this.get("matches");
@@ -294,7 +294,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                     //this would need updated for trimeric or higher order crosslinks
                     var rawMatch = rawMatches[i];
                     var rawMatchArray = [rawMatch];
-                    
+
                     if (rawMatch.ty.length === undefined) {
                         if ((i < (l - 1)) && rawMatch.id == rawMatches[i + 1].id) {
                             rawMatchArray.push (rawMatches[i + 1]);
@@ -329,13 +329,13 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
 
             var participantArray = CLMS.arrayFromMapValues(participants);
             // only count real participants towards participant count (which is used as cut-off further on)
-            var realParticipantArray = participantArray.filter(function(p) {
+            var targetParticipantArray = participantArray.filter(function(p) {
                 return !p.is_decoy;
             });
-            var participantCount = realParticipantArray.length;
+            var participantCount = targetParticipantArray.length;
 
             for (var p = 0; p < participantCount; p++) {
-                var participant = realParticipantArray[p];
+                var participant = targetParticipantArray[p];
                 var uniprot = json.interactors ? json.interactors[participant.accession.split('-')[0]] : null;
                 participant.uniprot = uniprot;
             }
@@ -373,7 +373,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                                 //var participantArray = CLMS.arrayFromMapValues(realParticipants);
                                 var invariantCount = participantCount;
                                 for (var p = 0; p < invariantCount; p++ ){
-                                    uniProtTxt(realParticipantArray[p]);
+                                    uniProtTxt(targetParticipantArray[p]);
                                 }
                             }
                             else {
@@ -383,7 +383,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         }
 
     },
-    
+
     // Connect searches to proteins
     getProteinSearchMap: function(peptideArray, rawMatchArray) {
         var pepMap = d3.map(peptideArray, function(peptide) {
@@ -427,7 +427,13 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         if (protObj.name.indexOf("_") != -1) {
             protObj.name = protObj.name.substring(0, protObj.name.indexOf("_"))
         }
-
+        protObj.getMeta = function (field) {
+            var x;
+            if (this.meta) {
+                x = this.meta[field];
+            }
+            return x;
+        }.bind(protObj);
     },
 
     getDigestibleResiduesAsFeatures: function(participant) {
