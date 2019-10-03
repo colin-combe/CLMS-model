@@ -334,6 +334,14 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             }
             if (protObj.sequence) protObj.size = protObj.sequence.length;
         }
+
+        protObj.getMeta = function (field) {
+            var x;
+            if (this.meta) {
+                x = this.meta[field];
+            }
+            return x;
+        }.bind(protObj);
     },
 
     //TODO
