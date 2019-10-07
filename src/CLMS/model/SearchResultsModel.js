@@ -431,12 +431,18 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         if (protObj.name.indexOf("_") != -1) {
             protObj.name = protObj.name.substring(0, protObj.name.indexOf("_"))
         }
-        protObj.getMeta = function (field) {
-            var x;
-            if (this.meta) {
-                x = this.meta[field];
+        protObj.getMeta = function(metaField) {
+            if (arguments.length === 0) {
+                return this.meta;
             }
-            return x;
+            return this.meta ? this.meta[metaField] : undefined;
+        }.bind(protObj);
+        
+        protObj.setMeta = function(metaField, value) {
+            if (arguments.length === 2) {
+                this.meta = this.meta || {};
+                this.meta[metaField] = value;
+            }
         }.bind(protObj);
     },
 
