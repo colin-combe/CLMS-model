@@ -213,7 +213,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                         });
                         i++;
                     }
-                    
+
                     if (i === 0) {
                         resSet.linkables.push (new Set(["*"]));  // in case non-covalent
                     }
@@ -426,6 +426,8 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             protObj.crossLinks = [];
         }
         protObj.hidden = false; //?
+
+        protObj.form = 0;
 
         //take out organism abbreviation after underscore from names
         if (protObj.name.indexOf("_") != -1) {
