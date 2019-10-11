@@ -18,8 +18,10 @@ CLMS.model.CrossLink = function(id, fromProtein, fromResidue, toProtein, toResid
 };
 
 CLMS.model.CrossLink.prototype.isDecoyLink = function() {
-    return (this.fromProtein.is_decoy == true ||
-        (this.toProtein && this.toProtein.is_decoy == true));
+    var fd = this.fromProtein.is_decoy == true;
+    var td = this.toProtein? this.toProtein.is_decoy == true : false;
+    return (fd ||
+        td);
 };
 
 CLMS.model.CrossLink.prototype.isSelfLink = function() {
@@ -27,5 +29,5 @@ CLMS.model.CrossLink.prototype.isSelfLink = function() {
 };
 
 CLMS.model.CrossLink.prototype.isLinearLink = function() {
-    return this.matches_pp[0].match.linkPos1 === -1 || this.matches_pp[0].match.matchedPeptides[1].pos[0] === -1; //hack required by links only CSV, look at again
+    return this.matches_pp[0].match.isLinear();//match.linkPos1 === -1 || (this.matches_pp[0].match.matchedPeptides[1] && this.matches_pp[0].match.matchedPeptides[1].pos[0] === -1); //hack required by links only CSV, look at again
 };

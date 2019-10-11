@@ -102,34 +102,61 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
 
     //loop to produce all alternative linkage site combinations
     //(position1 count * position2 count alternative)
-    for (var i = 0; i < this.matchedPeptides[0].pos.length; i++) {
-        for (var j = 0; j < this.matchedPeptides[1].pos.length; j++) {
+    if (this.matchedPeptides[1]) {
+        for (var i = 0; i < this.matchedPeptides[0].pos.length; i++) {
+            for (var j = 0; j < this.matchedPeptides[1].pos.length; j++) {
 
-            if (i > 0 || j > 0) {
-                this.containingModel.set("ambiguousPresent", true);
+                if (i > 0 || j > 0) {
+                    this.containingModel.set("ambiguousPresent", true);
+                }
+
+                //some files are not puting in duplicate protein ids in ambig links
+                //in this case use last one
+                // if (i < this.matchedPeptides[0].prt.length) {
+                    p1ID = this.matchedPeptides[0].prt[i];
+                // } else {
+                //     p1ID = this.matchedPeptides[0].prt[this.matchedPeptides[0].prt.length - 1];
+                // }
+                // if (j < this.matchedPeptides[1].prt.length) {
+                    p2ID = this.matchedPeptides[1].prt[j];
+                // } else {
+                //     p2ID = this.matchedPeptides[1].prt[this.matchedPeptides[1].prt.length - 1];
+                // }
+
+                // * residue numbering starts at 1 *
+                res1 = +this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
+                res2 = +this.matchedPeptides[1].pos[j] - 1 + this.linkPos2;
+
+                this.associateWithLink(participants, crossLinks, p1ID, p2ID, res1, res2, this.matchedPeptides[0].pos[i] - 0, this.matchedPeptides[0].sequence.length, this.matchedPeptides[1].pos[j], this.matchedPeptides[1].sequence.length);
             }
-
-            //some files are not puting in duplicate protein ids in ambig links
-            //in this case use last one
-            if (i < this.matchedPeptides[0].prt.length) {
-                p1ID = this.matchedPeptides[0].prt[i];
-            } else {
-                p1ID = this.matchedPeptides[0].prt[this.matchedPeptides[0].prt.length - 1];
-            }
-            if (j < this.matchedPeptides[1].prt.length) {
-                p2ID = this.matchedPeptides[1].prt[j];
-            } else {
-                p2ID = this.matchedPeptides[1].prt[this.matchedPeptides[1].prt.length - 1];
-            }
-
-            // * residue numbering starts at 1 *
-            res1 = +this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
-            res2 = +this.matchedPeptides[1].pos[j] - 1 + this.linkPos2;
-
-            this.associateWithLink(participants, crossLinks, p1ID, p2ID, res1, res2, this.matchedPeptides[0].pos[i] - 0, this.matchedPeptides[0].sequence.length, this.matchedPeptides[1].pos[j], this.matchedPeptides[1].sequence.length);
         }
     }
+    else {
+        for (var i = 0; i < this.matchedPeptides[0].pos.length; i++) {
+              if (i > 0 || j > 0) {
+                    this.containingModel.set("ambiguousPresent", true);
+                }
 
+                //some files are not puting in duplicate protein ids in ambig links
+                //in this case use last one
+                // if (i < this.matchedPeptides[0].prt.length) {
+                    p1ID = this.matchedPeptides[0].prt[i];
+                // } else {
+                //     p1ID = this.matchedPeptides[0].prt[this.matchedPeptides[0].prt.length - 1];
+                // }
+                // if (j < this.matchedPeptides[1].prt.length) {
+                    // p2ID = this.matchedPeptides[1].prt[j];
+                // } else {
+                //     p2ID = this.matchedPeptides[1].prt[this.matchedPeptides[1].prt.length - 1];
+                // }
+
+                // * residue numbering starts at 1 *
+                res1 = +this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
+                // res2 = +this.matchedPeptides[1].pos[j] - 1 + this.linkPos2;
+
+                this.associateWithLink(participants, crossLinks, p1ID, null, res1, null, this.matchedPeptides[0].pos[i] - 0, this.matchedPeptides[0].sequence.length, null, null);
+        }
+    }
     //identify homodimers: if peptides overlap its a homodimer
     this.confirmedHomomultimer = false;
     this.overlap = [];
@@ -306,7 +333,7 @@ CLMS.model.SpectrumMatch.prototype.isDecoy = function() {
 }
 
 CLMS.model.SpectrumMatch.prototype.isLinear = function() {
-    return this.linkPos1 === -1;
+    return this.matchedPeptides.length === 1;
 }
 
 CLMS.model.SpectrumMatch.prototype.runName = function() {

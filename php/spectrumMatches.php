@@ -340,29 +340,29 @@ if (count($_GET) > 0) {
     // Free resultset
     pg_free_result($res);
 
-                //interactors
-                $interactors = [];
-                $interactorQuery = "SELECT accession, sequence, features, array_to_json(go) AS go FROM uniprot_trembl WHERE accession IN ('"
-                        .implode(array_keys($interactorAccs), "','")."');";
-                try {
-                    // @ stops pg_connect echo'ing out failure messages that knacker the returned data
-                    $interactorDbConn = @pg_connect($interactionConnection);
-                    if ($interactorDbConn) {
-                        $interactorResult = pg_query($interactorQuery);
-                        $line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
-                        while ($line) {
-                            $line["features"] = json_decode($line["features"]);
-                            $line["go"] = json_decode($line["go"]);
-                            $interactors[$line["accession"]] = $line;
-                            $line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
-                        }
-                    } else {
-                        throw new Exception("Could not connect to interaction database");
-                    }
-                } catch (Exception $e) {
-                    $output["error"] = $e;
-                }
-                $output["interactors"] = $interactors;    $endTime = microtime(true);
+    //interactors
+    $interactors = [];
+    $interactorQuery = "SELECT accession, sequence, features, array_to_json(go) AS go FROM uniprot_trembl WHERE accession IN ('"
+            .implode(array_keys($interactorAccs), "','")."');";
+    try {
+        // @ stops pg_connect echo'ing out failure messages that knacker the returned data
+        $interactorDbConn = @pg_connect($interactionConnection);
+        if ($interactorDbConn) {
+            $interactorResult = pg_query($interactorQuery);
+            $line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
+            while ($line) {
+                $line["features"] = json_decode($line["features"]);
+                $line["go"] = json_decode($line["go"]);
+                $interactors[$line["accession"]] = $line;
+                $line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
+            }
+        } else {
+            throw new Exception("Could not connect to interaction database");
+        }
+    } catch (Exception $e) {
+        //$output["error"] = "Could not connect to interaction database";
+    }
+    $output["interactors"] = $interactors;    $endTime = microtime(true);
     //~ echo '/*php time: '.($endTime - $startTime)."ms*/\n\n";
     //echo ",\n";
 
