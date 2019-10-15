@@ -133,7 +133,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     }
     else {
         for (var i = 0; i < this.matchedPeptides[0].pos.length; i++) {
-              if (i > 0 || j > 0) {
+              if (i > 0) {
                     this.containingModel.set("ambiguousPresent", true);
                 }
 
@@ -234,14 +234,14 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function(proteins, crossL
 
     if (this.containingModel.isMatchingProteinPair(fromProt, toProt)) {
         this.couldBelongToSelfLink = true;
-    } else {
+    } else if (!this.isMonoLink()) {
         this.couldBelongToBetweenLink = true;
     }
 
     // again, order id string by prot id or by residue if self-link
     var endsReversedInResLinkId = false;
     var crossLinkID;
-    if (!p2ID || p2ID == "" || p2ID == '-' || p2ID == 'n/a') {
+    if (this.isLinear()) {
         crossLinkID = p1ID + "_linears";
     } else if (p1ID === p2ID || p2ID === null) {
         if ((res1 - 0) < (res2 - 0) || res2 === null) {
@@ -265,7 +265,7 @@ CLMS.model.SpectrumMatch.prototype.associateWithLink = function(proteins, crossL
         //WATCH OUT - residues need to be in correct order
         if (!p2ID) {
             resLink = new CLMS.model.CrossLink(crossLinkID, fromProt,
-                null, null, null, this.containingModel);
+                res1, null, null, this.containingModel);
         } else if (p1ID === p2ID) {
             if ((res1 - 0) < (res2 - 0)) {
                 resLink = new CLMS.model.CrossLink(crossLinkID, fromProt, res1, toProt, res2, this.containingModel);
@@ -333,7 +333,11 @@ CLMS.model.SpectrumMatch.prototype.isDecoy = function() {
 }
 
 CLMS.model.SpectrumMatch.prototype.isLinear = function() {
-    return this.matchedPeptides.length === 1;
+    return this.linkPos1 === -1;
+}
+
+CLMS.model.SpectrumMatch.prototype.isMonoLink = function() {
+    return this.linkPos1 !== -1 && this.matchedPeptides.length === 1;
 }
 
 CLMS.model.SpectrumMatch.prototype.runName = function() {
