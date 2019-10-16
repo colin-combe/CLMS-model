@@ -41,9 +41,9 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     }
 
     this.precursorCharge = +identification.pc_c;
-    if (this.precursorCharge == -1) {
-        this.precursorCharge = undefined;
-    }
+    // if (this.precursorCharge == -1) { //dodgy?
+    //     this.precursorCharge = undefined;
+    // }
 
     this.matchedPeptides = [];
     this.matchedPeptides[0] = peptides.get(this.searchId + "_" + identification.pi1);
@@ -337,7 +337,7 @@ CLMS.model.SpectrumMatch.prototype.isLinear = function() {
 }
 
 CLMS.model.SpectrumMatch.prototype.isMonoLink = function() {
-    return this.linkPos1 !== -1 && this.matchedPeptides.length === 1;
+    return this.linkPos1 !== -1 && (this.matchedPeptides.length === 1 || this.linkPos2 == -1 || this.matchedPeptides[1].pos[0] == -1);
 }
 
 CLMS.model.SpectrumMatch.prototype.runName = function() {
