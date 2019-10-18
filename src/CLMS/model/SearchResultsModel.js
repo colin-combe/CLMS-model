@@ -642,7 +642,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             var protCount = needsSequence.length;
             var countSequences = 0;
             var protArray = needsSequence; //CLMS.arrayFromMapValues(participants);
-            //if (protCount > 1) {
+            if (protCount > 1) {
                 for (var p = 0; p < protCount; p++) {
                     var prot = protArray[p];
                     if (prot.is_decoy == false) {
@@ -663,9 +663,9 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                         }
                     }
                 }
-            //} else {
-             //   addCSVLinks();
-            //}
+            } else {
+               addCSVLinks();
+            }
         } else {
             addCSVLinks();
         }
@@ -686,7 +686,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                             acc = splitOnBar[1].trim();
                             name = splitOnBar[2].trim();
                         }
-                        if (!participants.has(id)) {
+                        if (!participants.has(acc)) {
                             var protein = {
                                 id: id,
                                 name: name,
@@ -930,7 +930,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                             v: val,
                             pos: split(row[iSeqPos1]),
                             lp: 1,
-                            prt: split(row[iProt1]),
+                            prt: [accFromIdentifier(row[iProt1])],
                             sequence: ""
                         };
                         var pep2 = {
@@ -941,7 +941,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                             v: val,
                             pos: split(row[iSeqPos2]),
                             lp: 1,
-                            prt: split(row[iProt2]),
+                            prt: [accFromIdentifier(row[iProt2])],
                             sequence: ""
                         };
 

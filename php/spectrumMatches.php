@@ -590,10 +590,10 @@ if (count($_GET) > 0) {
                             $line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
                         }
                     } else {
-                        throw new Exception("Could not connect to interaction database");
+                        throw new Exception("Could not connect to uniprot interactor database");
                     }
                 } catch (Exception $e) {
-                    $output["error"] = $e;
+                    $output["error"] = "Could not connect to uniprot interactor database";
                 }
                 $output["interactors"] = $interactors;
                 $times["uniprotQuery"] = microtime(true) - $zz;
