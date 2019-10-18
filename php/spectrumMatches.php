@@ -593,7 +593,7 @@ if (count($_GET) > 0) {
                         throw new Exception("Could not connect to uniprot interactor database");
                     }
                 } catch (Exception $e) {
-                    $output["error"] = "Could not connect to interaction database";
+                    $output["error"] = "Could not connect to uniprot interactor database";
                 }
                 $output["interactors"] = $interactors;
                 $times["uniprotQuery"] = microtime(true) - $zz;
