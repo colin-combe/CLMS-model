@@ -227,6 +227,12 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                     peptide = peptideArray[pep];
                     peptide.sequence = peptide.seq_mods.replace(this.commonRegexes.notUpperCase, '');
                     peptides.set(peptide.u_id + "_" + peptide.id, peptide); // concat upload_id and peptide.id
+
+                    for (var p = 0; p < peptide.prt.length; p++) {
+                        if (peptide.is_decoy[p]) {
+                              participants.get(peptide.prt[p]).is_decoy = true;
+                        }
+                    }
                 }
             }
 

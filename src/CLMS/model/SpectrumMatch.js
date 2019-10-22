@@ -135,26 +135,11 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
         for (var i = 0; i < this.matchedPeptides[0].pos.length; i++) {
               if (i > 0) {
                     this.containingModel.set("ambiguousPresent", true);
-                }
-
-                //some files are not puting in duplicate protein ids in ambig links
-                //in this case use last one
-                // if (i < this.matchedPeptides[0].prt.length) {
-                    p1ID = this.matchedPeptides[0].prt[i];
-                // } else {
-                //     p1ID = this.matchedPeptides[0].prt[this.matchedPeptides[0].prt.length - 1];
-                // }
-                // if (j < this.matchedPeptides[1].prt.length) {
-                    // p2ID = this.matchedPeptides[1].prt[j];
-                // } else {
-                //     p2ID = this.matchedPeptides[1].prt[this.matchedPeptides[1].prt.length - 1];
-                // }
-
-                // * residue numbering starts at 1 *
-                res1 = +this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
-                // res2 = +this.matchedPeptides[1].pos[j] - 1 + this.linkPos2;
-
-                this.associateWithLink(participants, crossLinks, p1ID, null, res1, null, this.matchedPeptides[0].pos[i] - 0, this.matchedPeptides[0].sequence.length, null, null);
+              }
+              p1ID = this.matchedPeptides[0].prt[i];
+              // * residue numbering starts at 1 *
+              res1 = +this.matchedPeptides[0].pos[i] - 1 + this.linkPos1;
+              this.associateWithLink(participants, crossLinks, p1ID, null, res1, null, this.matchedPeptides[0].pos[i] - 0, this.matchedPeptides[0].sequence.length, null, null);
         }
     }
     //identify homodimers: if peptides overlap its a homodimer
