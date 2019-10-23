@@ -333,6 +333,10 @@ CLMS.model.SpectrumMatch.prototype.isLinear = function() {
     return this.linkPos1 === 0;
 }
 
+CLMS.model.SpectrumMatch.prototype.isMonoLink = function() {
+    return false;
+}
+
 CLMS.model.SpectrumMatch.prototype.runName = function() {
     if (this.run_name) {
         return this.run_name;
