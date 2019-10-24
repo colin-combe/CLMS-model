@@ -227,6 +227,13 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                     peptide = peptideArray[pep];
                     peptide.sequence = peptide.seq_mods.replace(this.commonRegexes.notUpperCase, '');
                     peptides.set(peptide.u_id + "_" + peptide.id, peptide); // concat upload_id and peptide.id
+
+                    for (var p = 0; p < peptide.prt.length; p++) {
+                        if (peptide.is_decoy[p]) {
+                              participants.get(peptide.prt[p]).is_decoy = true;
+                              this.set("decoysPresent", true);
+                        }
+                    }
                 }
             }
 
@@ -318,29 +325,36 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         if (!protObj.crossLinks) {
             protObj.crossLinks = [];
         }
-        var decoyNames = /(REV_)|(RAN_)|(DECOY_)|(DECOY:)|(reverse_)/;
-        if (decoyNames.exec(protObj.name) || decoyNames.exec(protObj.id)) {
-            this.set("decoysPresent", true);
-            protObj.is_decoy = true;
-            protObj.sequence = "";
+        protObj.is_decoy = false;
+        var accCheck = protObj.accession.match(this.commonRegexes.uniprotAccession);
+        if (protObj.seq_mods) {
+            this.commonRegexes.notUpperCase.lastIndex = 0;
+            protObj.sequence = protObj.seq_mods.replace(this.commonRegexes.notUpperCase, '');
+        } else if (accCheck != null) {
+            protObj.sequence = json.interactors[protObj.accession].sequence;
         } else {
-            protObj.is_decoy = false;
-            var accCheck = protObj.accession.match(this.commonRegexes.uniprotAccession);
-            if (protObj.seq_mods) {
-                this.commonRegexes.notUpperCase.lastIndex = 0;
-                protObj.sequence = protObj.seq_mods.replace(this.commonRegexes.notUpperCase, '');
-            } else if (accCheck != null) {
-                protObj.sequence = json.interactors[protObj.accession].sequence;
-            }
-            if (protObj.sequence) protObj.size = protObj.sequence.length;
+          protObj.sequence = "";
         }
+        protObj.size = protObj.sequence.length;
 
-        protObj.getMeta = function (field) {
-            var x;
-            if (this.meta) {
-                x = this.meta[field];
+        protObj.form = 0;
+
+        //take out organism abbreviation after underscore from names
+        // if (protObj.name.indexOf("_") != -1) {
+        //     protObj.name = protObj.name.substring(0, protObj.name.indexOf("_"))
+        // }
+        protObj.getMeta = function(metaField) {
+            if (arguments.length === 0) {
+                return this.meta;
             }
-            return x;
+            return this.meta ? this.meta[metaField] : undefined;
+        }.bind(protObj);
+
+        protObj.setMeta = function(metaField, value) {
+            if (arguments.length === 2) {
+                this.meta = this.meta || {};
+                this.meta[metaField] = value;
+            }
         }.bind(protObj);
     },
 

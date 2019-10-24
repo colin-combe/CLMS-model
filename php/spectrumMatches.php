@@ -260,7 +260,7 @@ if (count($_GET) > 0) {
         $isDecoyArray = explode(",", substr($isDecoys, 1, strlen($isDecoys) - 2));
         $dCount = count($isDecoyArray);
         for ($d = 0; $d < $pCount; $d++) {
-            $isDecoyArray[$d] = (int) $isDecoyArray[$d];
+            $isDecoyArray[$d] = $isDecoyArray[$d] == 't' ? 1 : 0;
         }
 
         array_push($peptides, array(
