@@ -395,7 +395,7 @@ CLMS.model.SpectrumMatch.prototype.score = function() {
     //if (scoreSets.size == 1) {
         var scoreSet = scoreSets.keys().next().value;
         var s = this._scores[scoreSet];
-        console.log("!", s);
+        //console.log("!", s);
         return s;
     //}
 }
