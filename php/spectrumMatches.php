@@ -144,7 +144,7 @@ if (count($_GET) > 0) {
     } else {
         $query = $query. "rank = 1";
     }
-    $query = $query. " ORDER BY scores->>'score' DESC";
+    # $query = $query. " ORDER BY scores->>'xi:score' DESC";
     $startTime = microtime(true);
     $res = pg_query($query) or die('Query failed: ' . pg_last_error());
     $endTime = microtime(true);
