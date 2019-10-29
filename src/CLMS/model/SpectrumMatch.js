@@ -37,7 +37,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
 
     this.spectrum = this.containingModel.get("spectrumSources").get(this.spectrumId);
     if (this.spectrum) {
-        this.scanNumber = this.spectrum.sn;
+        this.scanNumber = +this.spectrum.sn;
     }
 
     this.precursorCharge = +identification.pc_c;
