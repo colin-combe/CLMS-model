@@ -331,6 +331,12 @@ CLMS.model.SpectrumMatch.prototype.runName = function() {
     }
 }
 
+CLMS.model.SpectrumMatch.prototype.peakListFileName = function() {
+    if (this.spectrum) {
+        return this.spectrum.file;
+    }
+}
+
 CLMS.model.SpectrumMatch.prototype.group = function() {
     var group = this.containingModel.get("searches").get(this.searchId).group;
     return group;
