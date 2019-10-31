@@ -241,6 +241,14 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
 
             var minScore = undefined;
             var maxScore = undefined;
+
+            // moved from modelUtils 05/08/19
+            // Connect searches to proteins, and add the protein set as a property of a search in the clmsModel, MJG 17/05/17
+            var searchMap = this.getProteinSearchMap (json.peptides, json.rawMatches || json.identifications);
+            this.get("searches").forEach(function(value, key) {
+                value.participantIDSet = searchMap[key];
+            });
+
             if (json.identifications) {
                 var matches = this.get("matches");
 
@@ -318,6 +326,33 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
 
         }
 
+    },
+
+    // Connect searches to proteins
+    getProteinSearchMap: function(peptideArray, rawMatchArray) {
+        var pepMap = d3.map(peptideArray, function(peptide) {
+            return peptide.id;
+        });
+        var searchMap = {};
+        rawMatchArray = rawMatchArray || [];
+        rawMatchArray.forEach(function(rawMatch) {
+            var peptideIDs = rawMatch.pi ? rawMatch.pi : [rawMatch.pi1, rawMatch.pi2];
+            peptideIDs.forEach (function (pepID) {
+                if (pepID) {
+                    var prots = pepMap.get(pepID).prt;
+                    var searchToProts = searchMap[rawMatch.si];
+                    if (!searchToProts) {
+                        var newSet = d3.set();
+                        searchMap[rawMatch.si] = newSet;
+                        searchToProts = newSet;
+                    }
+                    prots.forEach(function(prot) {
+                        searchToProts.add(prot);
+                    });
+                }
+            });
+        });
+        return searchMap;
     },
 
     //adds some attributes we want to protein object
