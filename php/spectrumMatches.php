@@ -20,6 +20,8 @@
 
 //$pageStartTime = microtime(true);
 
+header("Cache-Control: max-age=25920000, private"); //300days (60sec * 60min * 24hours * 300days)
+
 if (count($_GET) > 0) {
     include('../../connectionString.php');
     $dbconn = pg_connect($connectionString) or die('Could not connect: ' . pg_last_error());
