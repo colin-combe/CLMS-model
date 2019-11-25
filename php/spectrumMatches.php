@@ -355,33 +355,33 @@ if (count($_GET) > 0) {
                     ON sm.id = mp.match_id
                 INNER JOIN spectrum sp ON sm.spectrum_id = sp.id
                         ORDER BY score DESC, sm.id;";
-                }
+        //}
 
-            $res = pg_query($query) or die('Query failed: ' . pg_last_error());
+            $res = pg_query($query) or die('{"error": "Query failed: ' . pg_last_error().'"}');
             $times["matchQueryDone"] = microtime(true) - $zz;
             $zz = microtime(true);
 
             $matches = [];
 
-                function jsonagg_number_split ($str) {
-                    $arr = explode(', ', substr($str, 1, -1));
-                    $arrCount = count($arr);
-                    for ($i = 0; $i < $arrCount; $i++) {
-                        $arr[$i] = +$arr[$i];
-                    }
-                    return $arr;
+            function jsonagg_number_split ($str) {
+                $arr = explode(', ', substr($str, 1, -1));
+                $arrCount = count($arr);
+                for ($i = 0; $i < $arrCount; $i++) {
+                    $arr[$i] = +$arr[$i];
                 }
+                return $arr;
+            }
 
-                function stringagg_number_split ($str) {
-                    $arr = explode(',', $str);
-                    $arrCount = count($arr);
-                    for ($i = 0; $i < $arrCount; $i++) {
-                        $arr[$i] = +$arr[$i];
-                    }
-                    return $arr;
+            function stringagg_number_split ($str) {
+                $arr = explode(',', $str);
+                $arrCount = count($arr);
+                for ($i = 0; $i < $arrCount; $i++) {
+                    $arr[$i] = +$arr[$i];
                 }
+                return $arr;
+            }
 
-                //error_log (print_r ("1 ".memory_get_usage(), true));
+            //error_log (print_r ("1 ".memory_get_usage(), true));
 
             $peptideIds = array();
             $sourceIds = array();
@@ -607,8 +607,10 @@ if (count($_GET) > 0) {
 
                 $times["endAbsolute"] = microtime(true);
             }
+        }
 
         $output["times"] = $times;
+        $output["timeStamp"] = $_SERVER["REQUEST_TIME"];
 
         // Free resultset
         pg_free_result($res);
