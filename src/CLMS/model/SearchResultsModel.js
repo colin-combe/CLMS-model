@@ -365,7 +365,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
         if (protObj.seq_mods) {
             this.commonRegexes.notUpperCase.lastIndex = 0;
             protObj.sequence = protObj.seq_mods.replace(this.commonRegexes.notUpperCase, '');
-        } else if (accCheck != null) {
+        } else if (accCheck != null && json.interactors[protObj.accession]) {
             protObj.sequence = json.interactors[protObj.accession].sequence;
         } else {
           protObj.sequence = "";
