@@ -27,5 +27,9 @@ CLMS.model.CrossLink.prototype.isSelfLink = function() {
 };
 
 CLMS.model.CrossLink.prototype.isLinearLink = function() {
-    return this.matches_pp[0].match.linkPos1 === 0;
+    return this.matches_pp[0].match.isLinear();
+};
+
+CLMS.model.CrossLink.prototype.isMonoLink = function() {
+    return this.matches_pp[0].match.isMonoLink();
 };
