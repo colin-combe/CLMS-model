@@ -439,7 +439,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             }
             return this.meta ? this.meta[metaField] : undefined;
         }.bind(protObj);
-        
+
         protObj.setMeta = function(metaField, value) {
             if (arguments.length === 2) {
                 this.meta = this.meta || {};
@@ -1230,7 +1230,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             },
             id: "ExpMissedCleavages",
             label: "Experimental Max. Missed Cleavages",
-            decimalPlaces: 2,
+            decimalPlaces: 0,
             matchLevel: true
         },
         {
@@ -1246,7 +1246,23 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             },
             id: "SearchMissedCleavages",
             label: "Search Max. Missed Cleavages",
-            decimalPlaces: 2,
+            decimalPlaces: 0,
+            matchLevel: true
+        },
+        {
+            linkFunc: function(link) {
+                return link.filteredMatches_pp.map(function(m) {
+                    return m.match.modificationCount();
+                });
+            },
+            unfilteredLinkFunc: function(link) {
+                return link.matches_pp.map(function(m) {
+                    return m.match.modificationCount();
+                });
+            },
+            id: "ModificationCount",
+            label: "Modification Count",
+            decimalPlaces: 0,
             matchLevel: true
         },
     ],
