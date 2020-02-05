@@ -145,7 +145,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
     //identify homodimers: if peptides overlap its a homodimer
     this.confirmedHomomultimer = false;
     this.overlap = [];
-    if (this.isAmbig() == false) { //todo: fix potential problem here regarding ambiguous homo-multimer link
+    if (this.isAmbig() == false && p1ID == p2ID) { //todo: fix potential problem here regarding ambiguous homo-multimer link
 
         if (this.matchedPeptides[0].sequence && this.matchedPeptides[1].sequence) {
 
