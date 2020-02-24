@@ -549,9 +549,12 @@ CLMS.model.SpectrumMatch.prototype.modificationCount = function() {
         return count;
     }
 
-    var modCount = peptideModCount(this.matchedPeptides[0]);
+    var modCount1 = peptideModCount(this.matchedPeptides[0]);
     if (this.matchedPeptides[1]) {
-        modCount += peptideModCount(this.matchedPeptides[1]);
+        var modCount2 = peptideModCount(this.matchedPeptides[1]);
+        if (modCount2 > modCount1) {
+          return modCount2;
+        }
     }
-    return modCount;
+    return modCount1;
 }
