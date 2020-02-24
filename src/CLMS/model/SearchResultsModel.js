@@ -651,6 +651,22 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             decimalPlaces: 2,
             maxVal: 90,
         },
+        {
+            linkFunc: function(link) {
+                return link.filteredMatches_pp.map(function(m) {
+                    return m.match.modificationCount();
+                });
+            },
+            unfilteredLinkFunc: function(link) {
+                return link.matches_pp.map(function(m) {
+                    return m.match.modificationCount();
+                });
+            },
+            id: "ModificationCount",
+            label: "Modification Count",
+            decimalPlaces: 0,
+            matchLevel: true
+        },
     ],
 
 });
