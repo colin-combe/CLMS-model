@@ -405,3 +405,26 @@ CLMS.model.SpectrumMatch.prototype.score = function() {
         return s;
     //}
 }
+
+CLMS.model.SpectrumMatch.prototype.modificationCount = function() {
+    function peptideModCount(peptide) {
+        var count = 0;
+        var sequence = peptide.seq_mods;
+        var pepLen = sequence.length;
+        for (var i = 0; i < pepLen - 1; i++) {
+            var a = sequence[i];
+            var b = sequence[i + 1];
+            if ((a >= "A" && a <= "Z") && (b < "A" || b > "Z")) count++;
+        }
+        return count;
+    }
+
+    var modCount1 = peptideModCount(this.matchedPeptides[0]);
+    if (this.matchedPeptides[1]) {
+        var modCount2 = peptideModCount(this.matchedPeptides[1]);
+        if (modCount2 > modCount1) {
+          return modCount2;
+        }
+    }
+    return modCount1;
+}
