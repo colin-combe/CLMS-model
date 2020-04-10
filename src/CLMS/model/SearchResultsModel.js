@@ -199,7 +199,7 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
             var specCount = json.spectra.length;
             for (var sp = 0; sp < specCount; sp++) {
                 specSource = json.spectra[sp];
-                spectrumSources.set(+specSource.id, specSource);
+                spectrumSources.set(specSource.up_id + '_' + specSource.id, specSource);
             }
             this.set("spectrumSources", spectrumSources);
 

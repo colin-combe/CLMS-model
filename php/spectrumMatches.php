@@ -113,6 +113,7 @@ if (count($_GET) > 0) {
     $WHERE_uploadClause_tableP = $WHERE_uploadClause_tableP.') ';
 
     // Stored layouts
+    //TODO _loading wrong one by default?
     $layoutQuery = "SELECT t1.layout AS l, t1.description AS n  "
     . " FROM layouts AS t1 "
     . " WHERE t1.search_id LIKE '" . $uploadId . "' "
@@ -187,7 +188,7 @@ if (count($_GET) > 0) {
     /*
      * SPECTRA
      */
-    $query = "SELECT id, peak_list_file_name, scan_id, frag_tol,  (peak_list is not null) as pks FROM spectra WHERE ".$WHERE_uploadClause.";";
+    $query = "SELECT id, upload_id, peak_list_file_name, scan_id, frag_tol,  (peak_list is not null) as pks FROM spectra WHERE ".$WHERE_uploadClause.";";
     $startTime = microtime(true);
     $res = pg_query($query) or die('Query failed: ' . pg_last_error());
     $endTime = microtime(true);
@@ -200,6 +201,7 @@ if (count($_GET) > 0) {
     while ($line) {// = pg_fetch_array($res, null, PGSQL_ASSOC)) {
         array_push($spectra, array(
                 "id"=>$line["id"],
+                "up_id"=>$line["upload_id"],
                 "file"=>$line["peak_list_file_name"],
                 "sn"=>$line["scan_id"],
                 "ft"=>$line["frag_tol"],

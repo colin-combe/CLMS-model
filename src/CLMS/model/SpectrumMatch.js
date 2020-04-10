@@ -35,7 +35,7 @@ CLMS.model.SpectrumMatch = function(containingModel, participants, crossLinks, p
         this.ions = ions;
     }
 
-    this.spectrum = this.containingModel.get("spectrumSources").get(this.spectrumId);
+    this.spectrum = this.containingModel.get("spectrumSources").get(this.searchId + "_" + this.spectrumId);
     if (this.spectrum) {
         this.scanNumber = +this.spectrum.sn;
     }
