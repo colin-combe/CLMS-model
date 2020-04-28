@@ -546,13 +546,13 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
                 var scores = link.filteredMatches_pp.map(function(m) {
                     return m.match.score();
                 });
-                return [Math.max(scores)];
+                return [Math.max.apply(Math, scores)];
             },
             unfilteredLinkFunc: function(link) {
                 var scores = link.matches_pp.map(function(m) {
                     return m.match.score();
                 })
-                return [Math.max(scores)];
+                return [Math.max.apply(Math, scores)];
             },
             id: "Highest Score",
             label: "Highest Match Score per Crosslink",
