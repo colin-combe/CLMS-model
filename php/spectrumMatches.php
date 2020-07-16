@@ -225,7 +225,7 @@ if (count($_GET) > 0) {
 
                 //lutz...
                 //https://github.com/Rappsilber-Laboratory/xi3-issue-tracker/issues/473#issuecomment-658401738
-                $crosslinkerQuery = "SELECT regexp_replace(d,'\s*(.*)','1','i') AS discription, regexp_replace(d,'.*[;:]ID:\s*([0-9]*).*','1','i')::int AS id, regexp_replace(d,'.*[;:]mass:\s*([+-]?[0-9.]*).*','1','i') AS mass, regexp_replace(d,'.*[;:]name:\s*([^;]*).*','1','i') AS name, d ~* '.*[;:]decoy.*' as is_decoy, false as is_default   FROM (SELECT  unnest(regexp_split_to_array(customsettings,E'\n','i')) AS d FROM parameter_set WHERE id = ".$psId.") c WHERE c.d ~* '\s*crosslinker:.*' UNION SELECT description as d, cl.id, mass, name, is_decoy, is_default FROM chosen_crosslinker cc INNER JOIN crosslinker cl ON cc.crosslinker_id = cl.id WHERE cc.paramset_id = ".$psId.";";
+                $crosslinkerQuery = "SELECT regexp_replace(d,'\s*(.*)','\\1','i') AS description, regexp_replace(d,'.*[;:]ID:\s*([0-9]*).*','\\1','i')::int AS id, regexp_replace(d,'.*[;:]mass:\s*([+-]?[0-9.]*).*','\\1','i') AS mass, regexp_replace(d,'.*[;:]name:\s*([^;]*).*','\\1','i') AS name, d ~* '.*[;:]decoy.*' as is_decoy, false as is_default   FROM (SELECT  unnest(regexp_split_to_array(customsettings,E'\n','i')) AS d FROM parameter_set WHERE id = ".$psId.") c WHERE c.d ~* '\s*crosslinker:.*' UNION SELECT description as d, cl.id, mass, name, is_decoy, is_default FROM chosen_crosslinker cc INNER JOIN crosslinker cl ON cc.crosslinker_id = cl.id WHERE cc.paramset_id = ".$psId.";";
 
                 $crosslinkerResult = pg_query($dbconn, $crosslinkerQuery)
                             or die('Query failed: ' . pg_last_error());
