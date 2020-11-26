@@ -1,4 +1,4 @@
-Type,Location,Protein1,LinkPos1,Domain,Protein2,LinkPos2,Domain,Confidence
+Type,Location,Protein1,SeqPos1,Domain,Protein2,SeqPos2,Domain,Confidence
 Intra-protein ,Within TFIIF,sp|P41895|Tfg1,23,N-terminal region,sp|P41895|Tfg1,61,N-terminal region,High
 Intra-protein ,Within TFIIF,sp|P41895|Tfg1,23,N-terminal region,sp|P41895|Tfg1,126,Dimerization domain,High
 Intra-protein ,Within TFIIF,sp|P41895|Tfg1,60,N-terminal region,sp|P41895|Tfg1,72,N-terminal region,High

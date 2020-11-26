@@ -1,0 +1,2 @@
+Rank,Id,Protein1,Protein2,Type,XLType,Spectrum,AbsPos1,AbsPos2,deltaAA,Annotation,Smallest_dist[euklid],Mr,Mz,z,Error_rel[ppm],Error_abs[ppm],nseen,MatchOdds,wmatchoddssum,wmatchoddsmean,Xcorrx,Xcorrb,TIC,TicA,TicB,WTIC,intsum,lApS,seriesscore,deltaS,ld-Score,fdr,xlinker,source
+1,GKLLSQPISQHGQLANFLQAHEHLSWLHEINSQELEK-K2-156,sp|Q8WUM0|NU133_HUMAN,-,monolink,monolink,AvA_1211_5_2_1.08304.08304.5_AvA_1211_5_2_1.08305.08305.5,913,n/a,-,AvA_1211_5_2_1_matched,,4415.278,884.063,5,2.7,2.7,1,4.39,0.61,0.61,0.02,0.25,0.1,0.1,0,0.01,102,0,1.2,0.45,15.92,0,,Mono_Xlinks.csv

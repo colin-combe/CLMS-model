@@ -1,0 +1,13 @@
+Protein1,PepPos1,LinkPos1,PepSeq1,Protein2,PepPos2,LinkPos2,PepSeq2, Decoy1, Decoy2
+A,19,,SKIP,,,,,false,false
+A,2,3,HIKER,,,,,false,false
+"A;A","7;14",2,SKIER, , ,,,false,false
+B1,2,1,KAYAKER,,,5,,false,false
+"B1;B2"," 12;15",4,MILKSHAKE,, ,8,,false,false
+C1,2,1,KIPPER, C2,2,3,RAKER, false,false
+C1,8,4,TANKER, C1,14,4,HACKER, false,false
+"C1;C2","20;7",3,FAKER,"C1;C2"," 27;14",2,SKY, false,false
+D,2,4,INNKEEPER,D,8,8,PERIWINKLER, false,false
+D,2,4,INNKEEPER,DECOY:D,8,8,PERIWINKLER, false,true
+"E1;E2","2;2",4,COOKMARKER,"E1;E2","9;9",8,KERPLUNKER, false;false, false;false
+"E1;E2","2;2",4,COOKMARKER,"E1;DECOY:E2","9;9",8,KERPLUNKER, false;false, false;true
