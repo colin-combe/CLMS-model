@@ -346,26 +346,28 @@ if (count($_GET) > 0) {
 
     //interactors
     $interactors = [];
-//     $interactorQuery = "SELECT accession, sequence, features, array_to_json(go) AS go FROM uniprot_trembl WHERE accession IN ('"
-//             .implode(array_keys($interactorAccs), "','")."');";
-//     try {
-//         // @ stops pg_connect echo'ing out failure messages that knacker the returned data
-//         $interactorDbConn = @pg_connect($interactionConnection);
-//         if ($interactorDbConn) {
-//             $interactorResult = pg_query($interactorQuery);
-//             $line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
-//             while ($line) {
-//                 $line["features"] = json_decode($line["features"]);
-//                 $line["go"] = json_decode($line["go"]);
-//                 $interactors[$line["accession"]] = $line;
-//                 $line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
-//             }
-//         } else {
-//             throw new Exception("Could not connect to interaction database");
-//         }
-//     } catch (Exception $e) {
-//         $output["error"] = "Could not connect to uniprot interactor database";
-//     }
+    $interactorQuery = "SELECT accession, sequence, gene, array_to_json(keywords) as keywords, array_to_json(comments) as comments, features, array_to_json(go) AS go FROM uniprot_trembl WHERE accession IN ('"             .implode(array_keys($interactorAccs), "','")."');";
+     try {
+         // @ stops pg_connect echo'ing out failure messages that knacker the returned data
+         $interactorDbConn = @pg_connect($interactionConnection);
+         if ($interactorDbConn) {
+             $interactorResult = pg_query($interactorQuery);
+             $line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
+             while ($line) {
+                 $line["features"] = json_decode($line["features"]);
+                 $line["go"] = json_decode($line["go"]);
+                 $line["keywords"] = json_decode($line["keywords"]);
+                 $line["comments"] = json_decode($line["comments"]);
+                 $line["gene"] = $line["gene"];
+                 $interactors[$line["accession"]] = $line;
+                 $line = pg_fetch_array($interactorResult, null, PGSQL_ASSOC);
+             }
+         } else {
+             throw new Exception("Could not connect to interaction database");
+         }
+     } catch (Exception $e) {
+         $output["error"] = "Could not connect to uniprot interactor database";
+     }
     $output["interactors"] = $interactors;
 
     $endTime = microtime(true);
