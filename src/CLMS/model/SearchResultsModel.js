@@ -80,6 +80,9 @@ CLMS.model.SearchResultsModel = Backbone.Model.extend({
     //our SpectrumMatches are constructed from the rawMatches and peptides arrays in this json
     parseJSON: function(json) {
         if (json) {
+
+            CLMSUI.loggedIn = json.loggedIn;
+
             var self = this;
             this.set("sid", json.sid);
 

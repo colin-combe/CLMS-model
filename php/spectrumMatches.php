@@ -53,7 +53,9 @@ if (count($_GET) > 0) {
             || preg_match($pattern, $matchid)) {
         exit();
     }
-
+    session_start();
+    $user = $_SESSION['session_name'];
+    $loggedIn = true;
     $id_rands = explode(",", $uploadId);
     $searchId_randomId = [];
     for ($i = 0; $i < count($id_rands); $i++) {
@@ -61,7 +63,9 @@ if (count($_GET) > 0) {
         $randId = implode('-', array_slice($dashSeperated, 1, 4));
         $id = $dashSeperated[0];
 
-        $searchDataQuery = "SELECT * FROM uploads WHERE id = '".$id."';";
+        $searchDataQuery = "SELECT up.peak_list_file_names, up.analysis_software, up.provider, 
+                    up.audits, up.samples, up.analyses, up.protocol, up.bib, up.spectra_formats, 
+                     up.upload_warnings, up.random_id, us.user_name FROM uploads as up INNER JOIN users as us on (up.user_id = us.id) where up.id =  '".$id."';";
 
         $res = pg_query($searchDataQuery)
                     or die('Query failed: ' . pg_last_error());
@@ -88,12 +92,16 @@ if (count($_GET) > 0) {
             //echo "no";
             exit();
         }
+        if ($line["user_name"] != $user) {
+            $loggedIn = false;
+        }
         $searchId_metaData[$id] = $line;
         $searchId_randomId[$id] = $randId;
     }
 
     $output = [];
     $output["sid"] = $uploadId;
+    $output["loggedIn"] = $loggedIn;
     $output["searches"] = $searchId_metaData;
 
     //load data -
