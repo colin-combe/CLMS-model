@@ -63,7 +63,7 @@ if (count($_GET) > 0) {
         $randId = implode('-', array_slice($dashSeperated, 1, 4));
         $id = $dashSeperated[0];
 
-        $searchDataQuery = "SELECT up.peak_list_file_names, up.analysis_software, up.provider, 
+        $searchDataQuery = "SELECT up.id, up.peak_list_file_names, up.analysis_software, up.provider, 
                     up.audits, up.samples, up.analyses, up.protocol, up.bib, up.spectra_formats, 
                      up.upload_warnings, up.random_id, us.user_name FROM uploads as up INNER JOIN users as us on (up.user_id = us.id) where up.id =  '".$id."';";
 
