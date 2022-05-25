@@ -35,7 +35,9 @@ if (count($_GET) > 0) {
 			WHERE spectrum_id = $spid";// AND upload_id = $uid;";
 
         $res = pg_query($dbconn, $query) or die('Query failed: ' . pg_last_error());
-        echo json_encode(pg_fetch_all($res));
+        $temp =  json_encode(pg_fetch_all($res));
+	if ($temp == "false") echo "[]";
+	else echo $temp;
     }
 
     // Free resultset
